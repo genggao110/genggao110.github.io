@@ -1,0 +1,27 @@
+---
+layout:     post
+title:      "Welcome to Ming Blog"
+subtitle:   " \"Hello World, Hello Blog\""
+date:       2019-01-15 12:00:00
+author:     "Hux"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    - 生活
+---
+
+> “Yeah It's on. ”
+
+
+## 前言
+
+Ming 的 Blog 就这么开通了。
+
+---
+
+## 正文
+
+希望后面的我能够坚持着写下去吧
+
+## 结语
+
+To Be A Better future !

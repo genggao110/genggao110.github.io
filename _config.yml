@@ -8,7 +8,8 @@ keyword: "Ming Blog, 博客, 个人网站, 互联网, Web, JAVA, Hadoop, Spark, 
 url: "https://genggao110.github.io"              # your host, for absolute URL
 baseurl: ""         # for example, '/blog' if your blog hosted on 'host/blog'
 
-
+# Publish posts or collection documents with a future date.
+future: true
 
 # SNS settings
 RSS: false
@@ -32,7 +33,7 @@ anchorjs: true                          # if you want to customize anchor. check
 
 # Gems
 # from PR#40, to support local preview for Jekyll 3.0
-gems: [jekyll-paginate]
+plugins: [jekyll-paginate]
 
 
 
@@ -43,7 +44,12 @@ gems: [jekyll-paginate]
 markdown: kramdown
 kramdown:
   input: GFM                            # use Github Flavored Markdown !important
-
+  syntax_highlighter_opts:
+    span:
+       line_numbers: false
+    block:
+       line_numbers: true
+       start_line: 1
 
 
 # Disqus settings
@@ -62,7 +68,7 @@ netease_comment: false
 
 # Analytics settings
 # Baidu Analytics
-ba_track_id: 7a6de4b59e2a989830a3504863855d4d
+# ba_track_id: 7a6de4b59e2a989830a3504863855d4d
 # Google Analytics
 ga_track_id: 'UA-132549253-1'            # Format: UA-xxxxxx-xx
 ga_domain: auto
