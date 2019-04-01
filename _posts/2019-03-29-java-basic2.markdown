@@ -1,0 +1,23 @@
+---
+layout:      post
+title:       "Java Basic Knowledge 2"
+subtitle:    " \"Java core technology\""
+date:        2019-03-29 10:45:26
+author:      "Ming"
+header-img:  "img/post-bg-alitrip.jpg"
+tags:
+    - JAVA
+    - Knowledge
+---
+
+> "I love and am used to keeping a distance with those changed things. Only in this way can I know what will not be abandoned by time."
+
+#### 1.8 Java集合框架
+
+Java集合框架下有很类，给出其集合框架图如下所示。(其中，黄色的代表接口，绿色的是抽象类，蓝色的是具体类)。
+
+![Collection集合](https://ws1.sinaimg.cn/large/005CDUpdly1g1jha52x8hj30ou0f8gm4.jpg)
+
+![Map集合](https://ws1.sinaimg.cn/large/005CDUpdly1g1jhb3ta1aj30n60asq32.jpg)
+
+

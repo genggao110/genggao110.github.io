@@ -1,6 +1,6 @@
 ---
 layout:      post
-title:       "Java Basic Knowledge"
+title:       "Java Basic Knowledge 1"
 subtitle:    " \"Java core technology\""
 date:        2019-03-14 16:18:37
 author:      "Ming"
@@ -477,7 +477,6 @@ PECS（Producer Extends Consumer Super）原则：
 - 频繁往外读取内容的，适合用上界Extends。
 - 经常往里插入的，适合用下界Super。
 
-#### 1.8
 
 
 
