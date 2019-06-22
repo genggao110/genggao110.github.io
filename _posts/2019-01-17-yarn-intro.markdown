@@ -13,6 +13,7 @@ tags:
 
 > “It's probably hard for you to imagine how it feels to have your destiny be predetermined at birth. ”
 
+
 ### Yarn的体系结构和运行原理
 ：运行计算框架(MapReduce, Storm, Spark, Flink等)的容器
 #### 1. 主节点：ResourceManager(整体角度)
