@@ -4,6 +4,7 @@ title:       "Java Basic Knowledge 2"
 subtitle:    " \"Java core technology\""
 date:        2019-03-29 10:45:26
 author:      "Ming"
+catalog: true
 header-img:  "img/post-bg-alitrip.jpg"
 tags:
     - JAVA

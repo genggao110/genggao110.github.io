@@ -4,6 +4,7 @@ title:       "KMeans Cluster"
 subtitle:    " \"Hello Blog, Hello Cluster\""
 date:        2019-01-16 15:38:00
 author:      "Ming"
+catalog: true
 header-img:  "img/post-bg-2015.jpg"
 tags:
     - cluster

@@ -1,0 +1,16 @@
+---
+layout:      post
+title:       "JavaSE 基础知识总结"
+subtitle:    " \"Java core knowledge\""
+date:        2019-07-09 08:54:26
+author:      "Ming"
+header-img:  "img/post-bg-universe.jpg"
+catalog: true
+tags:
+    - JAVASE
+    - Knowledge
+---
+
+> "There are no secrets to success. It is the result of preparation, hard work and learning from failure."
+
+### 1.

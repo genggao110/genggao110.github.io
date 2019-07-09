@@ -4,6 +4,7 @@ title:       "Nodejs summary"
 subtitle:    " \"nodejs Analysis\""
 date:        2019-05-27 20:31:26
 author:      "Ming"
+catalog: true
 header-img:  "img/home-bg-o.jpg"
 tags:
     - Nodejs

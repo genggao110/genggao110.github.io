@@ -4,6 +4,7 @@ title:       "Linux Basic Command"
 subtitle:    " \"basic command\""
 date:        2019-05-01 12:50:20
 author:      "Ming"
+catalog: true
 header-img:  "img/home-bg-o.jpg"
 tags:
     - Linux

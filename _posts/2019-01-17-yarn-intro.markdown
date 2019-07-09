@@ -4,6 +4,7 @@ title:       "Yarn Architecture"
 subtitle:    " \"Yarn Architecture\""
 date:        2019-01-17 19:27:38
 author:      "Ming"
+catalog: true
 header-img:  "img/post-bg-universe.jpg"
 tags:
     - yarn

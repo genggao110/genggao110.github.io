@@ -4,6 +4,7 @@ title:       "Operation System"
 subtitle:    " \"System deadlock\""
 date:        2019-03-29 10:45:26
 author:      "Ming"
+catalog: true
 header-img:  "img/post-bg-stars.jpg"
 tags:
     - Operation System

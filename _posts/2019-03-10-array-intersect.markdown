@@ -4,6 +4,7 @@ title:       "Intersection of Two Arrays"
 subtitle:    " \"LeetCode Algorithm\""
 date:        2019-03-10 15:38:37
 author:      "Ming"
+catalog: true
 header-img:  "img/post-bg-201903.jpg"
 tags:
     - JAVA

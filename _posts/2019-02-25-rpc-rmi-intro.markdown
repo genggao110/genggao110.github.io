@@ -4,6 +4,7 @@ title:       "RMI And RPC"
 subtitle:    " \"Difference in RMI And RPC\""
 date:        2019-02-25 22:14:37
 author:      "Ming"
+catalog: true
 header-img:  "img/post-bg-2019.jpg"
 tags:
     - JAVA
