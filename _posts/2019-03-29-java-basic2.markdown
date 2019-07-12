@@ -13,7 +13,9 @@ tags:
 
 > "I love and am used to keeping a distance with those changed things. Only in this way can I know what will not be abandoned by time."
 
-#### 1.8 Java集合框架
+### 2. Java高级特性设计
+
+#### 2.1 Java集合框架
 
 Java集合框架下有很类，给出其集合框架图如下所示。(其中，黄色的代表接口，绿色的是抽象类，蓝色的是具体类)。
 
@@ -25,11 +27,11 @@ TreeSet类与散列集(HashSet)十分类似，不过它比散列集有所改进�
 
 Eg: 具体内容参考Java核心技术书籍。
 
-#### 1.9 并发
+#### 2.2 并发
 
 学习中,后期补充....
 
-#### 1.10 Java SE8的流库
+#### 2.3 Java SE8的流库
 
 **流和集合之间的区别：**
 
