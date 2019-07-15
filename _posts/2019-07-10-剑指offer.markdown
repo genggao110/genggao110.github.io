@@ -216,4 +216,181 @@ private void helper(ArrayList<Integer> res, ListNode head){
     }
 ```
 
-### 4.
+### 4. 重建二叉树
+
+**题目描述**
+
+输入某二叉树的前序遍历和中序遍历的结果，请重建出该二叉树。假如输入的前序遍历和后序遍历的结果都不包含重复的数字。例如输入前序遍历序列{1,2,4,7,3,5,6,8}和中序遍历序列{4,7,2,1,5,3,8,6},则重建二叉树并返回。
+
+**解题思路**：(二叉树天然的递归特性，使得我们可以利用递归算法对二叉树进行遍历和重建)
+
+> 思路1：在二叉树的前序遍历序列(`根-左-右`)中，第一个数字总是树的根节点的值。但在中序遍历序列(`左-根-右`)中，根节点的值在序列的中间，左子树的节点的值位于根节点的值得左边，而右子树的节点的值位于根节点的值的右边。因此，我们需要扫描中序遍历序列，确定出左右子树。以给出的题目为例子：前序遍历序列的第一个数字1就是根节点的值。扫描中序遍历序列，就能确定根节点的值的位置，根据中序遍历的特点，在根节点的值1前面的3个数字都是左子树节点的值，位于1后面的数字都是右子树节点的值。由于在中序遍历序列中，有3个数字是左子树节点的值，因此左子树总共有3个左子节点。同样，在前序遍历的系列中，根节点后面的3个数字就是3个左子树节点的值，再后面的所有数字就是右子树节点的值。**所以**，这样就在前序和中序遍历的两个序列中，分别找到了左右子树对应的子序列。我们已经分别找到了左右子树的前序遍历和中序遍历，这样我们就可以用同样的办法去构建左右子树，实现递归。
+
+```java
+    public TreeNode reConstuctBinaryTree(int[] pre, int[] in){
+        TreeNode root = reConstructBinaryTree(pre,0, pre.length - 1,in, 0, in.length - 1);
+        return root;
+    }
+
+    //前序遍历{1,2,4,7,3,5,6,8}和中序遍历序列{4,7,2,1,5,3,8,6}
+    private TreeNode reConstructBinaryTree(int[] pre, int preStart, int preEnd, int[] in, int inStart, int inEnd){
+        if(preStart > preEnd || inStart > inEnd){
+            return null;
+        }
+        TreeNode root = new TreeNode(pre[preStart]); //根节点是数组的第一个
+        for(int i = inStart; i <= inEnd; i++){
+            if(in[i] == pre[preStart]){ //找到二叉树根节点
+                //左子树，其中i- inStart为中序排序中左子树节点的个数，preStart + 它，就是前序中左子树结束节点在前序数组中的索引，i - 1就是中序的左子树末端节点索引
+                root.left = reConstructBinaryTree(pre, preStart+1, preStart+i-inStart, in, inStart, i - 1);
+                //右子树，类似，[前序最左节点的索引](i - inStart + preStart) + 1,为右子树根节点索引， i+1 为右子树的起始中序节点索引
+                root.right = reConstructBinaryTree(pre, preStart + i - inStart + 1, preEnd, in, i+1, preEnd);
+            }
+        }
+        return root;
+    }
+```
+或许有些人说这个找起始索引的过程有点晕，为了让你稍微清晰的了解一下，我们可以通过在迭代过程中传入相当于提取出来的左右子树的方式(以内存空间增加的方法突出清晰的表现)，给出以下解题代码。(理论都是一样的)
+
+```java
+public TreeNode reConstructBinaryTree(int [] pre,int [] in) {
+       if(pre.length == 0 || in.length == 0){
+            return null;
+        }
+        TreeNode node = new TreeNode(pre[0]);
+        for(int i = 0; i < in.length; i++){
+            if(pre[0] == in[i]){
+                node.left = reConstructBinaryTree(Arrays.copyOfRange(pre, 1, i+1), Arrays.copyOfRange(in, 0, i));
+                node.right = reConstructBinaryTree(Arrays.copyOfRange(pre, i+1, pre.length), Arrays.copyOfRange(in, i+1,in.length));
+            }
+        }
+        return node;
+    }
+```
+当然，还有一种优化策略，利用HashMap存储值和索引，使得查找根节点时速度加快。如下所示：
+```java
+import java.util.HashMap;
+ 
+public class Solution {
+    public TreeNode reConstructBinaryTree(int [] pre,int [] in) {
+        if(pre == null || in == null){
+            return null;
+        }
+        HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
+        for(int i=0;i<in.length;i++){
+            map.put(in[i],i);
+        }
+         
+        return preIn(pre, 0, pre.length-1, in, 0, in.length-1, map);
+    }
+     
+    public TreeNode preIn(int[] pre, int p1, int p2, int[] in, int i1, int i2, HashMap<Integer,Integer> map){
+        if(p1>p2){
+            return null;
+        }
+        TreeNode parent = new TreeNode(pre[p1]);
+        int parentInIndex = map.get(pre[p1]);
+        parent.left = preIn(pre, p1+1, p1+parentInIndex-i1, in, i1, parentInIndex-1, map);
+        parent.right = preIn(pre, p1+parentInIndex-i1+1, p2, in, parentInIndex+1, i2, map);
+        return parent;
+    }
+}
+```
+那么，除了这种递归调用的方法之外，有没有别的方法来解决这个问题呢？给出思路2的解法如下：
+
+> 思路2：让前序遍历的序列拥有中序遍历的索引，在遍历(前序遍历)的过程中按照二叉排序树的方法插入即可。
+
+**原理解释**：(参考自(数据结构：关于重建二叉树的三种思路)[https://blog.csdn.net/lemon_tree12138/article/details/49798221])
+
+给出具体数据的例子如下所示：
+- 前序： A B D E H I C F G
+- 中序： D B H E I A F C G
+
+![前序遍历](https://ws1.sinaimg.cn/large/005CDUpdly1g50dyx7ognj30lk0bn3zr.jpg)
+
+![中序遍历过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g50dzu7rpnj30na0bfab5.jpg)
+
+![后序遍历过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g50e0eqx90j30mz0c8q40.jpg)
+
+则让前序遍历拥有中序遍历的索引表如下所示(Index很直观，就是取了某一个节点的下标，并保存)：
+
+ 序号 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+ --- | --- | --- | --- | --- | --- | --- | --- | --- | --- 
+ 前序 | A | B | D | E | H | I | C | F | G
+ INDEX | 5 | 1 | 0 | 3 | 2 | 4 | 7 | 6 | 8
+ 中序 | D | B | H | E | I | A | F | C | G
+
+其实在已知的遍历序列中，如果含有中序遍历结果，那么我们都可以直接采用上面的这种创建索引函数的方式来简化重建过程。具体原因解释之前我们先来看一下下图：
+
+![二叉树中序遍历顺序示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g50e1lle4aj30pc079wfu.jpg)
+
+我们可以把之前的中序遍历二叉树过程平摊开，就可以获取上图这样的一个顺序序列。从上图我们可以发现这样一个现象，**那就是某一个节点的左孩子一定是在这个节点的左边，其右孩子一定是在这个节点的右边(中序遍历的定义)，也就是节点Node的左孩子left的值(index)一定是比Node的值小，而Node右孩子Right的值一定是比Node的值大。**
+
+很明显，二叉排序树正是这样定义的。这样，我们来看一下二叉树的前序遍历。因为是前序，所以我们在遍历节点Node的孩子节点之前，必定是已经遍历过Node节点。这样也可以理解成是一种临近遍历的过程。这样前序 + 中序 = 二叉排序树，所以我们可以重建二叉排序树。(延伸到该题，解法代码如下所示：)
+
+```java
+import java.util.*;
+public class Solution {
+    TreeNode root = null;
+    Map<Integer,Integer> indexMap = new HashMap<>();
+    public TreeNode reConstructBinaryTree(int [] pre,int [] in) {
+        int[] index = recordArray(pre, in);
+        if(root == null){
+            root = new TreeNode(pre[0]);
+        }
+        //构建前序遍历元素与索引之间的映射
+        for(int i = 0; i < pre.length; i++){
+            indexMap.put(pre[i],index[i]);
+            TreeNode insertNode = new TreeNode(pre[i]);
+            insert(insertNode);
+        }
+        return root;
+    }
+    
+    private void insert(TreeNode insertNode){
+        TreeNode currentNode = root;
+        while(true){
+            if(indexMap.get(insertNode.val) < indexMap.get(currentNode.val)){
+                if(currentNode.left == null){
+                    currentNode.left = insertNode;
+                    break;
+                }else {
+                    currentNode = currentNode.left;
+                }
+            }else if(indexMap.get(insertNode.val) > indexMap.get(currentNode.val)){
+                if(currentNode.right == null){
+                    currentNode.right = insertNode;
+                    break;
+                }else{
+                    currentNode = currentNode.right;
+                }
+            }else{
+                break;
+            }
+        }
+    }
+
+    private int[] recordArray(int[] pre, int[] in){
+        if(pre == null || pre.length == 0 || in == null || in.length == 0){
+            return null;
+        }
+        int[] record = new int[pre.length];
+
+        for(int i = 0; i < pre.length; i++){
+            record[i] = index(in, pre[i]);
+        }
+        return record;
+    }
+
+    //计算前序遍历元素在中序遍历数组中的位置
+    private int index(int[] in, int label){
+        for(int i = 0; i < in.length; i++){
+            if(label == in[i]){
+                return i;
+            }
+        }
+        return -1;
+    }
+}
+```
+
+### 5. 

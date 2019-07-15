@@ -1,0 +1,16 @@
+---
+layout:     post
+title:      "论文开题"
+subtitle:   " \"煎熬\""
+date:       2019-07-12 18:43:09
+author:     "ming"
+catalog: true
+header-img: "img/post-bg-longmao.jpg"
+tags:
+    - 开题
+    - 毕业设计
+---
+
+> "The future is simply infinite possibility waiting to happen. What it waits on is human imagination to crystallize its possibilities."
+
+## 1.
