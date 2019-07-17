@@ -197,7 +197,7 @@ public ArrayList<Integer> printListFromTailToHead(ListNode listNode) {
     }
 ```
 
-> 思路4： 递归解法，本质上其实也是一个栈结构，要实现反过来输出链表，我们每访问到一个节点的时候，先递归输出它后面的节点，再输出该节点本身极客。
+> 思路4： 递归解法，本质上其实也是一个栈结构，要实现反过来输出链表，我们每访问到一个节点的时候，先递归输出它后面的节点，再输出该节点本身即可。
 
 ```java
 public ArrayList<Integer> printListFromTailToHead(ListNode listNode) {
@@ -392,5 +392,9 @@ public class Solution {
     }
 }
 ```
+
+最后，补充一下关于二叉树的一些相关概念：
+
+[Leetcode——二叉树常考算法整理](https://blog.csdn.net/qq_32690999/article/details/80484440)
 
 ### 5. 

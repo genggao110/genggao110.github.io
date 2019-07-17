@@ -1,6 +1,6 @@
 ---
 layout:      post
-title:       "JavaSE 基础知识总结"
+title:       "JavaSE 面试基础知识总结"
 subtitle:    " \"Java core knowledge\""
 date:        2019-07-09 08:54:26
 author:      "Ming"
@@ -51,7 +51,333 @@ Java的字节码文件首先被加载到计算机内存里，然后读出一条�
 
 为什么C#要进行两次“编译”？其实，微软想通过动态编译(由JIT compiler)来实现程序运行的最优化。如果代码在运行前进行动态编译运行，那么JIT compiler可以很智能的根据你本地机器的硬件条件来进行优化，比如使用更好的register，机器指令等等。
 
-### 2. 
+### 2. Java8 的新特性
+
+#### 2.1 Lambda表达
+
+> Lambda表达式，也称闭包，允许把函数作为一个方法的参数(函数作为参数传递进方法中)。
+
+lambda表达式的重要特性：
+- 可选类型声明：不需要声明参数类型，编译器可以统一识别参数值；
+- 可选的参数圆括号： 一个参数无需定义圆括号，但是多个参数需要定义圆括号；
+- 可选的大括号： 如果主体包含了一个语句，就不需要大括号；
+- 可选的返回关键字:如果主体只有一个表达式返回值则编译器会自动返回值，大括号需要指明表达式返回了一个数值。
+
+#### 2.2 函数式接口(Functional Interface)
+
+> 函数式接口就是一个有且仅有一个抽象方法，但是可以有多个非抽象方法的接口(默认方法与静态方法并不影响函数式接口的契约)。函数式接口可以被隐式转换为lambda表达式。
+
+例如定义一个函数式接口：
+```java
+@FunctionalInterface
+interface GreetingService 
+{
+    void sayMessage(String message);
+}
+```
+那么就可以用lambda表达式来表示该接口的一个实现(JAVA8 之前一般都是用匿名类来实现的)：
+```java
+GreetingService greetService1 = message -> System.out.println("Hello " + message);
+```
+
+**补充**：函数式接口里是可以包含Object里的public方法，这些方法对于函数式接口来说，不被当成抽象方法(虽然他们是抽象方法);因为任何一个函数式接口的实现，都默认继承了Object类，包含了java.lang.Object里对这些抽象方法的实现。
+
+#### 2.3 方法引用
+
+> 方法引用提供了非常有用的语法，可以直接引用已有Java类或对象(实例)的方法或构造器。与lambda联合使用，方法引用可以使语言的构造更紧凑简洁，减少冗余代码。(如果lambda表达式的代码块中只有一条代码。可以使用方法引用和构造器引用)
+
+其包含常见的方法引用如下所示：
+- 构造器引用：语法是Class::new,或者更一般的Class< T >::new;
+- 静态方法引用：语法是Class::static_method；
+- 特定类的任意对象的方法引用：语法是Class::method；
+- 特定对象的方法引用：语法是instance::method
+
+给出一个截图如下：
+
+![方法引用](https://ws1.sinaimg.cn/large/005CDUpdgy1g522ltv9ahj30lz06jmzj.jpg)
+
+#### 2.4 默认方法与静态方法
+
+> Java 8用默认方法与静态方法这两个新概念来扩展接口的声明。默认方法使接口有点像Traits（Scala中特征(trait)类似于Java中的Interface，但它可以包含实现代码，也就是目前Java8新增的功能），但与传统的接口又有些不一样，它允许在已有的接口中添加新方法，而同时又保持了与旧版本代码的兼容性。**主要目的是为了升级标准JDK接口，另外也是为了能在JDK8中顺畅的使用Lamb的表达式。**
+
+在方法名前面加个 default 关键字即可实现默认方法。此外，java 8 带来的另外一个有趣的特性就是可以在接口中可以定义静态方法。
+```java
+private interface DefaulableFactory {
+    // Interfaces now allow static methods
+    static Defaulable create( Supplier< Defaulable > supplier ) {
+        return supplier.get();
+    }
+}
+```
+
+在JVM中，默认方法的实现是非常高效的，并且通过字节码指令为方法调用提供了支持。默认方法允许继续使用现有的Java接口，而同时能够保障正常的编译过程。这方面好的例子是大量的方法被添加到java.util.Collection接口中去：stream()，parallelStream()，forEach()，removeIf() ……
+
+#### 2.5 重复注解
+
+> 自从Java 5引入了注解机制，这一特性就变得非常流行并且广为使用。然而，使用注解的一个限制是相同的注解在同一位置只能声明一次，不能声明多次。Java 8打破了这条规则，引入了重复注解机制，这样相同的注解可以在同一地方声明多次。
+
+在Java 8中使用@Repeatable注解定义重复注解，实际上，这并不是语言层面的改进，而是编译器做的一个trick，底层的技术仍然相同。可以利用下面的代码说明：
+```java
+package com.javacodegeeks.java8.repeatable.annotations;
+ 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+ 
+public class RepeatingAnnotations {
+    @Target( ElementType.TYPE )
+    @Retention( RetentionPolicy.RUNTIME )
+    public @interface Filters {
+        Filter[] value();
+    }
+ 
+    @Target( ElementType.TYPE )
+    @Retention( RetentionPolicy.RUNTIME )
+    @Repeatable( Filters.class )
+    public @interface Filter {
+        String value();
+    };
+ 
+    @Filter( "filter1" )
+    @Filter( "filter2" )
+    public interface Filterable {        
+    }
+ 
+    public static void main(String[] args) {
+        for( Filter filter: Filterable.class.getAnnotationsByType( Filter.class ) ) {
+            System.out.println( filter.value() );
+        }
+    }
+}
+```
+
+正如我们看到的，这里有个使用@Repeatable( Filters.class )注解的注解类Filter，Filters仅仅是Filter注解的数组，但Java编译器并不想让程序员意识到Filters的存在。这样，接口Filterable就拥有了两次Filter（并没有提到Filter）注解。
+
+同时，反射相关的API提供了新的函数getAnnotationsByType()来返回重复注解的类型（请注意Filterable.class.getAnnotation( Filters.class )经编译器处理后将会返回Filters的实例）。
+
+#### 2.6 Optional类
+
+> Optional 类已经成为 Java 8 类库的一部分，用来解决空指针异常。Optional实际上是一个容器：它可以保存类型T的值，或者仅仅保存null.
+
+给出下面的例子来演示使用Optional类：一个允许空值，一个不允许为空值：
+
+```java
+Optional<String> optionalS = Optional.ofNullable(null);
+    System.out.println("Full name is set?" + optionalS.isPresent());
+    System.out.println("Full name:" + optionalS.orElseGet(() -> "[none]"));
+    System.out.println(optionalS.map(s -> "Hey " + s + "!").orElse("Hey Stranger!"));
+    System.out.println();
+
+    Optional<String> optionalS1 = Optional.of("Tom");
+    System.out.println("Full name is set?" + optionalS1.isPresent());
+    System.out.println("Full name:" + optionalS1.orElseGet(() -> "[none]"));
+    System.out.println(optionalS1.map(s -> "Hey " + s + "!").orElse("Hey Stranger!"));
+```
+如果Optional类的实例为非空值的话，isPresent()返回true，否从返回false。为了防止Optional为空值，orElseGet()方法通过回调函数来产生一个默认值。map()函数对当前Optional的值进行转化，然后返回一个新的Optional实例。orElse()方法和orElseGet()方法类似，但是orElse接受一个默认值而不是一个回调函数。下面是这个程序的输出：
+```java
+Full name is set?false
+Full name:[none]
+Hey Stranger!
+
+Full name is set?true
+Full name:Tom
+Hey Tom!
+```
+
+#### 2.7 Stream API
+
+> java8新增了Stream API,把真正的函数式编程风格引入到java中。Stream使用一种类似用 SQL 语句从数据库查询数据的直观方式来提供一种对 Java 集合运算和表达的高阶抽象。这种风格将要处理的元素集合看作一种流， 流在管道中传输， 并且可以在管道的节点上进行处理， 比如筛选， 排序，聚合等。元素流在管道中经过中间操作（intermediate operation）的处理，最后由最终操作(terminal operation)得到前面处理的结果。
+
+Stream是一个来自数据源的元素队列并支持聚合操作：
+- 元素是特定类型的对象，形成一个队列。Java中的Stream并不会存储对象，而是按需计算；
+- 数据源流的来源，可以是集合，数组，I/O channel, 产生器generator等；
+- 聚合操作类似于SQL语句一样的操作，比如filter,map,reduce,find,match,sorted等。
+
+且和以前的Collection操作不同，Stream操作还有两个基础的特征：
+- Pipelining:中间操作都会返回流对象本身。这样多个操作可以串联成一个管道，如同流式风格。这样做可以对操作优化，比如延迟执行和短路。
+- 内部迭代：以前对集合遍历都是通过Iterator或者For-Each的方式, 显式的在集合外部进行迭代， 这叫做外部迭代。 Stream提供了内部迭代的方式， 通过访问者模式(Visitor)实现。
+
+#### 2.8 Date/Time API
+
+> java8 通过发布新的Date-Time API 来进一步加强对日前和时间的处理。
+
+java8 在java.time包下提供了许多新的API，以下给出两个比较重要的API:
+- Local(本地)-简化了日期时间的处理，没有时区的问题
+- Zoned(时区)-通过制定的时区处理日期时间
+
+新的java.time包涵盖了所有处理日期，时间，日期/时间，时区，时刻（instants），过程（during）与时钟（clock）的操作。
+
+#### 2.9 JavaScript引擎Nashorn
+
+>  Java 8提供了一个新的Nashorn javascript引擎，它允许我们在JVM上运行特定的javascript应用。
+ 
+Nashorn就是javax.script.ScriptEngine的另一种实现，并且它们俩遵循相同的规则，允许Java与JavaScript相互调用。下面看一个例子：
+
+```java
+ 
+ScriptEngineManager manager = new ScriptEngineManager();
+ScriptEngine engine = manager.getEngineByName( "JavaScript" );
+         
+System.out.println( engine.getClass().getName() );
+System.out.println( "Result:" + engine.eval( "function f() { return 1; }; f() + 1;" ) );
+```
+程序在控制台上的输出：
+
+```java
+jdk.nashorn.api.scripting.NashornScriptEngine
+Result: 2
+```
+
+#### 2.10 Base64,并行数组，并发(Concurrency)
+
+> java8中，Base64编码已经成为Java类库的标准；java8 新增了大量的方法来对数组进行并行处理，可以说最重要的是parallelSort()方法，因为它可以在多核机器上极大提高数组排序的速度；在新增Stream机制与lambda的基础之上，在java.util.concurrent.ConcurrentHashMap中加入了一些新方法来支持聚集操作。同时也在java.util.concurrent.ForkJoinPool类中加入了一些新方法来支持共有资源池（common pool）。
+
+#### 2.11 新的Java工具
+
+> java8带来了一些新的命令行工具。其包括Nashorn引擎jjs，类依赖分析器jdeps。
+
+jjs是个基于Nashorn引擎的命令行工具。它接受一些JavaScript源代码为参数，并且执行这些源代码。
+
+jdeps是一个很有用的命令行工具。它可以显示Java类的包级别或类级别的依赖。它接受一个.class文件，一个目录，或者一个jar文件作为输入。jdeps默认把结果输出到系统输出（控制台）上。
+
+### 3. java面试常问的关键字总结
+
+#### 3.1 final关键字
+
+在java中，final关键字可以用来修饰类，成员方法和变量(包括成员变量和局部变量)。下面从这三个方面来总结一下final关键字的基本用法：
+
+##### 1.修饰类
+
+当一个类被final修饰时，表明这个类不能被继承。final类中的成员变量可以根据需要设为final,但是注意**final类中的所有成员方法都会被隐式地指定为final方法**.并且，需要注意的是`一个类不能既被声明为abstract，又被声明为final`。
+
+##### 2.修饰方法
+
+如果在方法前面加final关键字，则表示该方法不能被子类重写。使用final修饰方法的原因有两个：一是将方法锁住，防止任何继承类去修改它的定义；第二个原因是提高效率，final修饰的方法比非final方法要快(早期编译器将所有对此方法的调用转化为inline（行内机制），即可以将此方法直接复制在调用处，而不是进行例行的方法调用（保存断点、压栈），可以提高效率。但如果过多的话，会造成代码膨胀，反而会影响效率，慎用。)。
+
+因此，如果只有在想明确禁止 该方法在子类中被覆盖的情况下才将方法设置为final的。**即父类的final方法是不能被子类所覆盖的，也就是说子类是不能够存在和父类一模一样的方法的。**但是，子类可以重载多个final修饰的方法。此外，如果父类中final修饰的方法同时访问控制权限为private,将会导致子类中不能直接继承到此方法，因此，此时可以在子类中定义相同的方法名和参数，此时`不再产生重写与final的矛盾，而是在子类中重新定义了新的方法`。(注：类的private方法会被隐式地指定为final方法)
+
+##### 3.修饰变量
+
+final成员变量表示常量，只能被赋值一次，赋值后值不再改变。`当final修饰一个基本数据类型的变量时，其数据一旦在初始化后不能改变；如果final修饰一个引用类型时，则在对其初始化后便不能再让其指向其他对象了，但是该引用所指向的对象的内容是可以发生变化的。`本质上是一回事，因为引用的值是一个地址，final要求值，即地址的值不发生变化。
+
+final修饰成员变量时，必须要显示地进行初始化：
+- 类变量：必须在静态初始化块中指定初始值或者声明该类变量的时候指定初始值，而且只能在这两个地方的其中之一指定；
+- 实例变量： 必须在非静态初始化块、声明该实例变量或构造器中指定初始值，而且只能在这三个地方的其中之一指定。
+
+final修饰局部变量时，局部变量必须显示初始化。但final修饰形参时，因为形参在调用该方法时，是由系统根据传入的参数来完成初始化，因此使用final修饰的形参不能被赋值。
+
+```java
+public void test(final int a){
+
+    //不能对final修饰的形参赋值，下面的语句非法
+    //a = 5;
+}
+```
+
+**可执行“宏替换”的final变量**
+
+当对于一个final变量而言，不管它是类变量、实例变量，还是局部变量，只要该变量满足三个条件，这个final变量就不在是一个变量，而是相当于一个直接量(编译器常量，不需要在运行时确定)。
+- 使用final修饰且定义变量时制定了初始值；
+- 初始值可以在编译期间被确定下来；
+- 除了赋直接量的情况外，如果被赋的表达式只是基本的算术表达式或字符串连接运算，没有访问普通变量，调用方法，也符合条件。
+
+给出例子如下：
+```java
+public class Test { 
+    public static void main(String[] args)  { 
+        String a = "hello2";   
+        final String b = "hello"; 
+        final String b1 = getHello();
+        String d = "hello"; 
+        String c = b + 2;  //编译时，当做编译器常量，直接替换值，因此直接指向字符串常量池中的“hello2”
+        String c1 = b1 + 2;  //编译期间无法获取b1值，运行时才能确定，所以编译器无优化
+        String e = d + 2; 
+        System.out.println((a == c)); //true
+        System.out.println((a == e)); //false
+        System.out.println((a == c1)); //false
+    } 
+
+    public static String getHello(){
+        return "hello";
+    }
+} 
+```
+
+#### 3.2 Synchronized关键字
+
+##### 3.2.1 基本概述
+
+在开始讲synchronized关键字之前，先补充一下关于Thread的几个重要方法：
+
+- start()方法：调用该方法开始执行该线程；
+- stop()方法：调用该方法强制结束该线程执行；
+- join()方法： 调用该方法等待该线程结束；
+- sleep()方法： 调用该方法该线程进入等待；
+- run()方法： 调用该方法直接执行线程的run()方法，但是线程调用start()方法也会运行run()方法，区别就是一个是由线程调度运行run()方法，一个是直接调用了线程中的run()方法(和普通对象调用方法一样)。
+
+此外，经常混淆wait()和notify()方法，其实它们是Object类的方法，不是Thread的方法。同时，wait()和notify()方法配合使用，分别表示线程挂起和线程恢复。(补充：wait()和sleep()的区别，简单来说wait()会释放对象锁而sleep()不会释放对象锁)
+
+最后，补充一下锁所拥有的类型：
+- 可重入锁：在执行对象中所有同步方法不用再次获得锁
+- 可中断锁：在等待获取锁过程中可中断
+- 公平锁：按等待获取锁的线程的等待时间进行获取，等待时间长的具有优先获取锁权利
+- 读写锁： 对资源读取和写入的时候拆分为2部分处理，读的时候可以多线程一起读，写的时候必须同步地写.
+
+synchronized锁什么？锁对象。锁的对象包括：this, 临界资源对象， Class类对象。其同步的三种用法：
+1. 同步实例方法，锁的是当前实例对象；
+2. 同步类方法，锁的是当前类对象；
+3. 同步代码块，锁的是括号里面的对象。
+
+```java
+
+public class SynchronizedTest {
+
+    /**
+     * 同步实例方法，锁实例对象
+     */
+    public synchronized void test() {
+    }
+
+    /**
+     * 同步类方法，锁类对象
+     */
+    public synchronized static void test1() {
+    }
+
+    /**
+     * 同步代码块
+     */
+    public void test2() {
+        // 锁类对象
+        synchronized (SynchronizedTest.class) {
+            // 锁实例对象
+            synchronized (this) {
+
+            }
+        }
+    }
+}
+```
+
+##### 3.2.2 synchronized实现原理
+
+> synchronized可以保证方法或者代码块在运行时，同一个时刻只有一个方法可以进入到临界区(原子性)，同时它还可以保证共享变量的内存可见性。因为 synchronized 无论是同步的方法还是同步的代码块，都会先把主内存的数据拷贝到工作内存中，同步代码块结束，会把工作内存中的数据更新到主内存中，这样主内存中的数据一定是最新的。更重要的是禁用了乱序重组以及保证了值对存储器的写入，这样就可以保证可见性。
+
+利用javap -verbose来查看上述示例的class文件信息：
+
+![](https://ws1.sinaimg.cn/large/005CDUpdgy1g5360ztb4yj30ks0qp3yv.jpg)
+
+
+
+
+
+### 4. 面向对象
+
+
+
+
 
 
 
