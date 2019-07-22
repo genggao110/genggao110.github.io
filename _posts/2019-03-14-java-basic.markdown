@@ -735,7 +735,7 @@ public class StringTest {
     }
 }
 ```
-![_20190710220804.jpg](https://s3.ax2x.com/2019/07/10/_20190710220804.jpg)
+![字符串的复合运算](https://ws1.sinaimg.cn/large/005CDUpdgy1g5595h9cvoj30t80bowg9.jpg)
 
 因为涉及到字符串拼接，所以运算a和运算b都会生成一个StringBuilder对象，但运算a只会调用一次append()方法，直接把字符串“ world !”与引用str拼接，而运算b需要调用两次append()方法，分别把str引用先后与字符串“ world ”和“!”拼接；表明复合运算“+=”使得编译器在编译阶段会优化字符串“ world ”和“!”的拼接。所以运算a的效率会高于运算b。
 
