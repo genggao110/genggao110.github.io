@@ -1,6 +1,6 @@
 ---
 layout:      post
-title:       "Linux Basic Command"
+title:       "Linux基础知识概括"
 subtitle:    " \"basic command\""
 date:        2019-05-01 12:50:20
 author:      "Ming"
