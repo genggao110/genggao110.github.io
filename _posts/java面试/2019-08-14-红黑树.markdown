@@ -48,7 +48,7 @@ tags:
 
 正是红黑树的这5条性质，使一棵n个结点的红黑树始终保持了logn的高度，从而也就解释了上面所说的“红黑树的查找、插入、删除的时间复杂度最坏为O(log n)”这一结论成立的原因。给出红黑树示意图如下所示：
 
-![红黑树](https://ws1.sinaimg.cn/large/005CDUpdgy1g64tsus3uqj30ps0ckjud.jpg)
+![红黑树](https://i.loli.net/2019/08/21/4DnjJ7Fk56IOS8i.jpg)
 
 在树的结构发生变化时(插入或者删除操作)，往往会破坏上述特性4和特性5，需要通过调整使得查找树重新满足红黑树的条件。
 
@@ -101,17 +101,17 @@ public class MyRBTree<T extends Comparable<T>> {
 
 左旋的过程是将x的右子树绕x逆时针旋转，使得x的右子树成为x的父亲，同时修改相关节点的引用。旋转之后，二叉查找树的特性依然能够满足。
 
-![左旋转](https://ws1.sinaimg.cn/large/005CDUpdly1g64zbrszbjj30m80rumzm.jpg)
+![左旋转](https://i.loli.net/2019/08/21/iwNzSOfUT6hnrl8.jpg)
 
 给出一个我认为很生动的例子过程：
 
-![左旋](https://ws1.sinaimg.cn/large/005CDUpdly1g64zfjav6mj310o107q3e.jpg)
+![左旋](https://i.loli.net/2019/08/21/w7rMWyv3NLm9SGA.jpg)
 
-![左旋动画](https://ws1.sinaimg.cn/large/005CDUpdgy1g64zgslj37g30fu09lk5j.gif)
+![左旋动画](https://i.loli.net/2019/08/21/2ZmOIashpPW6EwJ.gif)
 
 在算法导论上，给出了下面的伪代码，来理解“红黑树T的节点x进行左旋”是如何进行的。参考下面的示意图：
 
-![参考图](https://ws1.sinaimg.cn/large/005CDUpdgy1g64zlk6j1nj30fa08dt9q.jpg)
+![参考图](https://i.loli.net/2019/08/21/ZnCj8qwT9r5yx2s.jpg)
 
 ```
 LEFT-ROTATE(T x)
@@ -164,17 +164,17 @@ LEFT-ROTATE(T x)
 
 右旋的过程是将x的左子树绕x顺时针旋转，使得x的左子树成为x的父亲，同时修改相关节点的引用。旋转之后，二叉查找树的属性仍然满足。
 
-![右旋转](https://ws1.sinaimg.cn/large/005CDUpdgy1g659pb8h7pj30m80p9wgo.jpg)
+![右旋转](https://i.loli.net/2019/08/21/23aFgVvU9qBylm4.jpg)
 
 给出一个我认为很生动的例子过程：
 
-![右旋](https://ws1.sinaimg.cn/large/005CDUpdgy1g659qd5vqzj310o11xaah.jpg)
+![右旋](https://i.loli.net/2019/08/21/MzJh19SVBAsY67c.jpg)
 
-![右旋动画](https://ws1.sinaimg.cn/large/005CDUpdgy1g659qyeqf9g30cs09wnpd.gif)
+![右旋动画](https://i.loli.net/2019/08/21/RxfrnA2vMCia7Iw.gif)
 
 在算法导论上，给出了下面的伪代码，来理解“红黑树T的节点y进行右旋”是如何进行的。参考下面的示意图：
 
-![示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g659s5owucj30fa08d75a.jpg)
+![示意图](https://i.loli.net/2019/08/21/x2jhCGKUMXVOnSZ.jpg)
 
 ```
 RIGHT-ROTATE(T, y)
@@ -233,7 +233,7 @@ RIGHT-ROTATE(T, y)
 
 仔细观察上面"左旋"和"右旋"的示意图。我们能清晰的发现，它们是对称的。无论是左旋还是右旋，被旋转的树，在旋转前是二叉查找树，并且旋转之后仍然是一颗二叉查找树。
 
-![左旋与右旋](https://ws1.sinaimg.cn/large/005CDUpdgy1g65bjxcurzj30fa08d0u2.jpg)
+![左旋与右旋](https://i.loli.net/2019/08/21/gGxcihPjTkIWAFX.jpg)
 
 **左旋示意图**(以x节点进行左旋)：(这里可能会有一点点误解，看上面吧)
 ```java
@@ -397,7 +397,7 @@ RB-INSERT-FIXUP(T , z)
 
 给出示意图如下所示：
 
-![Case1 示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g65zmqqtk1j31tj0nh770.jpg)
+![Case1 示意图](https://i.loli.net/2019/08/21/wRKUsSPFBVEh5Hl.jpg)
 
 **2. (Case 2)叔叔是黑色，且当前节点是右孩子**
 
@@ -417,7 +417,7 @@ RB-INSERT-FIXUP(T , z)
 
 给出示意图如下所示：
 
-![Case2 示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g660cq08tyj31uh0nadia.jpg)
+![Case2 示意图](https://i.loli.net/2019/08/21/U82nRJhSf1oqdKV.jpg)
 
 **3. (Case 3)叔叔是黑色，且当前节点是左孩子**
 
@@ -436,7 +436,7 @@ S和F都为红色，违背了红黑树的“特性4”，我们可以将F由红�
 
 给出示意图如下所示：
 
-![Case3 示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g671mffinqj323m0nagoa.jpg)
+![Case3 示意图](https://i.loli.net/2019/08/21/eAvU29LdHPKkFJu.jpg)
 
 给出添加修正操作的实现代码如下所示：
 
@@ -661,7 +661,7 @@ RB-DELETE-FIXUP(T, x)
 
 给出示意图如下所示：
 
-![Case1 示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g66kh0qztuj31if0naaau.jpg)
+![Case1 示意图](https://i.loli.net/2019/08/21/BlLMkjf6ip9q3Fa.jpg)
 
 **2. (Case 2)x是"黑+黑"节点，x的兄弟节点是黑色，x的兄弟节点的两个孩子都是黑色**
 
@@ -677,7 +677,7 @@ RB-DELETE-FIXUP(T, x)
 
 给出示意图如下所示：
 
-![Case2 示意图](https://ws1.sinaimg.cn/large/005CDUpdly1g66ktzpod4j31nq0nadgk.jpg)
+![Case2 示意图](https://i.loli.net/2019/08/21/MgQzqWaiGXNdrLl.jpg)
 
 **3. (Case 3)x是"黑+黑"节点，x的兄弟节点是黑色，x的兄弟节点的左孩子是红色的，右孩子是黑色的**
 
@@ -693,7 +693,7 @@ RB-DELETE-FIXUP(T, x)
 
 给出示意图如下所示：
 
-![Case3 示意图](https://ws1.sinaimg.cn/large/005CDUpdly1g66lg03f0yj31q60nagmd.jpg)
+![Case3 示意图](https://i.loli.net/2019/08/21/dyFHCapoGRTzEfv.jpg)
 
 **4. (Case 4)x是"黑+黑"节点，x的兄弟节点是黑色，x的兄弟节点的右孩子是红色的，x的兄弟节点的左孩子任意颜色**
 
@@ -719,7 +719,7 @@ RB-DELETE-FIXUP(T, x)
 
 给出示意图如下所示：
 
-![Case4 示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g66mekmoyjj31q60nawfb.jpg)
+![Case4 示意图](https://i.loli.net/2019/08/21/RItfVQHoFwXZPBc.jpg)
 
 给出删除修正操作的实现代码如下所示：
 
@@ -796,7 +796,7 @@ RB-DELETE-FIXUP(T, x)
 
 给出删除操作的一个综合例子：
 
-![删除案例](https://ws1.sinaimg.cn/large/005CDUpdgy1g66mg2nnwuj312w1rfna7.jpg)
+![删除案例](https://i.loli.net/2019/08/21/dMhAGXTljaD58RC.jpg)
 
 至此，以上就是红黑树的核心内容。
 
