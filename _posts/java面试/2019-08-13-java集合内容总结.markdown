@@ -1,0 +1,1389 @@
+---
+layout:      post
+title:       "Java集合"
+subtitle:    " \"Java集合框架总结\""
+date:        2019-08-12 10:44:26
+author:      "Ming"
+catalog: true
+header-img:  "img/post-bg-heaven.jpg"
+tags:
+    - JAVA
+    - Collection
+    - Map
+---
+
+> "In this world there are only two tragedies. One is not getting what one wants, and the other is getting it."
+
+## 集合框架
+
+> Java集合框架(Java Collections Framework)是由Java类库的一系列接口、抽象类以及具体实现类组成(为了保存数量不确定的数据，以及保存具有映射关系的数据，Java提供了集合类)。集合就是把一组数据对象组织到一起，然后再根据不同的需求操纵这些数据。
+
+集合类与数组的异同：
+
+- 长度区别：数组的长度是固定的，而集合的长度是可变的；
+- 内容不同：数组存储的是同一种类型的元素，而集合可以存储不同类型的元素；
+- 数据类型：数组可以存储基本数据类型，也可以存储引用数据类型，而集合只能存储引用类型数据。
+
+java集合框架位于java.util包下，主要有三个大类：Collection接口、Map接口以及对集合进行操作的工具类。下面给出整体集合框架图如下：
+
+![java集合框架](https://ws1.sinaimg.cn/large/005CDUpdgy1g5qxrhsqnog30hv0gzwet.gif)
+
+从上面的集合框架图可以看出，Java集合框架主要包括两种类型的容器：集合(Collection)，存储一个元素集合；另一种是图(Map)，存储键值对映射。集合框架是一个用来代表和操纵集合的统一架构。所有的集合框架都包含如下内容：
+- **接口**: 是代表集合的抽象数据类型。例如Collection、List、Set、Map等。定义多个接口，是为了能以不同的方式去操纵集合对象。
+- **实现类**：是集合接口的具体实现。从本质上讲，它们是可重复使用的数据结构。例如：ArrayList, LinkedList, HashSet, HashMap.
+- **算法**： 是实现集合接口的对象里的方法执行的一些有用的计算，例如：搜索和排序。 
+
+### 1. Collection接口
+
+![Collection集合](https://ws1.sinaimg.cn/large/005CDUpdly1g1jha52x8hj30ou0f8gm4.jpg)
+
+从上图我们可以看出，Collection接口是List,Set和Queue接口的父接口，其是集合层次结构的根接口，里面的方法有：
+
+```java
+int size();
+boolean isEmpty();
+boolean contains(Object o);
+Iterator<E> iterator();
+Object[] toArray();
+<T> T[] toArray(T[] a); //接收一个参数数组，这个参数数组足够大时，就把集合中的元素都填入这个数组；当arrayToFill不够大时，就会创建一个大小与集合相同，类型与arrayToFill相同的数组，并填入集合元素
+boolean add(E e);
+boolean remove(Object o);
+boolean containsAll(Collection<?> c);
+boolean addAll(Collection<? extends E> c);
+boolean removeAll(Collection<?> c);
+default boolean removeIf(Predicate<? super E> filter){...} //默认方法
+boolean retainAll(Collection<?> c); //仅保留给定集合c中的元素(optional operation)
+void clear(); //清空集合
+default Spliterator<E> spliterator(){...}; //返回集合的Spliterator
+default Stream<E> stream(){...};
+default Stream<E> parallelStream(){...};
+boolean equals(Object o); //继承自Object
+int hashCode(); //继承自Object
+```
+
+我们来看一下Collection<E>接口的迭代器：
+```java
+public interface Iterable<T>{
+    Iterator<T> iterator();
+
+    
+    default void forEach(Consumer<? super T> action) {
+        Objects.requireNonNull(action);
+        for (T t : this) {  //增强的foreach语法糖底层是通过Iterator，即迭代器实现的
+            action.accept(t);
+        }
+    }
+
+    default Spliterator<T> spliterator() {
+        return Spliterators.spliteratorUnknownSize(iterator(), 0);
+    }
+}
+```
+抛去默认方法，这个接口只定义了一个方法，这个方法要求我们返回一个实现了Iterator<T>类型的对象，所以我们看下Iterator<T>的定义：
+
+```java
+public interface Iterator<E> { 
+  boolean hasNext(); 
+  E next(); 
+  default void remove(){...}; //删除集合里上一次next方法返回的元素
+  default void forEachRemaining(Consumer<? super E> action){...};
+}
+```
+迭代器就是我们用来遍历集合中的对象的东西。即对于集合，我们不像对原始类型数组那样通过数组索引来直接访问相应位置的元素，而是通过迭代器来遍历。这么做的好处是将对于集合类型的遍历行为与被遍历的集合对象分离，这样一来我们无需关系该集合类型的具体实现是怎么样的。只要获取这个集合对象的迭代器，便可以遍历这个集合中的对象了。而像遍历对象的顺序这些细节，全部由它的迭代器来处理。
+
+**AbstractCollection**
+
+我们知道接口在定义类型上具有其优势，但是接口不能包含实现。而对于集合这一类型，即使有再多的分类，其实现也会有一些共同之处。用抽象类继承接口，可以接管其实现功能，又不破坏接口带来的继承灵活性。其优点在《Effective Java》中有所提及：
+
+> 通过对你导出的每个重要接口都提供一个抽象的骨架实现类(AbstractInterface)，把接口和抽象类的优点结合起来，接口的作用仍然是定义类型，但是骨架实现类接管了所有与接口实现相关的工作。
+
+AbstractCollection作为Collection的骨架类，其帮我们实现了部分方法(当然包含可选操作这类抛出异常的方法)。下面简略地介绍一下AbstractCollection下的几个方法：
+
+1. **iterator()**
+
+AbstractCollection将iterator()的实现交给子类，这很正常，不同的子类将可能返回不同的iterator。iterator()是AbstractCollection访问和操作元素的唯一方式，所以它在很多方法中都会被用到。
+
+2. **contains()**
+
+contains()方法就是通过iterator()获取集合的迭代器，之后进行遍历比较，对，就是这么简单粗暴：
+
+```java
+public boolean contains(Object o) {
+        Iterator<E> it = iterator();
+        if (o==null) {
+            while (it.hasNext())
+                if (it.next()==null)
+                    return true;
+        } else {
+            while (it.hasNext())
+                if (o.equals(it.next()))
+                    return true;
+        }
+        return false;
+    }
+```
+对于特殊结构和搜索需求的大数据量的集合子类，我们可以override这个方法，提供更加的快速的查找方法。比如，针对排序的集合，我们可以用二分法进行元素的查找。值得学习的是，Collection是允许null作为元素存在的，我们在使用和扩展中应该注意到这一点，增加对null特殊情况的判断。
+
+3. **remove()**
+
+类似contain()，remove()也依赖于交给子类实现的iterator()：
+
+```java
+public boolean remove(Object o) {
+        Iterator<E> it = iterator();
+        if (o==null) {
+            while (it.hasNext()) {
+                if (it.next()==null) {
+                    it.remove();
+                    return true;
+                }
+            }
+        } else {
+            while (it.hasNext()) {
+                if (o.equals(it.next())) {
+                    it.remove();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+```
+removeAll、retainAll、clear乃至Collection接口新增的default方法removeIf，都是通过iterator遍历以及移除元素，将具体的操作交给子类提供的iterator执行。
+在remove的源码中，我们可以发现，Collection确实没有针对线程安全做额外的操作，以保证执行速度。我们也应该牢记，Collection框架不是线程安全的，对于多线程的情况，应该用java.util.concurrent包。
+
+**总结**
+
+Collection接口是集合层级结构的根接口。一个集合代表了一组对象，这组对象被称为集合的元素。一些集合允许重复的元素而其他不允许；一些是有序的而一些是无序的。Java类库中并未提供任何对这个接口的直接实现，而是提供了对于它的更具体的子接口的实现（比如Set接口和List接口）。Collection接口的直接子接口主要有三个：List接口、Set接口和Queue接口。下面我们具体来介绍这三个接口及其具体实现类。
+
+#### 1.1 List接口
+
+> List是一个有序的集合类型(也被称为序列)。使用List接口可以精确地控制每个元素被插入的位置，并且可以通过元素在列表中的索引来访问指定位置的集合元素。List运行重复的元素，并且在允许null元素的情况下也允许多个null元素。
+
+List接口定义了下面的方法:
+```java
+default void replaceAll(UnaryOperator<E> operator){...}; //通过UnaryOperator来替换所有集合元素
+default void sort(Comparator<? super E> c){...};  //通过一个Comparator对象来控制元素排序
+E get(int index);
+E set(int index, E element);
+void add(int index, E element);
+E remove(int index);
+int indexOf(Object o);
+int lastIndexOf(Object o); //返回对象o在List集合中最后一次出现的位置
+ListIterator<E> listIterator(int index);
+ListIterator<E> listIterator();
+List<E> subList(int fromIndex, int toIndex);
+default Spliterator<E> spliterator(){...};
+```
+
+上面有一个listIterator方法，它返回一个列表迭代器,ListIterator接口继承了Iterator接口，提供了专门操作List的方法。ListIterator<E>接口定义的方法主要包含：
+
+```java
+
+void add(E e) //在当前位置添加一个元素
+boolean hasNext() //返回ture如果还有下个元素（在正向遍历列表时使用）
+boolean hasPrevious() //反向遍历列表时使用
+E next() //返回下一个元素并将cursor（也就是指针)前移一个位置
+int nextIndex() //返回下一次调用next方法将返回的元素的索引
+E previous() //返回前一个元素并将cursor向前移动一个位置
+int previousIndex() //返回下一次调用previous方法将返回的元素的索引void remove() //从列表中移除最近一次调用next方法或previous方法返回的元素
+void set(E e) //用e替换最近依次调用next或previous方法返回的元素
+```
+
+拿ListIterator与普通的Iterator进行对比，不难发现ListIterator增加了向前迭代的功能(Iterator只能向后迭代)，而且ListIterator还可以通过add()方法向List集合中添加元素(Iterator只能删除元素)。
+
+java类库中主要的实现了List<E>接口的类有：ArrayList,LinkedList,Vector等等。
+
+##### 1.1.1 ArrayList源码解析
+
+ArrayList是顺序容器，即容器存放的数据与放进去的顺序相同，允许放入null元素，底层是通过`数组`实现的。除了该类未实现同步外，其余跟Vector大致相同。它相当于一个动态数组，内部的数组大小是可以根据元素实际情况自动分配，也可以自动分配大小。因为ArrayList并不是线程安全的，所以需要多线程并发操作应当使用CopyOnWriteArrayList(读远大于写的情况),或者使用Collections工具类的synchronizedList()对其包装。
+
+**1.类定义**
+
+```java
+public class ArrayList<E> extends AbstractList<E>
+         implements List<E>, RandomAccess, Cloneable, java.io.Serializable
+```
+ArrayList继承了AbstractList并且实现了List接口，所以具有添加、删除、修改和遍历等功能；实现了RandomAccess接口，因此支持随机访问，这是理所当然的，因为ArrayList是基于数组实现的；实现了Cloneable接口，支持clone；实现了Serializable接口，可以被序列化。
+
+**2.主要字段**
+
+```java
+/**
+ * 默认初始容量
+ */
+private static final int DEFAULT_CAPACITY = 10;
+
+/**
+ * 用于ArrayList空实例的共享空数组实例
+ */
+private static final Object[] EMPTY_ELEMENTDATA = {};
+
+/**
+ * 用于默认大小空实例的共享空数组实例。我们将this（DEFAULTCAPACITY_EMPTY_ELEMENTDATA）
+ * 和EMPTY_ELEMENTDATA区别开来，以便在添加第一个元素时知道数组大小要扩容为多少多少。
+ */
+private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
+
+/**
+ * 存储 ArrayList 元素的数组缓冲区。ArrayList 的容量是此数组缓冲区的长度。
+ * 当第一个元素添加进空数组时候 elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA 将会被扩容至 DEFAULT_CAPACITY
+ */
+transient Object[] elementData; // non-private to simplify nested class access
+
+/**
+ * ArrayList的数组大小（ArrayList包含的元素个数）
+ */
+private int size;
+```
+注意到此处的elementData字段是用`transient`关键字修饰的，该关键字声明数组默认不会被序列化。ArrayList 具有动态扩容特性，因此保存元素的数组不一定都会被使用，那么就没必要全部进行序列化。ArrayList 重写了 writeObject() 和 readObject() 来控制只序列化数组中有元素填充那部分内容。如下所示：
+
+```java
+    private void writeObject(java.io.ObjectOutputStream s)
+        throws java.io.IOException{
+        // Write out element count, and any hidden stuff
+        int expectedModCount = modCount;
+        s.defaultWriteObject();
+
+        // Write out size as capacity for behavioural compatibility with clone()
+        s.writeInt(size);
+
+        // Write out all elements in the proper order.
+        for (int i=0; i<size; i++) {
+            s.writeObject(elementData[i]);
+        }
+
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+    }
+
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
+        elementData = EMPTY_ELEMENTDATA;
+
+        // Read in size, and any hidden stuff
+        s.defaultReadObject();
+
+        // Read in capacity
+        s.readInt(); // ignored
+
+        if (size > 0) {
+            // be like clone(), allocate array based upon size not capacity
+            ensureCapacityInternal(size);
+
+            Object[] a = elementData;
+            // Read in all elements in the proper order.
+            for (int i=0; i<size; i++) {
+                a[i] = s.readObject();
+            }
+        }
+    }
+```
+> 当对象中自定义了 writeObject 和 readObject 方法时，JVM 会调用这两个自定义方法来实现序列化与反序列化.
+
+**3.构造函数**
+
+```java
+/**
+ * 根据指定的容量初始化空的列表，注意当容量为0时，使用的是EMPTY_ELEMENTDATA
+ */
+public ArrayList(int initialCapacity) {
+    if (initialCapacity > 0) {
+        this.elementData = new Object[initialCapacity];
+    } else if (initialCapacity == 0) {
+        this.elementData = EMPTY_ELEMENTDATA;
+    } else {
+        throw new IllegalArgumentException("Illegal Capacity: "+
+                                               initialCapacity);
+    }
+}
+
+/**
+ * 初始化容量为 10 的空列表
+ */
+public ArrayList() {
+    this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+}
+
+/**
+* 可以传入一个Collection集合，该构造方法会将这个集合里面所有元素作为ArrayList的初始元素。
+* 首先该方法会调用toArray()方法获取该集合所有元素的引用副本，如果集合不为空且数组类型不为Object[]，则将这些元素的引用复制到elementData数组。
+*
+* @param c the collection whose elements are to be placed into this list
+* @throws NullPointerException if the specified collection is null
+*/
+public ArrayList(Collection<? extends E> c) {
+    elementData = c.toArray();
+    if ((size = elementData.length) != 0) {
+        // c.toArray might (incorrectly) not return Object[] (see 6260652)
+        if (elementData.getClass() != Object[].class)
+            elementData = Arrays.copyOf(elementData, size, Object[].class);
+    } else {
+        // replace with empty array.
+        this.elementData = EMPTY_ELEMENTDATA;
+    }
+}
+```
+注意到对于无参构造器使用的是`DEFAULTCAPACITY_EMPTY_ELEMENTDATA`,而对于带参数指定容量大小的构造器，当`initialCapacity`为0时，使用的是`EMPTY_ELEMENTDATA`;另外，在无参数构造器的注释中——"初始化容量为10的空列表",我们不禁有以下疑惑：
+- `EMPTY_ELEMENTDATA`和`DEFAULTCAPACITY_EMPTY_ELEMENTDATA`都是空的对象数组，为什么在构造器中要对其进行区分;
+- 无参构造器中，只是把空的对象数组赋值给了`elementData`，为什么注释称声明了长度为10的空数组。
+
+对于上面问题，将在后面进行回答。
+
+**4.存储和扩容**
+
+在讲解add()方法之前，我们先来看一下ArrayList中提供的一个public的ensureCapacity(int minCapacity)方法：(当向集合中添加大量元素时，可以使用该方法一次性增加容量，减少重分配的次数，从而提升性能。)
+
+```java
+/**
+ * 增加 ArrayList 实例的容量，确保 ArrayList 实例能存储 minCapacity 个元素
+ */
+public void ensureCapacity(int minCapacity) {
+    int minExpand = (elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA)
+        // any size if not default element table
+        ? 0
+        // larger than default for default empty table. It's already
+        // supposed to be at default size.
+        : DEFAULT_CAPACITY;
+
+    if (minCapacity > minExpand) {
+        ensureExplicitCapacity(minCapacity);
+    }
+}
+```
+当ArrayList是个空列表并且 __elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA__ 时，minExpand设置为DEFAULT_CAPACITY(10)，此时如果minCapacity 小于 minExpand，那么不马上进行扩容操作，在进行add操作时候，会初始化一个容量为 10 的空列表，这样不仅符合无参构造器中的注释，并且保证了 ArrayList 实例能够存储 minCapacity 个元素。
+
+下面，进入正题add()方法，介绍其相应的逻辑：
+
+```java
+public boolean add(E e) {
+    ensureCapacityInternal(size + 1);  // Increments modCount!!
+    elementData[size++] = e;
+    return true;
+}
+
+private void ensureCapacityInternal(int minCapacity) {
+    if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+		minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
+    }
+	ensureExplicitCapacity(minCapacity);
+}
+
+private void ensureExplicitCapacity(int minCapacity) {
+    modCount++;
+    //扩容操作
+	if (minCapacity - elementData.length > 0)
+        grow(minCapacity);
+}
+
+/**
+ * 允许分配的最大数组大小
+ *一些 VM 会在数组头部储存头数据，试图尝试创建一个比 Integer.MAX_VALUE - 8 大的数组可能会产生 OOM 异常。
+ */
+private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+
+/**
+ * 增加 ArrayList 实例的容量，确保 ArrayList 实例能存储 minCapacity 个元素
+ */
+private void grow(int minCapacity) {
+	int oldCapacity = elementData.length;
+	//相当于oldCapacity的1.5倍
+    int newCapacity = oldCapacity + (oldCapacity >> 1);
+    if (newCapacity - minCapacity < 0)
+        newCapacity = minCapacity;
+    if (newCapacity - MAX_ARRAY_SIZE > 0)
+        newCapacity = hugeCapacity(minCapacity);
+    //调用工具类Arrays的copyOf扩容
+    elementData = Arrays.copyOf(elementData, newCapacity);
+}
+
+private static int hugeCapacity(int minCapacity) {
+	//小于0代表minCapacity溢出
+	if (minCapacity < 0)
+        throw new OutOfMemoryError();
+    return (minCapacity > MAX_ARRAY_SIZE) ? Integer.MAX_VALUE : MAX_ARRAY_SIZE;
+}
+
+```
+在真正添加元素之前，首先确保已有的容量在已使用长度加1后还能存入下一个元素，调用`ensureCapacityInternal`方法，如果elementData指向了DEFAULTCAPACITY_EMPTY_ELEMENTDATA(证明是无参数构造器初始化的实例)，那么会默认给elementData分配一个长度为10的数组(符合无参数构造器的注释，因此这里也就解决了上面的第一个疑问，因为它确确实实初始化了一个大小为 10 的空列表，只是不是一开始就初始化，而是使用了延迟初始化的方式，在add的时候才进行初始化。)
+
+接着会调用`ensureExplicitCapacity`方法，该方法首先增加计数器modCount,接着判断数组空间大小是否足够(即添加元素后数组会不会越界)，如果不够，则调用`grow()`方法。`grow()`方法的作用是给elementData分配一个新的数组并将旧的数组拷贝到这个新数组中，默认分配为原数组的1.5倍。如果分配的数组过大(超过`MAX_ARRAY_SIZE`)，则调用`hugeCapacity()`方法，如果minCapacity介于Integer.MAX_VALUE - 8到Integer.MAX_VALUE，则直接分配一个Integer.MAX_VALUE大小的数组，否则抛出OutOfMemoryError。
+
+在这里，补充一下对于上面另一个问题的回答：
+> 无参构造器使用DEFAULTCAPACITY_EMPTY_ELEMENTDAT，对于new ArrayList(0);使用的是EMPTY_ELEMENTDATA，前者是不知道需要的容量大小，后者预估元素较少。因此ArrayList对此做了区别，通过引用判断来区别用户行为，使用不同的扩容算法（扩容速度：无参：10->15->22...，有参且参数为0 ：0->1->2->3->4->6->9...)。另外，在 JDK 1.7 中，没有通过两个空数组来对用户行为进行区分，因此容量为 0 的话，会创建很多空数组new Object[0]，因此上述方式也对这种情况进行了优化。
+
+```java
+//jdk 1.7
+public ArrayList(int initialCapacity) {
+    super();
+    if (initialCapacity < 0)
+        throw new IllegalArgumentException("Illegal Capacity: "+
+                                           initialCapacity);
+    this.elementData = new Object[initialCapacity];
+}
+
+
+public ArrayList() {
+    this(10);
+}
+```
+
+add()方法还有提供了两个参数的形式，支持在指定位置添加元素：
+
+```java
+public void add(int index, E element) {
+	rangeCheckForAdd(index);
+    ensureCapacityInternal(size + 1);
+    System.arraycopy(elementData, index, elementData, index + 1, size - index);
+    elementData[index] = element;
+    size++;
+}
+private void rangeCheckForAdd(int index) {
+	if (index > size || index < 0)
+        throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+}
+private String outOfBoundsMsg(int index) {
+	return "Index: " + index + ", Size: " + size;
+}
+```
+
+该方法首先会检查数组下标，如果index越界则抛出IndexOutOfBoundsException异常。接着按add(E e)方法一样检查数组长度是否足够。然后将数组从index开始右移一个位置，再将目标元素插入到elementData[index]中。
+
+**5.方法剖析**
+
+1. size和isEmpty
+
+```java
+public int size() {
+    return size;
+}
+
+public boolean isEmpty() {
+    return size == 0;
+}
+```
+都是依靠size值，直接获取容器内元素的个数，判断是否为空集合。
+
+2. Set和Get
+
+```java
+public E set(int index, E element) {
+    rangeCheck(index); //下标越界检查
+
+    E oldValue = elementData(index);
+    elementData[index] = element;
+    return oldValue;
+}
+
+public E get(int index) {
+    rangeCheck(index);
+
+    return elementData(index);
+}
+
+@SuppressWarnings("unchecked")
+E elementData(int index) {
+    return (E) elementData[index];
+}
+```
+在操作之前都会做RangeCheck检查，如果index超过size，则会报IndexOutOfBoundsException错误。elementData的操作实际就是基于下标的访问，所以ArrayList 长于随机访问元素，复杂度为O(1)。
+
+3. Contain,indexOf,lastIndexOf
+
+```java
+//判断是否存在相同元素
+public boolean contains(Object o) {
+	return indexOf(o) >= 0;
+}
+
+//返回第一个和Object相等的元素所在的数组下标，如果不存在返回-1
+public int indexOf(Object o) {
+	if (o == null) {
+		for (int i = 0; i < size; i++)
+            if (elementData[i]==null)
+                return i;
+    } else {
+        for (int i = 0; i < size; i++)
+            if (o.equals(elementData[i]))
+                return i;
+    }
+    return -1;
+}
+
+//返回该数组最后一个和参数相等的对象
+public int lastIndexOf(Object o) {
+	if (o == null) {
+		for (int i = size-1; i >= 0; i--)
+			if (elementData[i]==null)
+				return i;
+    } else {
+        for (int i = size-1; i >= 0; i--)
+            if (o.equals(elementData[i]))
+                return i;
+    }
+    return -1;
+}
+```
+
+4. remove方法
+
+remove方法有两个重载的方法：E remove(int index) 和boolean remove(Object o):
+
+**E remove(int index)**
+
+```java
+/**
+ * 从列表中删除指定位置的元素，并将其后位置的元素向左移动
+ */
+public E remove(int index) {
+    //检查是否超过数组越界
+    rangeCheck(index);
+
+    modCount++;
+    E oldValue = elementData(index);
+
+    int numMoved = size - index - 1;
+    if (numMoved > 0)
+        System.arraycopy(elementData, index+1, elementData, index,
+                         numMoved);
+    //置null，让 GC 可以工作
+    elementData[--size] = null;
+    return oldValue;
+}
+```
+
+同样，首先检查数组下标是否越界。然后调用System.arraycopy将需要删除的元素后面所有的数组元素往前移一个位置，最后显式调用elementData[--size] = null;来通知GC：空间不足时可以将此对象进行回收。
+
+**boolean remove(Object o)**
+
+```java
+/**
+ * 删除列表中首次出现的指定的元素，若列表不存在相应元素，则不做改变
+ */
+public boolean remove(Object o) {
+    //若指定元素为 null，因其为空，没有 equals 方法，因此这两个地方做一个区分
+    if (o == null) {
+        for (int index = 0; index < size; index++)
+            if (elementData[index] == null) {
+                fastRemove(index);
+                return true;
+            }
+    } else {
+        for (int index = 0; index < size; index++)
+            if (o.equals(elementData[index])) {
+                fastRemove(index);
+                return true;
+            }
+    }
+    return false;
+}
+
+/*
+ * Private remove method that skips bounds checking and does not
+ * return the value removed.
+ */
+private void fastRemove(int index) {
+    modCount++;
+    int numMoved = size - index - 1;
+    if (numMoved > 0)
+        System.arraycopy(elementData, index+1, elementData, index,
+                         numMoved);
+    elementData[--size] = null; // clear to let GC do its work
+}
+```
+该方法传入一个Object对象，来删除集合中调用equals方法返回true的对象。如果有任意一个元素满足条件被删除则直接返回true。方法首先判断传入的Object是不是为null，如果为null，则从数组下标0开始搜索第一个为null的元素，找到后调用私有方法fastRemove（和上面remove方法同样的策略）移动数组并删除，然后返回true。如果不为null，则同样遍历数组，删除第一个equals方法返回true对象，返回true。如果没有找到符合条件的对象，返回false。
+
+5. iterator方法
+
+ArrayList的iterator方法实现是返回内部类Itr,Itr类实现了Iterator接口：
+```java
+public Iterator<E> iterator() {
+	return new Itr();
+}
+
+private class Itr implements Iterator<E> {
+    int cursor;       // 变量用于记录下一个迭代的元素的数组下标
+    int lastRet = -1; // 变量用于记录上一次返回的元素的数组下标
+    int expectedModCount = modCount; //主要用来检测在迭代器使用期间有没有修改过ArrayList，修改了之后如果调用迭代器内的next方法，则会抛出ConcurrentModificationException异常。
+
+    public boolean hasNext() {
+        return cursor != size;
+    }
+
+    @SuppressWarnings("unchecked")
+    public E next() {
+        //检查ArrayList有没有被修改过
+        checkForComodification();
+        //获取需要返回的数组下标
+        int i = cursor;
+        if (i >= size)
+            throw new NoSuchElementException();
+        Object[] elementData = ArrayList.this.elementData;
+        if (i >= elementData.length)
+            throw new ConcurrentModificationException();
+        cursor = i + 1;
+        return (E) elementData[lastRet = i];
+    }
+
+    public void remove() {
+        if (lastRet < 0)
+            throw new IllegalStateException();
+        checkForComodification();
+
+        try {
+            ArrayList.this.remove(lastRet);
+            cursor = lastRet;
+            lastRet = -1;
+            expectedModCount = modCount;
+        } catch (IndexOutOfBoundsException ex) {
+            throw new ConcurrentModificationException();
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void forEachRemaining(Consumer<? super E> consumer) {
+        Objects.requireNonNull(consumer);
+        final int size = ArrayList.this.size;
+        int i = cursor;
+        if (i >= size) {
+            return;
+        }
+        final Object[] elementData = ArrayList.this.elementData;
+        if (i >= elementData.length) {
+            throw new ConcurrentModificationException();
+        }
+         while (i != size && modCount == expectedModCount) {
+            consumer.accept((E) elementData[i++]);
+        }
+        // update once at end of iteration to reduce heap write traffic
+        cursor = i;
+        lastRet = i - 1;
+        checkForComodification();
+    }
+
+    final void checkForComodification() {
+        if (modCount != expectedModCount)
+            throw new ConcurrentModificationException();
+    }
+}
+```
+
+**6.Fail-Fast**
+
+fail-fast 机制在遍历一个集合时，当集合结构被修改，会抛出 ConcurrentModificationException。fail-fast 会在以下两种情况下抛出 Concurrent Modification Exception.
+- 单线程环境：集合被创建后，在遍历它的过程中修改了结构。注意 remove() 方法会让 expectModcount 和 modcount 相等，所以是不会抛出这个异常。
+- 多线程环境： 当一个线程在遍历这个集合，而另一个线程对这个集合的结构进行了修改。
+  
+modCount 用来记录 ArrayList 结构发生变化的次数。结构发生变化是指添加或者删除至少一个元素的所有操作，或者是调整内部数组的大小，仅仅只是设置元素的值不算结构发生变化。
+
+在进行序列化或者迭代等操作时，需要比较操作前后 modCount 是否改变，如果改变了需要抛出 Concurrent Modification Exception。
+
+**7. CopyOnWriteArrayList**
+
+我们知道ArrayList是线程不安全的，可以使用 _Collections.synchronizedList()_ ; 得到一个线程安全的 ArrayList。
+
+```java
+List<String> list = new ArrayList<>();
+List<String> synList = Collections.synchronizedList(list);
+```
+
+也可以使用concurrent并发包下的CopyOnWriteArrayList类：
+
+```java
+List<String> list = new CopyOnWriteArrayList<>();
+```
+CopyOnWriteArrayList容器即写时复制的容器。通俗的理解就是`当我们往一个容器添加元素时，不直接往当前容器添加，而是先将当前容器进行Copy，复制出一个新的容器，然后新的容器里添加元素，添加完元素之后，再将原容器的引用指向新的容器。`这样的好处是我们可以对 CopyOnWrite 容器进行并发的读，而不需要加锁，因为当前容器不会添加任何元素。所以 CopyOnWrite 容器也是一种读写分离的思想，读和写不同的容器。
+
+```java
+public boolean add(T e) {
+    final ReentrantLock lock = this.lock;
+    lock.lock();
+    try {
+        Object[] elements = getArray();
+        int len = elements.length;
+        // 复制出新数组
+        Object[] newElements = Arrays.copyOf(elements, len + 1);
+        // 把新元素添加到新数组里
+        newElements[len] = e;
+        // 把原数组引用指向新数组
+        setArray(newElements);
+        return true;
+    } finally {
+        lock.unlock();
+    }
+}
+
+final void setArray(Object[] a) {
+    array = a;
+}
+```
+
+读的时候不需要加锁，如果读的时候有多个线程正在向 ArrayList 添加数据，读还是会读到旧的数据，因为写的时候不会锁住旧的 ArrayList。
+
+```java
+public E get(int index) {
+    return get(getArray(), index);
+}
+```
+
+CopyOnWriteArrayList 在写操作的同时允许读操作，大大提高了读操作的性能，因此很适合读多写少的应用场景。但是同时也存在两个问题，即内存占用问题和数据一致性问题。
+
+内存占用问题：
+- 因为 CopyOnWrite 的写时复制机制，所以在进行写操作的时候，内存里会同时驻扎两个对象的内存，旧的对象和新写入的对象（注意：在复制的时候只是复制容器里的引用，只是在写的时候会创建新对象添加到新容器里，而旧容器的对象还在使用，所以有两份对象内存）。如果这些对象占用的内存比较大，比如说 200M 左右，那么再写入 100M 数据进去，内存就会占用 300M，那么这个时候很有可能造成频繁的 Yong GC 和 Full GC。之前我们系统中使用了一个服务由于每晚使用 CopyOnWrite 机制更新大对象，造成了每晚 15 秒的 Full GC，应用响应时间也随之变长。
+- 针对内存占用问题，可以通过压缩容器中的元素的方法来减少大对象的内存消耗，比如，如果元素全是 10 进制的数字，可以考虑把它压缩成 36 进制或 64 进制。或者不使用 CopyOnWrite 容器，而使用其他的并发容器，如 ConcurrentHashMap 。
+
+数据一致性问题：
+- CopyOnWrite 容器只能保证数据的最终一致性，不能保证数据的实时一致性。所以如果你希望写入的的数据，马上能读到，请不要使用 CopyOnWrite 容器。
+- 关于 C++ 的 STL 中，曾经也有过 Copy-On-Write 的玩法，参见陈皓的《C++ STL String类中的Copy-On-Write》，后来，因为有很多线程安全上的事，就被去掉了。
+
+**8.总结**
+
+- 底层数组实现，使用默认构造方法初始化出来的容量是10
+- 扩容的长度是在原长度基础上加二分之一
+- 实现了RandomAccess接口，底层又是数组，get读取元素性能很好
+- 线程不安全，所有的方法均不是同步方法也没有加锁，因此多线程下慎用
+- 顺序添加很方便
+- 删除和插入需要复制数组 性能很差（可以使用LinkindList）
+
+参考文章：
+
+[ArrayList源码分析](https://www.cnblogs.com/bingyang-py/p/8286632.html)
+
+[Java——ArrayList源码解析](https://www.cnblogs.com/ZhaoxiCheung/p/Java-ArrayList-Source-Analysis.html)
+
+[java.util.ArrayList源码解析](https://blog.csdn.net/abc123lzf/article/details/82154383)
+
+[和我一起读Java8 ArrayList源码](https://www.jianshu.com/p/ab948d4ea01b)
+
+[Java -- 基于JDK1.8的ArrayList源码分析](https://www.cnblogs.com/wjtaigwh/p/9856951.html)
+
+##### 1.1.2 Vector源码分析
+
+Vector与ArrayList类似，内部同样维护一个数组，方法与ArrayList大致一样，只是加上了synchronized关键字，保证其线程安全。
+
+```java
+public synchronized boolean add(E e) {
+    modCount++;
+    ensureCapacityHelper(elementCount + 1);
+    elementData[elementCount++] = e;
+    return true;
+}
+
+public synchronized E get(int index) {
+    if (index >= elementCount)
+        throw new ArrayIndexOutOfBoundsException(index);
+    return elementData(index);
+}
+```
+
+既然Vector和ArrayList既然都是数组实现，它们到底有什么区别呢？通过源码可以总结出以下两个区别：
+- Vector的所有公有方法都是有synchronized关键字的，即每一个方法都是同步的，所以在使用起来效率会非常低，但是保证了线程安全；而ArrayList的全部方法都是非同步的，所以相对Vector的效率会更高，所以它是线程不安全的；
+- ArrayList在每次扩容时都是增加当前容量的1.5倍，而Vector可以指定增长因子，如果该增长因子指定了，那么扩容的时候会每次新的数组大小会在原数组的大小基础上加上增长因子；如果不指定增长因子，那么每次扩容时都是增加当前容量的2倍。
+
+**1. 变量介绍**
+
+```java
+    // Vector 的操作就是基于这个数组来实现的：
+    protected Object[] elementData;
+    
+    // Vector 中的元素数量
+    protected int elementCount;
+
+    // Vector 的增量，用它来判断需要扩容多少
+    protected int capacityIncrement;
+
+    //某些 JVM 会在数组的前几位保留一些信息（具体的也不晓得）
+    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+```
+
+**2. 构造函数**
+
+```java
+    // 使用给定的初始容量和增量来创造一个空的 Vector
+    public Vector(int initialCapacity, int capacityIncrement) {
+        super();
+        if (initialCapacity < 0)
+            //容量为负
+            throw new IllegalArgumentException("Illegal Capacity: "+
+                                               initialCapacity);
+        //根据容量创造数组
+        this.elementData = new Object[initialCapacity];
+        this.capacityIncrement = capacityIncrement;
+    }
+
+    // 使用给定的容量来创造一个空的 Vector,增量设置为0
+    public Vector(int initialCapacity) {
+        this(initialCapacity, 0);
+    }
+
+    // 不带参数构造一个空的vector
+    public Vector() {
+        this(10);
+    }
+
+    // 创造一个带有其他容器元素的 Vector
+    public Vector(Collection<? extends E> c) {
+    elementData = c.toArray();
+    elementCount = elementData.length;
+    // c.toArray might (incorrectly) not return Object[] (see 6260652)
+    if (elementData.getClass() != Object[].class)
+        elementData = Arrays.copyOf(elementData, elementCount, Object[].class);
+    }
+```
+
+**3. 方法**
+
+关于Vector类的具体方法，增删查改与ArrayList大致，类似，不再赘述，下面主要看看扩容机制的函数实现：
+
+```java
+    public synchronized void ensureCapacity(int minCapacity) {
+        if (minCapacity > 0) {
+            modCount++;
+            ensureCapacityHelper(minCapacity);
+        }
+    }
+
+    private void ensureCapacityHelper(int minCapacity) {
+        // overflow-conscious code
+        if (minCapacity - elementData.length > 0)
+            grow(minCapacity);
+    }
+
+    //先确定需要扩容多少，在方法最后才进行扩容
+    private void grow(int minCapacity) {
+        // overflow-conscious code
+        //现有的容量
+        int oldCapacity = elementData.length;
+        //如果增量大于0，就按增量来扩容，否则就扩容至原来的2倍容量
+        int newCapacity = oldCapacity + ((capacityIncrement > 0) ?
+                                         capacityIncrement : oldCapacity);
+        //如果扩容之后的容量还是小于给定的容量，则按照给定容量扩容
+        if (newCapacity - minCapacity < 0)
+            newCapacity = minCapacity;
+        if (newCapacity - MAX_ARRAY_SIZE > 0)
+            newCapacity = hugeCapacity(minCapacity);
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }
+
+    private static int hugeCapacity(int minCapacity) {
+        if (minCapacity < 0) // overflow
+            throw new OutOfMemoryError();
+        return (minCapacity > MAX_ARRAY_SIZE) ?
+            Integer.MAX_VALUE :
+            MAX_ARRAY_SIZE;
+    }
+```
+
+此外，Vector有一种新的遍历方法，`public Enumeration<E> elements()`，其返回一个Enumeration对象的序列。Enumeration只有两个方法，hasMoreElements()和nextElement(),它只能从首个元素遍历到最后一个元素，并不能根据位置拿到具体的元素。
+
+```java
+    public Enumeration<E> elements() {
+        return new Enumeration<E>() {
+            int count = 0;
+
+            public boolean hasMoreElements() {
+                return count < elementCount;
+            }
+
+            public E nextElement() {
+                synchronized (Vector.this) {
+                    if (count < elementCount) {
+                        return elementData(count++);
+                    }
+                }
+                throw new NoSuchElementException("Vector Enumeration");
+            }
+        };
+    }
+```
+
+**4. Vector与Collections.synchronizedList区别**
+
+Vector是java.util包中的一个类。 SynchronizedList是java.util.Collections中的一个静态内部类。在多线程的场景中可以直接使用Vector类，也可以使用Collections.synchronizedList(List list)方法来返回一个线程安全的List。那么，到底SynchronizedList和Vector有没有区别，为什么java api要提供这两种线程安全的List的实现方式呢？下面我们来看一下synchronizedList的部分源码：
+
+```java
+static class SynchronizedList<E> extends SynchronizedCollection<E> implements List<E> {
+    
+    final List<E> list;
+
+    SynchronizedList(List<E> list) {
+        super(list);
+        this.list = list;
+    }
+    //构造函数可以传入指定的锁对象
+    SynchronizedList(List<E> list, Object mutex) {
+        super(list, mutex);
+        this.list = list;
+    }
+
+    public E get(int index) {
+        synchronized (mutex) {return list.get(index);}
+    }
+
+    public void add(int index, E element) {
+        synchronized (mutex) {list.add(index, element);}
+    }
+
+    public E remove(int index) {
+        synchronized (mutex) {return list.remove(index);}
+    }
+    ...
+}
+```
+综合对比SynchronizedList源码与Vector源码，我们可以看出：
+- Vector使用同步方法实现, synchronizedList使用同步代码块实现
+- 两者的扩容数组容量方式不一样(两者在扩容方面的差别就是ArrayList和Vector的差别)
+
+但是， SynchronizedList中 listlterator方法并没有做同步处理, 但是在Vector却对该方法加了方法锁. 所以, 在使用SynchronizedList进行遍历的时候要手动加锁.
+
+```java
+    public ListIterator<E> listIterator() {
+        return list.listIterator(); // Must be manually synched by user
+    }
+
+    public ListIterator<E> listIterator(int index) {
+        return list.listIterator(index); // Must be manually synched by user
+    }
+```
+
+**5. Vector的子类Stack源码分析**
+
+Stack表示先进后出(FILO, First In Last Out)的堆栈，是一种常见的数据结构。Stack继承了Vector，所以Stack也是通过数组实现的，而非链表。Stack的源码很简单，下面我们来具体分析一下：
+
+```java
+package java.util;
+
+public class Stack<E> extends Vector<E> {
+   
+    // 构造函数
+    public Stack() {
+    }
+
+    // 栈顶元素入顶
+    public E push(E item) {
+        // addElement的实现在Vector.java中
+        addElement(item);
+        return item;
+    }
+
+    // 删除栈顶元素
+    public synchronized E pop() {
+        E obj;
+        int len = size();
+        obj = peek();
+        // removeElementAt的实现在Vector.java中
+        removeElementAt(len - 1);
+        return obj;
+    }
+
+    // 返回栈顶元素，不执行删除操作
+    public synchronized E peek() {
+        int len = size();
+        if (len == 0)
+            throw new EmptyStackException();
+        return elementAt(len - 1);
+    }
+
+    // 是否为空
+    public boolean empty() {
+        return size() == 0;
+    }
+
+    // 查找元素o在栈中位置，由栈底向栈顶方向
+    public synchronized int search(Object o) {
+        int i = lastIndexOf(o);
+        if (i >= 0) {
+            return size() - i;
+        }
+        return -1;
+    }
+
+    // 版本ID
+    private static final long serialVersionUID = 1224463164541339165L;
+}
+```
+总结：
+- 执行push时(即，将元素推入栈中)，是通过将元素追加的数组的末尾中。
+- 执行peek时(即，取出栈顶元素，不执行删除)，是返回数组末尾的元素。
+- 执行pop时(即，取出栈顶元素，并将该元素从栈中删除)，是取出数组末尾的元素，然后将该元素从数组中删除。
+
+##### 1.1.3 LinkedList源码分析
+
+LinkedList是List接口的另一种实现，它的底层是基于双向链表实现的，因此它具有插入删除快而查找修改慢的特点，其类定义如下：(基于JDK1.8)
+
+```java
+public class LinkedList<E>
+    extends AbstractSequentialList<E>
+    implements List<E>, Deque<E>, Cloneable, java.io.Serializable
+```
+可以看出，LinkedList继承了AbstractSequentialList，实现了List,Deque,Cloneable,Serializable四个接口。其中，AbstractSequentialList实现了大部分List接口的方法，Deque接口定义了双端队列的操作。具体分析如下：
+- 继承了AbstractSequentialList抽象类：在遍历LinkedList的时候，官方更推荐使用顺序访问，也就是使用我们的迭代器。（因为LinkedList底层是通过一个链表来实现的）（虽然LinkedList也提供了get（int index）方法，但是底层的实现是：每次调用get（int index）方法的时候，都需要从链表的头部或者尾部进行遍历，每一的遍历时间复杂度是O(index)，而相对比ArrayList的底层实现，每次遍历的时间复杂度都是O(1)。所以不推荐通过get（int index）遍历LinkedList。至于上面的说从链表的头部后尾部进行遍历：官方源码对遍历进行了优化：通过判断索引index更靠近链表的头部还是尾部来选择遍历的方向）（所以这里遍历LinkedList推荐使用迭代器）。
+- 实现了List接口。（提供List接口中所有方法的实现）
+- 实现了Cloneable接口，它支持克隆(浅克隆),底层实现：LinkedList节点并没有被克隆，只是通过Object的clone（）方法得到的Object对象强制转化为了LinkedList,然后把它内部的实例域都置空，然后把被拷贝的LinkedList节点中的每一个值都拷贝到clone中。（后面有源码解析）。
+- 实现了Deque接口。实现了Deque所有的可选的操作。
+- 实现了Serializable接口。表明它支持序列化。（和ArrayList一样，底层都提供了两个方法：readObject（ObjectInputStream o）、writeObject（ObjectOutputStream o），用于实现序列化，底层只序列化节点的个数和节点的值）
+
+首先我们知道LinkedList是一个双向链表，但是同时也实现了List接口，因此可以根据索引值(index)来获取，更改，删除节点等。那么是如何把链表和索引值联系的呢？LinkedList是通过一个计数索引值来实现的，当我们调用get(int index)时，我们会把index和链表长度的1/2比较，如果index值小，则从链表头向后遍历；反之，如果index值大，则从链表尾遍历。其余方法原理类似。
+
+**1.基本数据结构**
+
+![数据结构](https://ws1.sinaimg.cn/large/005CDUpdly1g60dqn1q7bj30n303w3ye.jpg)
+
+如上图所示，LinkedList的本质是双向链表，LinkedList中first,last,size等成员比较重要，first是链表的头指针，last是尾指针，size是双向链表中节点的个数，链表的节点对应Node类数据结构如下(LinkedList中真正存储元素的数据结构)：
+
+```java
+    private static class Node<E> {
+        E item; //节点值
+        Node<E> next; // 指向下一个节点
+        Node<E> prev; // 指向上一个节点
+
+        Node(Node<E> prev, E element, Node<E> next) {
+            this.item = element;
+            this.next = next;
+            this.prev = prev;
+        }
+    }
+```
+
+**2.属性及构造函数**
+
+```java
+transient int size = 0;   // 节点个数
+ 
+transient Node<E> first;  // 表头
+transient Node<E> last;   // 表尾
+
+//默认构造函数
+public LinkedList() {
+}
+
+// 创建包含集合c的LinkedList
+public LinkedList(Collection<? extends E> c) {
+    this(); //调用一下空构造器
+    addAll(c);
+}
+```
+LinkedList有两个构造函数，一个是初始化一个空的实例，另外一个是传入一个集合进行初始化。在初始化的时候主要调用了addAll()方法，那么这个addAll()方法是怎样添加元素的呢？
+
+```java
+//addAll,在尾部批量添加
+public boolean addAll(Collection<? extends E> c) {
+    return addAll(size, c); //以size为插入下标，插入集合c中的所有元素
+}
+
+// 以index为插入下标，插入集合c中的所有元素
+public boolean addAll(int index, Collection<? extends E> c) {
+    checkPositionIndex(index); //检查越界[0,size]闭区间
+
+    Object[] a = c.toArray(); //将集合转换为数组
+    int numNew = a.length; //新增元素的数量
+    if(numNew == 0){ // 如果新增元素数量为0，则不增加，并返回false
+        return false;
+    }
+
+    Node<E> pred, succ; //index节点的前置节点，后置节点
+    if(index == size){ //如果插入的位置刚好在最后位置,succ则为null，原来链表的last设置为此刻的pred节点
+        succ = null;  
+        pred = last;
+    } else{
+        succ = node(index); //取出index节点，作为后置节点
+        pred = succ.prev; //前置节点是，index节点的前一个节点
+    }
+
+    //链表批量增加，是靠for循环遍历原数组，依次执行插入节点操作。对比ArrayList是通过System.arraycopy完成批量增加的
+    for(Object o : a){
+        @SuppressWarnings("unchecked") E e = (E) o; //向下转型
+        Node<E> newNode = new Node<>(pred, e, null); //以前置节点 和 元素值e，构建new一个新节点
+        if(pred == null)
+            first = newNode; //如果前置节点是空，说明是头结点
+        else
+            pred.next = newNode; //否则 前置节点的后置节点设置问新节点
+        pred = newNode; //步进，当前的节点为前置节点了，为下次添加节点做准备
+    }
+
+    if(succ == null){ //循环结束后，判断，如果后置节点是null。 说明此时是在队尾append的。
+        last = pred; //则设置尾节点
+    } else {
+        pred.next = succ; // 否则是在队中插入的节点 ，更新前置节点 后置节点
+        succ.prev = pred; //更新后置节点的前置节点
+    }
+
+    size += numNew; // 修改数量size
+    modCount++; //修改modCount
+    return true;
+}
+
+//根据index 查询出Node，
+Node<E> node(int index) {
+    // assert isElementIndex(index);
+//通过下标获取某个node 的时候，（增、查 ），会根据index处于前半段还是后半段 进行一个折半，以提升查询效率
+    if (index < (size >> 1)) {
+        Node<E> x = first;
+        for (int i = 0; i < index; i++)
+            x = x.next;
+        return x;
+    } else {
+        Node<E> x = last;
+        for (int i = size - 1; i > index; i--)
+            x = x.prev;
+        return x;
+    }
+}
+
+private void checkPositionIndex(int index) {
+    if (!isPositionIndex(index))
+        throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+}
+private boolean isPositionIndex(int index) {
+    return index >= 0 && index <= size;  //插入时的检查，下标可以是size [0,size]
+}
+```
+归纳：
+- 在addAll函数中，传入一个集合参数和插入位置，然后将集合转化为数组，然后再遍历数组，挨个添加数组的元素，但是问题来了，为什么要先转化为数组再进行遍历，而不是直接遍历集合呢？其原因是因为:`toArray的目的是保证传进来的这个集合不会被任何地方引用，也保证这个集合不会有任何机会被修改，保证了数据的安全性。`
+- 通过下标获取某个node 的时候，（add select），会根据index处于前半段还是后半段 进行一个折半，以提升查询效率.
+
+**3.核心函数分析**
+
+1. add()
+
+add()方法有两个版本，一个是add(E e)，该方法在LinkedList的末尾插入元素，因为有last指向链表末尾，在末尾插入元素的花费是常数时间。只需要简单修改几个相关引用即可；另一个是add(int index, E element)，该方法是在指定下表处插入元素，需要先通过线性查找找到具体位置，然后修改相关引用完成插入操作。
+
+![add方法](https://ws1.sinaimg.cn/large/005CDUpdgy1g60ft0tyfrj30m80c4wf5.jpg)
+
+```java
+//在尾部插入一个节点： add
+public boolean add(E e) {
+    linkLast(e);
+    return true;
+}
+
+//生成新节点 并插入到 链表尾部， 更新 last/first 节点。
+void linkLast(E e) { 
+    final Node<E> l = last; //记录原尾部节点
+    final Node<E> newNode = new Node<>(l, e, null);//以原尾部节点为新节点的前置节点
+    last = newNode;//更新尾部节点
+    if (l == null)//若原链表为空链表，需要额外更新头结点
+        first = newNode;
+    else//否则更新原尾节点的后置节点为现在的尾节点（新节点）
+        l.next = newNode;
+    size++;//修改size
+    modCount++;//修改modCount
+}
+
+//在指定下标，index处，插入一个节点
+public void add(int index, E element) {
+    checkPositionIndex(index);//检查下标是否越界[0,size]
+    if (index == size)//在尾节点后插入
+        linkLast(element);
+    else//在中间插入
+        linkBefore(element, node(index));
+}
+//在succ节点前，插入一个新节点e
+void linkBefore(E e, Node<E> succ) {
+    // assert succ != null;
+     //保存后置节点的前置节点
+    final Node<E> pred = succ.prev;
+    //以前置和后置节点和元素值e 构建一个新节点
+    final Node<E> newNode = new Node<>(pred, e, succ);
+    //新节点new是原节点succ的前置节点
+    succ.prev = newNode;
+    if (pred == null)//如果之前的前置节点是空，说明succ是原头结点。所以新节点是现在的头结点
+        first = newNode;
+    else//否则构建前置节点的后置节点为new
+        pred.next = newNode;
+    size++;//修改数量
+    modCount++;//修改modCount
+}
+
+```
+
+2. remove()
+
+remove()方法也有两个版本，一个是删除跟指定元素相等的第一个元素remove(Object o)，另一个是删除指定下标处的元素remove(int index)。
+
+![remove](https://ws1.sinaimg.cn/large/005CDUpdgy1g60g1pgb8oj30m80ftgmj.jpg)
+
+```java
+//删：remove目标节点
+public E remove(int index) {
+    checkElementIndex(index);//检查是否越界 下标[0,size)
+    return unlink(node(index));//从链表上删除某节点
+}
+
+//从链表上删除x节点
+E unlink(Node<E> x) {
+// assert x != null;
+    final E element = x.item; //当前节点的元素值
+    final Node<E> next = x.next; //当前节点的后置节点
+    final Node<E> prev = x.prev;//当前节点的前置节点
+
+    if (prev == null) { //如果前置节点为空(说明当前节点原本是头结点)
+        first = next;  //则头结点等于后置节点 
+    } else { 
+        prev.next = next;
+        x.prev = null; //将当前节点的 前置节点置空
+    }
+
+    if (next == null) {//如果后置节点为空（说明当前节点原本是尾节点）
+        last = prev; //则 尾节点为前置节点
+    } else {
+        next.prev = prev;
+        x.next = null;//将当前节点的 后置节点置空
+    }
+
+    x.item = null; //将当前元素值置空
+    size--; //修改数量
+    modCount++;  //修改modCount
+    return element; //返回取出的元素值
+}
+
+//因为要考虑 null元素，也是分情况遍历
+public boolean remove(Object o) {
+    if (o == null) {//如果要删除的是null节点(从remove和add 里 可以看出，允许元素为null)
+        //遍历每个节点 对比
+        for (Node<E> x = first; x != null; x = x.next) {
+            if (x.item == null) {
+                unlink(x);
+                return true;
+            }
+        }
+    } else {
+        for (Node<E> x = first; x != null; x = x.next) {
+            if (o.equals(x.item)) {
+                unlink(x);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+```
+删除操作也一定会修改modCount。 按下标删，也是先根据index找到Node，然后去链表上unlink掉这个Node。 按元素删，会先去遍历链表寻找是否有该Node，考虑到允许null值，所以会遍历两遍，然后再去unlink它。
+
+3. set()
+
+```java
+public E set(int index, E element) {
+    checkElementIndex(index); //检查越界[0,size)
+    Node<E> x = node(index);//取出对应的Node
+    E oldVal = x.item;//保存旧值 供返回
+    x.item = element;//用新值覆盖旧值
+    return oldVal;//返回旧值
+}
+```
+改也是先根据index找到Node，然后替换值，改不修改modCount的值。
+
+4. get()
+
+```java
+//根据index查询节点
+public E get(int index) {
+    checkElementIndex(index);//判断是否越界 [0,size)
+    return node(index).item; //调用node()方法 取出 Node节点，
+}
+```
+查不修改modCount。
+
+**4.栈和队列的操作**
+
+```java
+/**
+     * 检索头结点元素
+     */
+    public E peek() {
+        final Node<E> f = first;
+        return (f == null) ? null : f.item;
+    }
+
+    /**
+     * 与peek()作用一样
+     */
+    public E element() {
+        return getFirst();
+    }
+
+    /**
+     * 删除并返回第一个节点
+     */
+    public E poll() {
+        final Node<E> f = first;
+        return (f == null) ? null : unlinkFirst(f);
+    }
+
+    /**
+     * 与poll()作用一样
+     */
+    public E remove() {
+        return removeFirst();
+    }
+
+    /**
+     * 在尾部添加节点与add()一样
+     */
+    public boolean offer(E e) {
+        return add(e);
+    }
+
+    // Deque operations
+    /**
+     * 在头部插入节点
+     */
+    public boolean offerFirst(E e) {
+        addFirst(e);
+        return true;
+    }
+```
+
+**5.总结**
+
+- LinkedList是通过双向链表实现的，内部有节点的数据结构；
+- LinkedList实现了Deque，而Deque接口定义了在队列两端访问元素的方法，有增加，删除，获取第一个元素等方法；
+- LinkedList可以作为FIFO先进先出的队列，下列方法等效。
+
+队列方法 | LinkedList等效方法
+--- | ---
+add(e) | addLast(e)
+offer(e) | offerLast(e)
+remove() | removeFirst()
+poll() | pollFirst()
+element() | getFirst()
+peek() | peekFirst()
+
+- LinkedList可以作为LIFO后进先出的栈，下列方法等效
+
+栈方法 | LinkedList等效方法
+--- | ---
+push(e) | addFirst(e)
+pop() | removeFirst()
+peek() | peekFirst()
+
+- LinkedList无需提前指定容量，因为基于链表操作，集合的容量随着元素的加入自动增加。
+- LinkedList删除元素后集合占用的内存自动缩小，无需像ArrayList一样调用trimToSize()方法。
+- LinkedList的所有方法没有进行同步，因此它也不是线程安全的，应该避免在多线程环境下使用。
+
+**参考博文**：
+
+[LinkedList源码解析](https://blog.csdn.net/tangyuan_sibal/article/details/89789385)
+
+[和我一起读Java8 LinkedList源码](https://www.jianshu.com/p/4bbfd9086904)
+
+[【集合框架】JDK1.8源码分析之LinkedList（七）](https://www.cnblogs.com/leesf456/p/5308843.html)
+
+[面试必备：LinkedList源码解析（JDK8）](https://blog.csdn.net/zxt0601/article/details/77341098)
+
+[LinkedList源码解析（基于JDK1.8）](https://blog.csdn.net/m0_37884977/article/details/80467658)
+
+[Java集合系列03之LinkedList源码分析](http://hengtao.top/2018/09/24/Java%E9%9B%86%E5%90%88%E7%B3%BB%E5%88%9703%E4%B9%8BLinkedList%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/)
+
+#### 1.2 Set接口
+
+> Set是一个不允许出现重复元素，并且无序的集合。Set集合与Collcetion基本相同，没有提供任何额外的方法，实际上Set就是Collection，只是行为略有不同(Set不允许包含重复元素)。与List一样，它同样允许null的存在但是仅有一个。
+
+java类库中主要的实现了Set<E>接口的类有：HashSet,LinkedHashSet,TreeSet等等。
+
+##### 1.2.1 HashSet源码解析
+
+
+

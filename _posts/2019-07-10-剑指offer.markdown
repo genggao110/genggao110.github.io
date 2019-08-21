@@ -313,11 +313,11 @@ public class Solution {
 
 则让前序遍历拥有中序遍历的索引表如下所示(Index很直观，就是取了某一个节点的下标，并保存)：
 
- 序号 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
- --- | --- | --- | --- | --- | --- | --- | --- | --- | --- 
- 前序 | A | B | D | E | H | I | C | F | G
- INDEX | 5 | 1 | 0 | 3 | 2 | 4 | 7 | 6 | 8
- 中序 | D | B | H | E | I | A | F | C | G
+ | 序号  | 0   | 1   | 2   | 3   | 4   | 5   | 6   | 7   | 8   |
+ | ----- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+ | 前序  | A   | B   | D   | E   | H   | I   | C   | F   | G   |
+ | INDEX | 5   | 1   | 0   | 3   | 2   | 4   | 7   | 6   | 8   |
+ | 中序  | D   | B   | H   | E   | I   | A   | F   | C   | G   |
 
 其实在已知的遍历序列中，如果含有中序遍历结果，那么我们都可以直接采用上面的这种创建索引函数的方式来简化重建过程。具体原因解释之前我们先来看一下下图：
 
@@ -397,4 +397,319 @@ public class Solution {
 
 [Leetcode——二叉树常考算法整理](https://blog.csdn.net/qq_32690999/article/details/80484440)
 
-### 5. 
+### 5. 用两个栈实现队列
+
+**题目描述**
+
+用两个栈来实现一个队列，完成队列的Push和Pop操作。队列中的元素为int类型。
+
+**解题思路**：
+
+> 两个栈stack1和stack2,开始时，每次添加队尾元素到stack1中。当弹出时，当 stack2 不为空，弹出 stack2 栈顶元素，如果 stack2 为空，将 stack1 中的全部数逐个出栈入栈 stack2，再弹出 stack2 栈顶元素。
+
+![出入队列思路](https://ws1.sinaimg.cn/large/005CDUpdgy1g5yzkj3njjj30g706k762.jpg)
+
+```java
+import java.util.Stack;
+ 
+public class Solution {
+    Stack<Integer> stack1 = new Stack<Integer>();
+    Stack<Integer> stack2 = new Stack<Integer>();
+     
+    public void push(int node) {
+        stack1.push(node);
+    }
+     
+    public int pop() {
+        if(stack1.empty()&&stack2.empty()){
+            throw new RuntimeException("Queue is empty!");
+        }
+        if(stack2.empty()){
+            while(!stack1.empty()){
+                stack2.push(stack1.pop());
+            }
+        }
+        return stack2.pop();
+    }
+}
+```
+
+### 6. 旋转数组的最小数字
+
+**题目描述**
+
+把一个数组最开始的若干个元素搬到数组的末尾，我们称之为数组的旋转。输入一个非递减排序的数组的一个旋转，输出旋转数组的最小元素。例如数组{3,4,5,1,2}为{1,2,3,4,5}的一个旋转，该数组的最小值为1.(NOTE: 给出的所有元素都大于0，若数组大小为0，请返回0)。
+
+**解题思路**：(非递减排序数组，很明显得出本题想要考的是二分法，但是为了展示解题的解法，这里给出几种解题的方法。)
+
+**Note**: 非递减数组的含义是指对每一个元素均有array[i] <= array[i+1]。 
+
+> 思路1：暴力法直接寻找，因为在两段范围内都是非递减排序，当不符合这个规律时，就找到了最小数字。
+
+```java
+import java.util.ArrayList;
+public class Solution {
+    public int minNumberInRotateArray(int [] array) {
+        int n = array.length;
+        if(n == 0){
+            return 0;
+        }
+        for(int i=0;i<n-1;i++){
+            if(array[i] >array[i+1]){
+                return array[i+1];
+            }
+        }
+        return array[0];
+    }
+}
+```
+
+> 思路2：排序法，利用Arrays工具类的排序函数，默认的排序规则是从小到大，排序后的数组的第一个值就是最小值。
+
+```java
+public int minNumberInRotateArray(int[] array){
+    if(array.length == 0){
+        return 0;
+    }
+    Arrays.sort(array);
+    return array[0];
+}
+```
+
+> 思路3：利用优先队列，将数组元素挨着丢进优先队列，优先队列默认为最小堆，弹出的第一个数就是整个数组的最小值。
+
+```java
+public int minNumberInRotateArray(int[] array){
+    int n = array.length;
+    if(n == 0) {
+        return 0;
+    }
+    PriorityQueue<Integer> queue = new PriorityQueue<>();
+    for(int i = 0; i < n; i++){
+        queue.add(array[i]);
+    }
+    return queue.poll();
+}
+```
+
+> 思路4：利用二分法进行求解。旋转后的数组实际上可以划分为两个有序的数组——前面子数组的大小都大于后面子数组中的元素。注意到实际上最小的元素就是两个子数组的分界线。本题目给出的数组在一定程度上是排序的，因此我们试着用二分查找法寻找这个最小的元素。
+
+具体思路如下：
+1. 我们用两个指针left,right分别指向数组的第一个元素和最后一个元素。按照题目的旋转的规则，第一个元素应该是大于最后一个元素的(假设没有重复的元素时)，但是如果不是旋转，第一个元素肯定小于最后一个元素。
+2. 找到数组的中间元素。中间元素大于第一个元素，则中间元素是属于前面的递增子数组，此时最小元素位于中间元素的后面。我们可以让第一个指针left指向中间元素，移动之后，第一个指针仍然位于前面的递增数组中；当中间元素小于第一个元素，则中间元素是属于后面的递增子数组，此时最小元素位于中间元素的前面。我们可以让第二个指针right指向中间元素，移动之后，第二个指针仍然位于后面的递增数组中，这样就可以缩小寻找的范围。
+3. 按照上述思路，第一个指针left总是指向前面递增的元素，第二个指针right总是指向后面递增的数组元素。为此，`最终第一个指针将指向前面数组的最后一个元素，第二个指针指向后面数组的第一个元素`。也就是说他们将指向两个相邻的元素，而第二个指针指向的刚好是最小的元素，这也是循环的结束条件。
+4. 上面是在`没有重复元素的假设下进行的`，然而现实情况是有特殊情况的，比如：{1,0,1,1,1}和{1,1,1,0,1}都可以看成是递增排序数组{0,1,1,1,1}的旋转。在这种情况下，我们就没法利用上面提到的解法去解决，因为在这两个数组中第一个数字、最后一个数字、中间数字都是1。第一种情况下，中间数字位于后面的子数组，第二种情况下，中间数字位于前面的子数组。**因此当两个指针指向的数字和中间数字相同的时候，我们无法确定中间数字1是属于前面还是属于后面的子数组，因此也就无法移动指针来缩小查找的范围。为此，就需要通过线性查找的方法。**
+
+```java
+public int minNumberInRotateArray(int[] array){
+    int size = array.length;
+    if(size == 0){
+        return 0;
+    }
+    int left = 0;
+    int right = size - 1;
+    int mid = 0;
+    //array[left] >= array[right] 确保数据旋转
+    while(array[left] >= array[right]){
+        //分界点
+        if(right - left == 1){
+            mid = right;
+            break;
+        }
+        mid = left + (right - left) / 2;
+        //array[left], array[right], array[mid]三者相等的时候，无法确定中间元素是属于前面还是后面的递增子数组，只能顺序查找
+        if (array[left] == array[right] && array[left] == array[mid]){
+            return MinOrder(array,left,right);
+        }
+
+        //中间元素位于前面的递增子数组，此时最小的元素位于中间元素的后面
+        if(array[mid] >= array[left]){
+            left = mid;
+        }
+        else{
+            //中间元素位于后面的递增子数组，此时最小元素位于中间元素的前面
+            right = mid;
+        }
+    }
+    return array[mid];
+}
+
+private int MinOrder(int[] array, int left, int right){
+    int result = array[left];
+    for(int i = left + 1; i < right; i++){
+        if(array[i] < result){
+            result = array[i];
+        }
+    }
+    return result;
+}
+```
+
+感觉上面的文字描述太过于复杂繁琐，为此，给出同样思路的另一种解释说明如下：
+
+采用二分法解答这个问题，mid = low + (high - low)/2,需要考虑三种情况：
+- array[mid] > array[high]:出现这种情况的array类似于{3,4,5,6,0,1,2}，此时最小数字一定在mid的右边，所以low = mid + 1;
+- array[mid] == array[high]：出现这种情况array类似于{1,0,1,1,1}或者{1,1,1,0,1}，此时最小数字不好判断在mid的右边还是左边，这时只好一个一个尝试，所以high = high - 1;
+- array[mid] < array[high]:出现这种情况的array类似于{2,2,3,4,5,6,6}，此时最小数字一定是在mid的左边，因为右边必然是递增的，所以high = mid。
+
+**注意**：如果待查询的范围最后只剩两个数，那么mid 一定会指向下标靠前的数字。比如array = [4,6],array[low] = 4 ;array[mid] = 4 ; array[high] = 6 ; 如果high = mid - 1，就会产生错误， 因此high = mid,但是low = mid + 1就不会出错。
+
+```java
+ public int minNumberInRotateArray(int [] array) {
+    int low = 0 ; int high = array.length - 1;
+    while(low < high){
+        if(array[low] < array[high]){
+            return array[low];
+        }
+        int mid = low + (high - low) / 2;
+        if(array[mid] > array[high]){
+            low = mid + 1;
+        }else if(array[mid] == array[high]){
+            high = high - 1;
+        }else{
+            high = mid;
+        }
+    }
+    return array[low];
+}
+```
+
+### 7. 斐波那契数列
+
+**题目描述**
+
+大家都知道斐波那契数列，现在要求输入一个整数n,请你输出斐波那契数列的第n项(从0开始，第0项为0， n<=39>)。
+
+**解题思路**：
+
+> 思路1：常用的递归法。斐波那契数列的标准公式为：F(1)=1，F(2)=1, F(n)=F(n-1)+F(n-2)（n>=3，n∈N*），根据公式直接写出答案。
+
+```java
+public class Solution {
+    public int Fibonacci(int n) {
+        if(n<=1){
+            return n;
+        }
+        return Fibonacci(n-1) + Fibonacci(n-2);
+    }
+}
+```
+
+还有一种尾递归的解决思路，如下所示：(但是实际上JVM并没有对尾递归进行优化)
+
+```java
+public class Solution {
+    public int Fibonacci(int n) {
+        return Fibonacci(n,0,1);
+    }
+
+
+    private static int Fibonacci(int n,int acc1,int acc2){
+        if(n==0) return 0;
+        if(n==1) return acc2;
+        else     
+           return Fibonacci(n - 1, acc2, acc1 + acc2);
+    }
+}
+```
+
+> 思路2：迭代法。很明显递归容易超时，那是递归在计算的时候，计算过很多次已经计算过的结果，可以保存下来。迭代的时候，只关注当前的数的前一个和前两个，每次用变量临时纪录起来，那么只需相加即可，而不是像递归那样重复计算。
+
+```java
+public class Solution {
+    public int Fibonacci(int n) {
+        if(n <= 1){
+            return n;
+        }
+        int sum = 0;
+        int two = 0;
+        int one = 1;
+        for(int i=2;i<=n;i++){
+            sum = two + one;
+            two = one;
+            one = sum;
+        }
+        return sum;
+    }
+}
+```
+我们在观察上面的代码其实可以发现，sum只在每次计算第n项的时候用一下，其实还可以用sum来存储第n-1项，例如当计算完 f(5) 时 sum 存储的是 f(5) 的值，当需要计算 f(6) 时，f(6) = f(5) - f(4)，sum 存储的 f(5)，f(4) 存储在 one 中，由 f(5)-f(3) 得到。
+
+```java
+public class Solution {
+    public int Fibonacci(int n) {
+        if(n <= 1){
+            return n;
+        }
+        int sum = 1;
+        int one = 0;
+        for(int i=2;i<=n;i++){
+            sum = sum + one;
+            one = sum - one;
+        }
+        return sum;
+    }
+
+    //或者更简洁的写法
+    public int FibonacciOptimize2(int n)
+    {
+        int f = 0, g = 1;
+        while(n -- > 0)
+        {
+            g += f;
+            f = g - f;
+        }
+        return f;
+    }
+}
+```
+
+> 思路3：矩阵链乘法。具体思路查看下面文章。
+
+[【剑指Offer】斐波那契数列](https://blog.csdn.net/FightLei/article/details/89391112)
+
+```java
+// 简单实现了2*2矩阵的乘法
+public int[,] matrixMul(int[,] m, int[,] n)
+{
+    int[,] ret = {
+        { m[0,0] * n[0,0] + m[0,1] * n[1,0],  m[0,0] * n[0,1] + m[0,1] * n[1,1]} ,
+        { m[1,0] * n[0,0] + m[1,1] * n[1,0],  m[1,0] * n[0,1] + m[1,1] * n[1,1]}
+    };
+    return ret;
+}
+// 矩阵的快速幂
+public int[,] matrixPow(int[,] m, int n)
+{
+	// 单位矩阵，作用相当于整数乘法中的1
+    int[,] ret = { { 1, 0 }, { 0, 1 } };
+    while(n > 0)
+    {
+        if ((n & 1) > 0)
+        {
+            ret = matrixMul(m, ret);
+        }
+        m = matrixMul(m, m);
+        n >>= 1;
+    }
+    return ret;
+}
+
+public int FibonacciOptimize4(int n)
+{
+    if (n == 0)
+    {
+        return 0;
+    }
+    int[,] matrix = { { 1, 1 }, { 1, 0 } };
+    // 这里的F1和F0矩阵多加了一列0,0，不会影响最终结果，是因为matrixMul只实现了2*2矩阵的乘法
+    int[,] unit = { { 1, 0 }, { 0, 0 } };
+    // 调用前面代码的矩阵乘法和矩阵快速幂
+    int[,] ret = matrixMul(matrixPow(matrix, n - 1), unit);
+    return ret[0, 0];
+}
+
+```
+
+### 8. 跳台阶
+

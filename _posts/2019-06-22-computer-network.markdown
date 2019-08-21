@@ -44,7 +44,7 @@ OSI参考模型将实际的分组通信协议整理并分成了易于理解的7�
 4~7层交换机 | 处理传输层以上各层网络传输的设备
 网关 | 转换协议的设备
 
-![7OUNZ0JZBBRCUSWP1G7.png](https://s3.ax2x.com/2019/07/09/7OUNZ0JZBBRCUSWP1G7.png)
+
 
 
 

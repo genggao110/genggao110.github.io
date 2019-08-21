@@ -727,6 +727,8 @@ private static volatile Singleton instance;
 
 [面试题:volatile关键字的作用、原理](https://www.cnblogs.com/shan1393/p/8999683.html)
 
+[jdk源码剖析二: 对象内存布局、synchronized终极原理](https://www.cnblogs.com/dennyzhangdd/p/6734638.html)
+
 
 ### 3.4 static 关键字
 
@@ -2079,10 +2081,102 @@ JVM预定义有三种类加载器，当一个 JVM启动的时候，Java开始使
 
 除此之外，还有自定义的类加载器，它们之间的层次关系被称为类加载器的双亲委派模型。该模型要求除了顶层的启动类加载器外，其余的类加载器都应该有自己的父类加载器，而这种父子关系一般通过组合（Composition）关系来实现，而不是通过继承（Inheritance）。后面会详细地讲解双亲委派模型的工作原理。
 
+![类加载器之间的层次关系](https://ws1.sinaimg.cn/large/005CDUpdgy1g5b4szbhnaj30gm0d2abd.jpg)
+
+JVM的类加载机制主要有以下3种：
+1. 全盘负责：所谓全盘负责，就是当一个类加载器负责加载某个Class时，该Class所依赖和引用其他Class也将由该类加载器负责载入，除非显示使用另一个类加载器来载入。
+2. 双亲委派：所谓双亲委派，则是先让父类加载器试图加载该Class，只有在父类加载器无法加载该类时才尝试从自己的类路径中加载该类。通俗地讲，就是某个特定的类加载器在接到加载类的请求时，首先将加载任务委托给父加载器，依次递归，如果父加载器可以完成类加载任务，就成功返回；只有父加载器无法完成此加载任务时，才自己去加载；
+3. 缓存机制：缓存机制将会保证所有加载过的Class都会被缓存，当程序中需要使用某个Class时，类加载器先从缓存区中搜索该Class,只有当缓存区中不存在该Class对象时，系统才会读取该类对应的二进制数据，并将其转换成Class对象，存入缓冲区中。这也是为什么修改了Class文件后，必须重新启动JVM，程序所做的修改才会生效的原因。
 
 
 类加载器加载Class大致要经过如下8个步骤：
-- 检测此Class有没有加载过
+1. 检测此Class是否被载入过，即在缓冲区中是否有此Class，如果有直接进入第8步，否则进入第2步；
+2. 如果没有父类加载器，则要么Parent是根类加载器，要么本身就是根类加载器，则跳到第4步，如果父类加载器存在，则进入第3步；
+3. 请求使用父类加载器去载入目标类，如果载入成功则跳至第8步，否则接着执行第5步；
+4. 请求使用根类加载器去加载目标类，如果载入成功则跳至第8步，否则接着执行第7步；
+5. 当前类加载器尝试去寻找Class文件，如果找到则执行第6步，如果找不到则执行第7步；
+6. 从文件中载入Class，成功后跳至第8步；
+7. 抛出ClassNotFoundException异常；
+8. 返回对应的java.lang.Class对象。
+
+#### 4.8.4 双亲委派机制
+
+> 双亲委派机制，其工作原理就是,如果一个类加载器收到了类加载请求，它并不会自己先去加载，而是把这个请求委托给父类的加载器去执行，如果父类加载器还存在其父类加载器，则进一步向上委托，依次递归，请求最终将到达顶层的启动类加载器(bootstrap class loader)，如果父类加载器可以完成类加载任务，就成功返回，倘若父类加载器无法完成此加载任务，子加载器才会尝试自己去加载，这就是双亲委派模式。
+
+我们来具体看一下双亲委派模型的代码实现：
+- 首先检查类是否被加载，没有则调用父类加载器的loadClass()方法； 
+- 若父类加载器为空，则默认使用启动类加载器作为父加载器；
+- 若父类加载失败，抛出ClassNotFoundException 异常后，再调用自己的findClass() 方法。
+
+```java
+protected Class<?> loadClass(String name, boolean resolve)
+        throws ClassNotFoundException
+    {
+        synchronized (getClassLoadingLock(name)) {
+            // 1.检查类是否被加载
+            Class<?> c = findLoadedClass(name);
+            if (c == null) {
+                long t0 = System.nanoTime();
+                try {
+                    if (parent != null) {
+                        //2 没有则调用父类加载器的loadClass方法
+                        c = parent.loadClass(name, false);
+                    } else {
+                        //3 若父类加载器为空，则默认使用启动类加载器来作为父加载器
+                        c = findBootstrapClassOrNull(name);
+                    }
+                } catch (ClassNotFoundException e) {
+                    // 4. ClassNotFoundException thrown if class not found
+                    // from the non-null parent class loader
+                }
+
+                if (c == null) {
+                    // If still not found, then invoke findClass in order
+                    // to find the class. 调用自己的findClass()方法
+                    long t1 = System.nanoTime();
+                    c = findClass(name);
+
+                    // this is the defining class loader; record the stats
+                    sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);
+                    sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
+                    sun.misc.PerfCounter.getFindClasses().increment();
+                }
+            }
+            if (resolve) {
+                resolveClass(c);
+            }
+            return c;
+        }
+    }
+```
+
+`使用双亲委派机制的好处是Java类随着它的加载器一起具备了一种带有优先级的层次关系`,通过这种层级关系可以避免类的重复加载，当父亲已经加载了该类时，就没有必要子ClassLoader再加载一次。其次是考虑到安全因素，java核心api中定义类型不会被随意替换，假设通过网络传递一个名为java.lang.Integer的类，通过双亲委托模式传递到启动类加载器，而启动类加载器在核心Java API发现这个名字的类，发现该类已被加载，并不会重新加载网络传递的过来的java.lang.Integer，而直接返回已加载过的Integer.class，这样便可以防止核心API库被随意篡改。
+
+#### 4.8.5 破坏双亲委派模型
+
+双亲委派模型很好的解决了各个类加载器加载基础类的统一性问题。**即越基础的类由越上层的加载器进行加载。**但是若加载的基础类中需要回调用户代码，而这时顶层的类加载器无法识别这些用户代码，怎么办？这时就需要破坏双亲委派模型了。
+
+下面给出两个例子来讲解破坏双亲委派模型的过程：
+
+##### 1.JNDI破坏双亲委派模型
+
+JNDI是java标准服务，它的代码由启动类加载器去加载。但是JNDI需要回调独立厂商实现的代码，而类加载器无法识别这些回调代码(SPI)。为了解决这个问题，引入了一个线程上下文类加载器。可通过Thread.setContextClassLoader()设置。利用线程上下文类加载器去加载所需要的SPI代码，即父类加载器请求子类加载器去完成类加载的过程，而破坏了双亲委派模型。
+
+##### 2.Spring破坏双亲委派模型
+
+Spring要对用户程序进行组织和管理，而用户程序一般放在WEB-INF目录下，由WebAppClassLoader类加载器加载，而Spring由Commom类加载器或Shared类加载器加载。那么Spring是如何访问WEB-INF下的用户程序呢？
+
+Spring使用**线程上下文类加载器**来解决这个问题。Spring加载类所用的classLoader都是通过Thread.currentThread().getContextClassLoader()获取的。当线程创建时会默认创建一个AppClassLoader类加载器（对应Tomcat中的WebAppclassLoader类加载器）： setContextClassLoader(AppClassLoader)。 利用这个来加载用户程序。即任何一个线程都可通过getContextClassLoader()获取到WebAppclassLoader。
+
+**参考博文**：
+
+[JVM(四)—一道面试题搞懂JVM类加载机制](https://blog.csdn.net/noaman_wgs/article/details/74489549)
+
+[【Java面试题】之类加载：从面试题分析Java类加载机制](https://blog.csdn.net/zjkC050818/article/details/78376195)
+
+[jvm之java类加载机制和类加载器(ClassLoader)的详解](https://blog.csdn.net/m0_38075425/article/details/81627349)
+
+[Java虚拟机类加载机制和双亲委派模型](https://blog.csdn.net/xu768840497/article/details/79175335)
 
 
 ### 4.9 java重载(Overload)与重写(Override)的区别
@@ -2184,8 +2278,298 @@ public class Test1 extends Test{
     }
 }
 ```
+#### 4.9.3 Java虚拟机角度分析多态
+
+我们的程序在运行的时候，底层虚拟机是如何去实现动态调用？我们先从java虚拟机讲起，给出java虚拟机执行java程序的过程图如下：
+
+![JVM执行程序流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g5b9kpyxxjj30hs0asaag.jpg)
+
+从图中我们可以看出，我们的java文件要想运行，需要通过java编译器编译成.class文件，然后通过类装载器讲.class文件装载到JVM中，最后才是执行。而且JVM分了五个区域，那么在代码中定义的那些多态方法存到了哪个地方呢？为此我们还需要对这块内存区域进行一个分析：(**这里补充一下，java 1.7把运行时常量池移到了java堆中，并且java1.8之后没有永久代的概念，存放类相关信息被放在元空间里**)
+
+![JVM内存区域](https://ws1.sinaimg.cn/large/005CDUpdgy1g5b9p999b9j30hs0b4t99.jpg)
+
+多态方法其实就存放在方法区中，java堆里面存放的是我们建立的一个个实例对象，方法区存放的就是类的类型等信息。而且这个方法区中的类型信息跟在堆中存放的class对象是不同的。在方法区中，这个class的类型信息只有唯一的实例（所以方法区是各个线程共享的内存区域），而在堆中可以有多个该class对象。也就是说方法区的类型信息就是像一个模板，那些class对象就好比通过这些模板创建的一个个实例。
+
+给出下面一个具体案例分析：
+```java
+public class Father{
+    public void dealHouse(){
+        System.out.println("father deal with house");
+    }
+}
+
+public class SonA extends Father{
+    @Override
+    public void dealHouse(){
+        System.out.println("SonA deal with house");
+    }
+}
+
+public class SonB extends Father{
+    @Override
+    public void dealHouse(){
+        System.out.println("SonB deal with house");
+    }
+}
+
+public class Test {
+    public static void main(String[] args){
+        Father father = new Father();
+        Father sonA = new SonA();
+        Father sonB = new SonB();
+        sonA.dealHouse();
+        sonB.dealHouse();
+    }
+}
+```
+我们知道当程序运行Father sonA = new SonA();其实这里就出现了多态，因为编译的时候看到的是Father类型，但是new出来一个SonA类，两种类型还不一样。我们来看看其在内存里是如何保存的：
+- Father sonA是一个引用类型，存在了java虚拟机栈的本地变量表中；
+- new SonA其实创建了一个实例对象，存储在了java堆中；
+- SonA的类型数据存在方法区中。
+
+![内存结构](https://ws1.sinaimg.cn/large/005CDUpdly1g5ba7jpo95j30hs09vwev.jpg)
+
+reference中存储的就是对象在堆中的实际地址，在堆中存储的对象信息中包含了在方法区中的相应类型数据，定位流程如下：
+- 虚拟机通过reference（Father的引用）查询java栈中的本地变量表，得到堆中的对象类型数据的指针，
+- 通过到对象的指针找到方法区中的对象类型数据
+- 查询方法表定位到实际类（SonA类）的方法运行。
+  
+我们来看一下父子类在方法表中是如何保存的：
+
+![父子类方法表中存储过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g5baaxqzm8j30hs0aeglu.jpg)
+
+很明显每一个类都会有一个方法表，子类中不同的方法指向不同的类型信息。继承自Object的就指向Object，继承自Father的就指向Father（也就是包含了父类的方法dealHouse）。
+
+可能我们到这就迷糊了，既然子类的dealHouse方法其实是父类Father的，那么为什么会执行子类的dealHouse方法呢？别着急往下看。这是java虚拟机区分多态方法（实现动态调用）的精华所在。
+
+当Son类的方法表会有一个指向Father类dealHouse方法的指针，同时也有一个指向自己dealHouse方法的指针，这时候，新的数据会覆盖原有的数据，也就是说原来指向Father.dealHouse的那个引用会被替换成指向Son.dealHouse的引用（占据原来表中的位置）。
+
+> 上述讲述的其实是对继承实现的多态的一种分析，对接口实现的，会有着不一样的理解。Java虚拟机 对于接口方法的调用是采用搜索方法表的方式，如，要在Father接口的方法表中找到dealHouse()方法，必须搜索Father的整个方法表。从效率上来说，接口方法的调用总是慢于类方法的调用的。
+
+最后，总结一下，类调用是根据多态方法在方法表中的位移量，而接口调用是根据搜索整个方法表来实现的。
+
+### 4.10 Object类的方法总结
+
+Object类是Java中所有类的基类，其位于java.lang包中，其一共有13个方法。其按照用途可以分为以下几种：
+- 构造函数方法
+- hashCode()与equals()方法用来判断对象是否相同
+- wait(),wait(long),wait(long,int),notify(),notifyAll()线程等待或唤醒
+- toString()和getClass()
+- clone(),对象的浅复制
+- finalize()，与Java垃圾回收机制有关
+
+![Object类](https://ws1.sinaimg.cn/large/005CDUpdgy1g5bty0rjrtj30wx0pjtam.jpg)
+
+其中，object.c中包含了下面：
+```c++
+static JNINativeMethod methods[] = {
+{"hashCode", "()I", (void *)&JVM_IHashCode},
+{"wait", "(J)V", (void *)&JVM_MonitorWait},
+{"notify", "()V", (void *)&JVM_MonitorNotify},
+{"notifyAll", "()V", (void *)&JVM_MonitorNotifyAll},
+{"clone", "()Ljava/lang/Object;", (void *)&JVM_Clone},
+};
+```
+
+来简单总结一下各个方法：
+
+- getClass():一个final方法，不可重写，其作用是返回此Object对象的类对象/运行时类对象Class。
+- hashCode():获取对象的哈希值，一般情况下是根据对象的地址、字符串或者数字计算。
+- equals():判断两个对象是否相等。
+- clone():这是一个protected方法，实现对象的浅拷贝。只有当类实现Cloneable接口才可以调用该方法，否则抛出CloneNotSupportedException异常。
+- toString():返回一个能够表示该对象的字符串，其默认返回类对象名加上对象的哈希码。一般来说，字符串应该是简明而有意义的，且尽量所有的子类都应该重写该方法。
+- notify():唤醒在该对象上等待的某个线程，如果有多个线程在该对象上等待，那么按照一定的算法唤醒其中一个。
+- notifyAll():唤醒在该对象上等待的所有线程。
+- wait():使当前线程在该对象上等待。
+- finalize(): 这是一个protected方法。当JVM准备对此对形象所占用的内存空间进行垃圾回收前，该方法将被调用，程序员可以通过该方法释放JVM无法管理的内存以避免内存泄漏。一般而言，该方法不由我们来主动去调用。
+
+
+#### 4.10.1 详述finalize()作用
+
+- java的GC只负责对象内存相关的清理，所有其他资源的清理必须由程序员手动编写，否则可能会导致内存泄漏，因此某些对象会有close()方法。
+- 而finalize()是确定的当对象被GC回收时必然调用的方法，假设有资源持续在整个对象的生命周期里，可以将额外的资源在finalize()里进行回收;
+- finalize()可以被用户自己调用，但这种调用不会导致对象被销毁;
+- GC时，finalize()里抛出的异常，如未被捕获处理，只会导致该对象的finalize()执行退出，而不会导致GC终止。
+
+#### 4.10.2 wait()和notify()方法的底层实现
+
+Object作为java中所有对象的基类，其重要性不言而喻，其中wait()和notify()方法的实现为多线程协作提供了保障。我们先来看一个例子，看看如何使用者两个方法：
+```java
+public class WaitNotifyCase {
+    public static void main(String[] args) {
+        final Object lock = new Object();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("thread A is waiting to get lock");
+                synchronized (lock) {
+                    try {
+                        System.out.println("thread A get lock");
+                        TimeUnit.SECONDS.sleep(2);
+                        System.out.println("thread A do wait method");
+                        lock.wait();
+                        System.out.println("wait end");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+
+        //保证线程B肯定后于线程A拿到锁
+        try{
+            TimeUnit.SECONDS.sleep(1);
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("thread B is waiting to get lock");
+                synchronized (lock) {
+                    System.out.println("thread B get lock");
+                    try {
+                        TimeUnit.SECONDS.sleep(5);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    lock.notify();
+                    System.out.println("thread B do notify method");
+                }
+            }
+        }).start();
+    }
+}
+```
+
+执行结果：
+```java
+thread A is waiting to get lock
+thread A get lock
+thread B is waiting to get lock
+thread A do wait method
+thread B get lock
+thread B do notify method
+wait end
+```
+在上面的代码中，由同一个lock对象调用wait,notify方法：
+- 当线程A执行wait方法时，该线程会被挂起；
+- 当线程B执行notify方法时，会唤醒一个被挂起的线程A。
+
+观察上面的代码，我们可能会存在下面的疑惑：
+- 进入wait/notify方法之前，为什么要获取synchronized锁?
+- 线程A获取了synchronized锁，执行wait方法并挂起，线程B又如何再次获取锁？
+
+##### 1.为什么要获取synchronized锁？
+
+注意，这两个方法的使用必须是在synchronized同步块中，并且在当前对象的同步块中，如果在A对象的方法中调用B对象的wait或notify方法，虚拟机会抛出IllegalMonitorStateException(非法的监视器异常),因为你这个线程持有的监视器和调用的监视器不是同一个对象。
+
+前面介绍过synchronized关键字，我们知道synchronized修饰的代码块通过javap生成的字节码中包含“monitorenter”和“monitorexit”指令。执行monitorenter指令可以获取到对象的monitor，而lock.wait()方法通过调用native方法wait(0)实现，其中接口注释存在下面一句话：
+```java
+The current thread must own this object's monitor.
+```
+其表示线程执行lock.wait()方法时，必须持有该lock对象的monitor。如果wait()方法在synchronized代码块中执行，很明显该线程已经持有了lock对象的monitor.
+
+在回答第二个问题之前，我们先来具体了解一下monitor.
+
+##### 2.什么是monitor?
+
+> 管程，英文名是Monitor，也常被翻译成“监视器”。我们知道，操作系统在面对进程/线程同步的时候，支持了一些同步原语，其中信号量(semaphore)和互斥量(mutex)是最重要的同步原语。然而，当我们使用基本的mutex进行并发控制时，需要程序员非常小心地控制 mutex 的 down 和 up 操作，否则很容易引起死锁等问题。为了更容易地编写出正确的并发程序，所以在 mutex 和 semaphore 的基础上，提出了更高层次的同步原语 monitor，不过需要注意的是，操作系统本身并不支持 monitor 机制，实际上，monitor 是属于编程语言的范畴，当你想要使用 monitor 时，先了解一下语言本身是否支持 monitor 原语，例如 C 语言它就不支持 monitor，Java 语言支持 monitor。
+
+monitor 的重要特点是，同一个时刻，只有一个 进程/线程 能进入 monitor 中定义的临界区，这使得 monitor 能够达到互斥的效果。但仅仅有互斥的作用是不够的，无法进入 monitor 临界区的 进程/线程，它们应该被阻塞，并且在必要的时候会被唤醒。显然，monitor 作为一个同步工具，也应该提供这样的管理 进程/线程 状态的机制。想想我们为什么觉得 semaphore 和 mutex 在编程上容易出错，因为我们需要去亲自操作变量以及对 进程/线程 进行阻塞和唤醒。monitor 这个机制之所以被称为“更高级的原语”，那么它就不可避免地需要对外屏蔽掉这些机制，并且在内部实现这些机制，使得使用 monitor 的人看到的是一个简洁易用的接口。
+
+**monitor基本元素**
+
+monitor机制需要几个元素来配合，分别是：
+- 临界区
+- monitor对象及锁
+- 条件变量以及定义在monitor对象上的wait, signal操作
+
+`使用monitor机制的目的是为了互斥进入临界区，为了做到能阻塞无法进入临界区的进程/线程,还需要一个monitor Object来协助，这个monitor object内部会有相应的数据结构，例如列表，来保存被阻塞的线程；同时由于monitor机制本质上是基于mutex这种基本原语的，所以monitor object还必须维护一个基于mutex的锁。`
+
+此外，为了能够在适当的时候阻塞和唤醒进程/线程,还需要引入一个条件变量，这个条件变量用来决定什么时候是“适当的时候”，这个条件可以来自程序代码的逻辑，也可以是在 monitor object 的内部，总而言之，程序员对条件变量的定义有很大的自主性。不过，由于 monitor object 内部采用了数据结构来保存被阻塞的队列，因此它也必须对外提供两个 API 来让线程进入阻塞状态以及之后被唤醒，分别是 wait 和 notify。
+
+##### 3. monitor在Java中的实现
+
+在HotSpot虚拟机中，monito采用ObjectMonitor实现：
+
+![ObjectMonitor结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c5o1n31uj30iq0bfwef.jpg)
+
+每个线程都会有两个ObjectMonitor对象列表，分别为free和used列表，如果当前free列表为空，线程将向全局global list请求分配ObjectMonitor。
+
+ObjectMonitor对象中有两个队列：_WaitSet和_EntryList，用来保存ObjectWaiter对象列表。_owner指向获得ObjectMonitor对象的线程。
+
+![ObjectMonitor](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c66vaq0zj30et08v0t8.jpg)
+
+当一个线程需要获取 Object 的锁时，会被放入 EntrySet 中进行等待，如果该线程获取到了锁，成为当前锁的 owner。如果根据程序逻辑，一个已经获得了锁的线程缺少某些外部条件，而无法继续进行下去（例如生产者发现队列已满或者消费者发现队列为空），那么该线程可以通过调用 wait 方法将锁释放，进入 wait set 中阻塞进行等待，其它线程在这个时候有机会获得锁，去干其它的事情，从而使得之前不成立的外部条件成立，这样先前被阻塞的线程就可以重新进入 EntrySet 去竞争锁。这个外部条件在 monitor 机制中称为条件变量。
+
+**ObjectWaiter**
+![ObjectWaiter](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c6ax57f7j30j50ajaa3.jpg)
+
+ObjectWaiter对象是双向链表结构，保存了_thread（当前线程）以及当前的状态TState等数据， 每个等待锁的线程都会被封装成ObjectWaiter对象。
+
+**wait方法实现**
+
+lock.wait()方法最终通过ObjectMonitor的`void wait(jlong millis, bool interruptable, TRAPS);`实现：
+1. 将当前线程封装成ObjectWaiter对象node;
+
+![step1](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c6xss5a8j30qa0jz75v.jpg)
+
+2. 通过`ObjectMonitor::AddWaiter`方法将node添加到_WaitSet列表中：
+
+![step2](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c71abr20j30g10aqglm.jpg)
+
+3. 通过`ObjectMonitor::exit`方法释放当前的ObjectMonitor对象，这样其它竞争线程就可以获取该ObjectMonitor对象。
+
+![step3](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c72x1shsj30i50dt755.jpg)
+
+4. 最终底层的park方法会挂起线程。
+
+
+**notify方法实现**
+
+lock.notify()方法最终通过ObjectMonitor的`void notify(TRAPS)`实现：
+1. 如果当前_WaitSet为空，即没有正在等待的线程，则直接返回；
+2. 通过`ObjectMonitor::DequeueWaiter`方法，获取_WaitSet列表中的第一个ObjectWaiter节点，实现也很简单。(**在jdk的notify方法注释是随机唤醒一个线程，其实是第一个ObjectWaiter节点**)
+
+![notify()](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c75qt0l6j30is0iw74i.jpg)
+
+3. 根据不同的策略，将取出来的ObjectWaiter节点，加入到_EntryList或则通过`Atomic::cmpxchg_ptr`指令进行自旋操作cxq。
+
+
+**notifyAll方法实现**
+
+lock.notifyAll()方法最终通过ObjectMonitor的`void notifyAll(TRAPS)`实现：通过for循环取出_WaitSet的ObjectWaiter节点，并根据不同策略，加入到_EntryList或则进行自旋操作。
+
+从JVM的方法实现中，可以发现：notify和notifyAll并不会释放所占有的ObjectMonitor对象，其实真正释放ObjectMonitor对象的时间点是在执行monitorexit指令，一旦释放ObjectMonitor对象了，entry set中ObjectWaiter节点所保存的线程就可以开始竞争ObjectMonitor对象进行加锁操作了。
+
+##### 总结
+
+就针对于wait方法而言，其简单的内部实现总结如下(将当前线程放入wait set，等待被唤醒，并放弃lock对象上的所有同步声明。)：
+- 将当前线程封装成ObjectWaiter对象node；
+- 通过ObjectMonitor::AddWaiter方法将node添加到_WaitSet列表中；
+- 通过ObjectMonitor::exit方法释放当前的ObjectMonitor对象，这样其它竞争线程就可以获取该ObjectMonitor对象。
+- 最终底层的park方法会挂起线程。
+
+（最后与之对应的notify方法）会随机唤醒_WaitSet中随机一个线程。
+
+**参考文章**：
+
+[JVM源码分析之Object.wait/notify实现](https://www.jianshu.com/p/f4454164c017)
+
+[Java 中的 Monitor 机制](https://www.jianshu.com/p/7f8a873d479c)
+
+[Java的wait()、notify()学习三部曲之一：JVM源码分析](https://blog.csdn.net/boling_cavalry/article/details/77793224)
+
+[java的Object里wait()实现原理](https://blog.csdn.net/ZytheMoon/article/details/89461016)
+
+[Java中Object.wait()、Object.notify()/notifyAll()底层原理](https://blog.csdn.net/u013096592/article/details/80019871)
 
 ## 5. 
+
+
 
 
 

@@ -117,7 +117,7 @@ private Set<Integer> compare(int[] smallArray, int[] bigArray){
 
 继承Collection接口的包含有一个retainAll的方法，我们利用Set可以实现两个数组的交集。具体代码如下，这里利用了Stream API,运行速率会比较慢，可以换成for循环(实现int[] 与Integer[] 的转换)
 
-```
+```java
 public int[] intersect2(int[] nums1, int[] nums2){
         List<Integer> array1 = Arrays.stream(nums1).boxed().collect(Collectors.toList());
         List<Integer> array2 = Arrays.stream(nums2).boxed().collect(Collectors.toList());
@@ -137,7 +137,7 @@ public int[] intersect2(int[] nums1, int[] nums2){
 
 队列的方法与指针比较法有相同之处。将原数组进行排序，然后将数组加入到队列中，拿元素个数较小的作为循环条件，比较两个队列peek的数值。相等则输出并出队列，否则将较小值所在的队列进行出列操作直到某个队列为空结束循环。(此方法比较适合大数据量等级)
 
-```
+```java
 public int[] intersect2(int[] nums1, int[] nums2){
         Arrays.sort(nums1);
         Arrays.sort(nums2);

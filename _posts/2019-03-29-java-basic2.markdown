@@ -39,3 +39,1408 @@ Eg: 具体内容参考Java核心技术书籍。
 - 流的操作不会修改其数据源。例如，filter方法不会从新的流中移除元素，而是会生成一个新的流，其中不包括被过滤掉的元素。
 - 流的操作是尽可能惰性执行的。这意味着直至需要其结果时，操作才会执行。
 
+
+
+
+
+### 1.2 Map接口
+
+![Map集合](https://ws1.sinaimg.cn/large/005CDUpdly1g1jhb3ta1aj30n60asq32.jpg)
+
+Map用于保存具有映射关系的数据，它是由一系列键值对组成的集合，提供了key到value的映射，在Map中它保证了key与value之间的一一对应关系。也就是说一个key对应一个value，所以它不能存在相同的key值，当然value值可以相同。Map接口中定义了如下常见的方法：
+
+```java
+void clear(); //删除Map对象中的所有key-value键值对
+boolean containsKey(Object key); //查询Map中是否包含指定的key,如果包含则返回true
+boolean containsValue(Object value); //查询Map中是否包含一个或多个value,如果包含则返回true
+Set<Map.Entry<K, V>> entrySet(); //返回Map中包含的key-value所组成的Set集合，每个集合元素都是Map.Entry(Entry是Map的内部类)对象
+V get(Object key); //返回指定key所对应的value;如果此Map中不包含该key，则返回null
+boolean isEmpty();  //查询该Map是否为空
+Set<K> keySet(); // 返回该Map中所有key组成的Set集合
+V put(K key, V value); //添加一个key-value对，如果当前Map中已经存在一个与该key相等的key-value对，则新的key-value对会覆盖原来的key-value。
+void putAll(Map<? extends K, ? extends V> m); //将指定Map中的key-value对复制到该map中
+V remove(Object key); //删除指定key锁对应的key-value对，返回被删除key所关联的value,如果该key不存在，则返回null
+default boolean remove(Object key, Object value){...}; //删除指定key,value所对应的key-value对
+int size(); //返回Map里key-value的个数
+Collection<V> values(); //返回该Map里所有value组成的Collection 
+boolean equals(Object o); 
+int hashCode();
+default V getOrDefault(Object key, V defaultValue){...}; //获取指定key对应的value,如果该key不存在，则返回defaulrValue
+default void forEach(BiConsumer<? super K, ? super V> action){...}; //使用这个新的API能方便的遍历集合中的元素，这个方法的使用需要结合Lambda表达式：map.forEach((k, v) -> System.out.println("key=" + k + ", value=" + v))
+default void replaceAll(BiFunction<? super K, ? super V, ? extends V> function){...};//该方法使用BiFunction对原key-value对进行计算，并将计算结果作为该key-value对的value值。
+default V putIfAbsent(K key, V value){...}; //该方法会自动检测指定key对应的value是否为null,如果该key对应的value为null,该方法会用新的value代替原来的null值。调用putIfAbsent会直接插入
+default V replace(K key, V value){...}; //将Map中指定key对应的value替换成新value。
+default boolean replace(K key, V oldValue, V newValue){...}; //将Map中指定key-value对应的原value替换成新value。如果找到则替换，否则返回false
+default V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction){...}; //如果传给该方法的key参数在Map中对应的value为null，则使用mappingFunction根据key计算一个新的结果，如果计算结果不为null，则用计算结果覆盖原有的value.如果原Map原来不包含该key，该方法将会添加一组key-value对。
+default V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction){...}; //如果传给该方法的key参数在Map中对应的value为null，则使用remappingFunction根据原key,value计算一个新的结果.如果计算结果不为null，则使用该结果覆盖原来的value;如果计算结果为null，则删除原key-value对。
+default V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction){...}; //该方法使用remappingFunction根据原有key-value计算一个新的value.只要新的value不为null,就使用新value覆盖原value；如果原value不为null,但是新value为null,则删除原key-value对；如果原value,新value同时为null,那么直接返回null
+default V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction){...}; //该方法会根据key参数获取在该Map中对应的value。如果获取的value为null,则直接用传入的value覆盖原来的value;如果获取的value不为null,则使用remappingFunction函数根据原value,新value计算一个新的结果，并用得到的结果去覆盖原有的value.
+
+```
+
+我们来看一下Map接口中的内部接口Entry源码，其封装了一个key-value对：
+
+```java
+interface Entry<K,V>{
+    K getKey(); //返回该Entry里包含的key值
+    V getValue(); //返回该Entry里包含的value值
+    V setValue(); //设置该Entry里包含的value值，并返回新设置的value值
+    boolean equals(Object o);
+    int hashCode();
+    public static <K extends Comparable<? super K>, V> Comparator<Map.Entry<K,V>> comparingByKey(){
+        return (Comparator<Map.Entry<K, V>> & Serializable)
+                (c1, c2) -> c1.getKey().compareTo(c2.getKey());
+    }
+
+    public static <K, V extends Comparable<? super V>> Comparator<Map.Entry<K,V>> comparingByValue() {
+        return (Comparator<Map.Entry<K, V>> & Serializable)
+                (c1, c2) -> c1.getValue().compareTo(c2.getValue());
+    }
+
+    public static <K, V> Comparator<Map.Entry<K, V>> comparingByKey(Comparator<? super K> cmp) {
+        Objects.requireNonNull(cmp);
+        return (Comparator<Map.Entry<K, V>> & Serializable)
+                (c1, c2) -> cmp.compare(c1.getKey(), c2.getKey());
+    }
+
+    public static <K, V> Comparator<Map.Entry<K, V>> comparingByValue(Comparator<? super V> cmp) {
+        Objects.requireNonNull(cmp);
+        return (Comparator<Map.Entry<K, V>> & Serializable)
+                (c1, c2) -> cmp.compare(c1.getValue(), c2.getValue());
+    }
+}
+```
+
+Map接口有三个比较重要的实现类，分别是HashMap、TreeMap和HashTable。在介绍这三个之前，我们先来了解一下Map的抽象类AbstractMap。
+
+#### 1.2.1 AbstractMap源码解析
+
+> AbstractMap抽象类实现了一些简单且通用的方法，本身并不难。但在这个抽象类中有两个方法非常值得关注，keySet和values方法源码的实现可以说是教科书式的典范。Java中Map类型的数据结构有相当多，AbstractMap作为它们的骨架实现实现了Map接口部分方法，也就是说为它的子类各种Map提供了大部分公共的方法，它的子类只需要实现Set<Entry<K,V>> entrySet() 返回一个键值对的集合，就可以使用Map集合的功能了。
+
+抽象类不能通过new关键字直接创建抽象类的实例，但它可以有构造方法。AbstractMap提供了一个protected修饰的无参构造方法，意味着只有它的子类才能访问（当然它本身就是一个抽象类，其他类也不能直接对其实例化），也就是说只有它的子类才能调用这个无参的构造方法。
+
+AbstractMap中唯一的抽象方法：
+```java
+public abstract Set<Entry<K,V>> entrySet();
+```
+当我们要实现一个`不可变`的Map时，只需要继承这个类，然后实现entrySet()方法，这个方法返回一保存所有key-value映射的set。通常这个set不支持add(),remove()方法，Set对应的迭代器也不支持remove()方法。
+
+如果想要实现一个可变的Map，我们需要在上述操作外，重写put()方法，因为默认不支持put操作：
+
+```java
+public V put(K key, V value) {
+        throw new UnsupportedOperationException();
+    }
+```
+
+而且 entrySet() 返回的 Set 的迭代器，也得实现 remove() 方法，因为 AbstractMap 中的 删除相关操作都需要调用该迭代器的 remove() 方法。
+
+##### AbstractMap的成员变量
+
+```java
+/**
+ * keySet和values是lazy的，它们只会在第一次请求视图时进行初始化，
+ * 而且它们是无状态的，所以只需要一个实例（初始化一次）。
+ */
+    transient Set<K>        keySet; //保存map中所有的键的Set
+    transient Collection<V> values; //保存map中所有值的集合
+```
+
+**注意**：这两个成员变量都是被transient修饰的，从jdk1.8开始，这两个变量不再使用volatile修饰，因为调用这两个变量的方法不是同步的，增加volatile也不能保证线程安全。
+
+##### AbstractMap的成员方法
+
+AbstractMap中实现了许多方法，接下来来具体看看AbstractMap中的方法。
+
+**1.添加方法**
+
+```java
+    public V put(K key, V value) {
+        throw new UnsupportedOperationException();
+    }
+```
+直接抛出异常，如果子类不复写这个方法，那么它是一个不可修改的Map集合。
+```java
+    public void putAll(Map<? extends K, ? extends V> m) {
+        for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
+            put(e.getKey(), e.getValue());
+    }
+```
+遍历Map集合m，通过它的entrySet()方法得到可迭代的Set集合，然后将每个键值对存放到本Map集合中。
+
+**2.删除方法**
+
+```java
+    public V remove(Object key) {
+        //获取键值对的迭代器
+        Iterator<Entry<K,V>> i = entrySet().iterator();
+        Entry<K,V> correctEntry = null;
+        // 根据key是否为null，分成两部分，虽然这两部分代码逻辑几乎一样
+        // 这样做主要是减少判断，因为合成一部分的话，判断条件就要增加
+        if (key==null) {
+            while (correctEntry==null && i.hasNext()) {
+                Entry<K,V> e = i.next();
+                if (e.getKey()==null)
+                    correctEntry = e;
+            }
+        } else {
+            while (correctEntry==null && i.hasNext()) {
+                Entry<K,V> e = i.next();
+                if (key.equals(e.getKey()))
+                    correctEntry = e;
+            }
+        }
+
+        V oldValue = null;
+        //如果找到了这个键值对correctEntry，删除它，并返回它的value值
+        if (correctEntry !=null) {
+            oldValue = correctEntry.getValue();
+            i.remove();
+        }
+        return oldValue;
+    }
+```
+通过entrySet().iterator()方法，得到键值对的迭代器，然后遍历键值对，找到与key值相等的键值对，删除它，并返回对应的value值，如果没找到，就返回null。
+
+```java
+    public void clear() {
+        entrySet().clear();
+    }
+```
+调用entrySet集合的clear()方法。
+
+**3.查找元素**
+
+```java
+    public boolean containsKey(Object key) {
+        Iterator<Map.Entry<K,V>> i = entrySet().iterator();
+        if (key==null) {
+            while (i.hasNext()) {
+                Entry<K,V> e = i.next();
+                if (e.getKey()==null)
+                    return true;
+            }
+        } else {
+            while (i.hasNext()) {
+                Entry<K,V> e = i.next();
+                if (key.equals(e.getKey()))
+                    return true;
+            }
+        }
+        return false;
+    }
+```
+通过entrySet().iterator()方法，得到键值对的迭代器，然后遍历键值对，找到与key值相等的键值对，返回true，否则返回false。
+
+```java
+    public boolean containsValue(Object value) {
+        Iterator<Entry<K,V>> i = entrySet().iterator();
+        if (value==null) {
+            while (i.hasNext()) {
+                Entry<K,V> e = i.next();
+                if (e.getValue()==null)
+                    return true;
+            }
+        } else {
+            while (i.hasNext()) {
+                Entry<K,V> e = i.next();
+                if (value.equals(e.getValue()))
+                    return true;
+            }
+        }
+        return false;
+    }
+```
+通过entrySet().iterator()方法，得到键值对的迭代器，然后遍历键值对，找到与value值相等的键值对，返回true，否则返回false。
+
+```java
+    public V get(Object key) {
+        Iterator<Entry<K,V>> i = entrySet().iterator();
+        if (key==null) {
+            while (i.hasNext()) {
+                Entry<K,V> e = i.next();
+                if (e.getKey()==null)
+                    return e.getValue();
+            }
+        } else {
+            while (i.hasNext()) {
+                Entry<K,V> e = i.next();
+                if (key.equals(e.getKey()))
+                    return e.getValue();
+            }
+        }
+        return null;
+    }
+```
+通过entrySet().iterator()方法，得到键值对的迭代器，然后遍历键值对，找到与key值相等的键值对，并返回对应的value值，如果没找到，就返回null。
+
+**4.获取主要的视图**
+
+AbstractMap没有提供entrySet()的实现，但是却提供了keySet()与values()集合视图的默认实现，它们都是依赖于entrySet()返回的集合视图实现的，首先我们来了解一下`public Set<J>keySet()`：
+
+`分析`：该方法返回Map key值的Set集合，很自然的我们可以想到一个简单的实现方案，遍历Entry数组取出key值放到Set集合中，类似下面代码：
+
+```java
+//示例代码
+public Set<K> keySet() {
+    Set<K> ks = null;
+    for (Map.Entry<K, V> entry : entrySet()) {
+        ks.add(entry.getKey());
+    }
+    return ks;
+}
+```
+这就意味着每次调用keySet方法都会遍历Entry数组，数据量大时效率会大大降低。不得不说JDK源码是写得非常好，它并没有采取遍历的方式。如果不遍历Entry，那又如何知道此时Map新增了一个key-value键值对呢？
+
+答案就是在keySet方法内部重新实现了一个新的自定义Set集合，在这个自定义Set集合中又重写了iterator方法，这里是关键，iterator方法返回Iterator接口，而在这里又重新实现了Iterator迭代器，通过调用entrySet方法再调用它的iterator方法。下面结合代码来分析：
+
+```java
+
+  /**
+   * keySet和values是lazy的，它们只会在第一次请求视图时进行初始化，
+   * 而且它们是无状态的，所以只需要一个实例（初始化一次）。
+   */
+    transient Set<K>        keySet; //保存map中所有的键的Set
+    transient Collection<V> values; //保存map中所有的value的Collection
+
+    public Set<K> keySet() {
+        Set<K> ks = keySet; //使用keySet变量做缓存，这样只有第一次需要遍历entrySet()集合，对它的操作都调用Map集合对应方法
+        if (ks == null) {
+            ks = new AbstractSet<K>() { //创建一个自定义Set
+                public Iterator<K> iterator() {
+                    // 创建一个迭代器，利用 entrySet().iterator()的迭代器来实现本Iterator实例的方法
+                    return new Iterator<K>() {
+                        private Iterator<Entry<K,V>> i = entrySet().iterator();
+
+                        public boolean hasNext() {
+                            return i.hasNext(); //对key值的判断，就是对entry的判断
+                        }
+
+                        public K next() {
+                            return i.next().getKey(); //取下一个key值，就是取entry#getKey
+                        }
+
+                        public void remove() {
+                            i.remove(); //删除key值，就是删除entry
+                        }
+                    };
+                }
+
+                public int size() {
+                    //key值有多少就是整个Map有多大，所以调用本类的size方法即可。这个是内部类，直接使用this关键字代表这个类，应该指明是调用AbstractMap中的size方法，没有this则表示是static静态方法
+                    return AbstractMap.this.size(); 
+                }
+
+                public boolean isEmpty() {
+                    //对是否有key值，就是判断Map是否为空，，所以调用本类的isEmpty方法即可
+                    return AbstractMap.this.isEmpty();
+                }
+
+                public void clear() {
+                    //清空key值，就是清空Map，，所以调用本类的clear方法即可
+                    AbstractMap.this.clear();
+                }
+
+                public boolean contains(Object k) {
+                    //判断Set是否包含数据k，就是判断Map中是否包含key值，所以调用本类的containsKey方法即可
+                    return AbstractMap.this.containsKey(k);
+                }
+            };
+            keySet = ks;
+        }
+        return ks;
+    }
+```
+这是一种很巧妙的实现，尽管这个方法是围绕key值，但实际上可以结合Entry来实现，而不用遍历Entry，同时上面提到了调用entrySet# iterator方法，这里则又是模板方法模式的最佳实践。因为entrySet在AbstractMap中并未实现，而是交给了它的子类去完成，但是对于keySet方法却可以对它进行一个“算法骨架” 实现，这就是模板方法模式。
+
+下面来看看values()方法的具体实现，其实该方法完全可以参考keySet(),两者有异曲同工之妙，唯一的区别就是返回的是AbstractCollection的子类。
+
+```java
+    transient Set<K>        keySet; //保存map中所有的键的Set
+    transient Collection<V> values; //保存map中所有的value的Collection
+
+    public Collection<V> values() {
+        // 使用values变量做缓存用的，防止每次都遍历创建
+        Collection<V> vals = values;
+        if (vals == null) {
+            // 创建一个Collection集合，对它的操作都调用Map集合对应方法。
+            vals = new AbstractCollection<V>() {
+                public Iterator<V> iterator() {
+                    // 创建一个迭代器，利用 entrySet().iterator()的迭代器来实现本Iterator实例的方法。
+                    return new Iterator<V>() {
+                        private Iterator<Entry<K,V>> i = entrySet().iterator();
+
+                        public boolean hasNext() {
+                            return i.hasNext();
+                        }
+
+                        public V next() {
+                            return i.next().getValue();
+                        }
+
+                        public void remove() {
+                            i.remove();
+                        }
+                    };
+                }
+
+                public int size() {
+                    return AbstractMap.this.size();
+                }
+
+                public boolean isEmpty() {
+                    return AbstractMap.this.isEmpty();
+                }
+
+                public void clear() {
+                    AbstractMap.this.clear();
+                }
+
+                public boolean contains(Object v) {
+                    return AbstractMap.this.containsValue(v);
+                }
+            };
+            values = vals;
+        }
+        return vals;
+    }
+```
+
+**5.AbstractMap中的内部类**
+
+正如 Map 接口 中有内部类 Map.Entry 一样， AbstractMap 也有两个内部类：
+- SimpleImmutableEntry, 表示一个不可变的键值对；
+- SimpleEntry, 表示可变的键值对。
+
+SimpleImmutableEntry，不可变的键值对,实现了 `Map.Entry <K,V>` 接口和Serializable接口：
+
+```java
+    private static boolean eq(Object o1, Object o2) {
+        return o1 == null ? o2 == null : o1.equals(o2);
+    }
+
+    public static class SimpleImmutableEntry<K,V>
+        implements Entry<K,V>, java.io.Serializable
+    {
+        private static final long serialVersionUID = 7138329143949025153L;
+
+        private final K key; //final修饰，不可变
+        private final V value; //final修饰，不可变
+
+        public SimpleImmutableEntry(K key, V value) {
+            this.key   = key;
+            this.value = value;
+        }
+
+        public SimpleImmutableEntry(Entry<? extends K, ? extends V> entry) {
+            this.key   = entry.getKey();
+            this.value = entry.getValue();
+        }
+
+        public K getKey() {
+            return key;
+        }
+
+        public V getValue() {
+            return value;
+        }
+
+        // 因为是不可修改键值对Entry类，所以setValue方法直接抛出异常
+        public V setValue(V value) {
+            throw new UnsupportedOperationException();
+        }
+
+        // 当key值与value值都相等时，就说明两个entry值相等
+        public boolean equals(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry<?,?> e = (Map.Entry<?,?>)o; // 因为泛型编译时会被擦除，所以使用?号
+            return eq(key, e.getKey()) && eq(value, e.getValue());
+        }
+
+        // 保证两个相等的entry，它们的hashCode值必须也相同
+        public int hashCode() {
+            return (key   == null ? 0 :   key.hashCode()) ^
+                   (value == null ? 0 : value.hashCode());
+        }
+
+        public String toString() {
+            return key + "=" + value;
+        }
+    }
+```
+
+SimpleEntry, 可变的键值对:
+
+```java
+    public static class SimpleEntry<K,V>
+        implements Entry<K,V>, java.io.Serializable
+    {
+        private static final long serialVersionUID = -8499721149061103585L;
+
+        private final K key; //不可变
+        private V value;
+
+        public SimpleEntry(K key, V value) {
+            this.key   = key;
+            this.value = value;
+        }
+
+        public SimpleEntry(Entry<? extends K, ? extends V> entry) {
+            this.key   = entry.getKey();
+            this.value = entry.getValue();
+        }
+
+        public K getKey() {
+            return key;
+        }
+
+        public V getValue() {
+            return value;
+        }
+
+        // 替换value值，并返回原来的oldValue值
+        public V setValue(V value) {
+            V oldValue = this.value;
+            this.value = value;
+            return oldValue;
+        }
+
+        // 当key值与value值都相等时，就说明两个entry值相等
+        public boolean equals(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry<?,?> e = (Map.Entry<?,?>)o;
+            return eq(key, e.getKey()) && eq(value, e.getValue());
+        }
+
+        public int hashCode() {
+            return (key   == null ? 0 :   key.hashCode()) ^
+                   (value == null ? 0 : value.hashCode());
+        }
+
+        public String toString() {
+            return key + "=" + value;
+        }
+
+    }
+```
+
+**6.总结**
+
+和 AbstractCollection 接口，AbstractList 接口 作用相似， AbstractMap 是一个基础实现类，实现了 Map 的主要方法，默认不支持修改。常用的几种 Map, 比如 HashMap, TreeMap, LinkedHashMap 都继承自它。
+- AbstractMap的核心方法是entrySet()，子类必须实现；
+- Entry是存储键值对的数据结构，子类根据Map的特点，构造不同的Entry。
+
+#### 1.2.2 HashMap源码解析(JDK 1.7)
+
+在讨论HashMap具体实现之前，我想我们先了解一下其他数组结构在新增、查找等基础操作时的执行性能：
+- 数组：采用一段连续的存储单元来存储数据。对于指定下标的查找，时间复杂度为O(1)；通过给定值进行查找，需要遍历数组，逐一比对给定关键字和数组元素，时间复杂度为O(n)，当然，对于有序数组，则可采用二分查找，插值查找，斐波那契查找等方式，可将查找复杂度提高为O(logn)；对于一般的插入删除操作，涉及到数组元素的移动，其平均复杂度也为O(n)。
+- 线性链表：对于链表的新增，删除等操作（在找到指定操作位置后），仅需处理结点间的引用即可，时间复杂度为O(1)，而查找操作需要遍历链表逐一进行比对，复杂度为O(n)。
+- 二叉树：对一棵相对平衡的有序二叉树，对其进行插入，查找，删除等操作，平均复杂度均为O(logn)。
+- 哈希表：相比上述几种数据结构，在哈希表中进行添加，删除，查找等操作，性能十分之高，不考虑哈希冲突的情况下，仅需一次定位即可完成，时间复杂度为O(1)，接下来我们就来看看哈希表是如何实现达到惊艳的常数阶O(1)的。
+
+我们知道，数据结构的物理存储结构只有两种：顺序存储结构和链式存储结构（像栈，队列，树，图等是从逻辑结构去抽象的，映射到内存中，也这两种物理组织形式），而在上面我们提到过，在数组中根据下标查找某个元素，一次定位就可以达到，哈希表利用了这种特性，哈希表的主干就是数组。
+
+比如我们要新增或查找某个元素，我们通过把当前元素的关键字 通过某个函数映射到数组中的某个位置，通过数组下标一次定位就可完成操作。
+
+**存储位置=f(关键字)**
+
+其中，，这个函数f一般称为哈希函数，这个函数的设计好坏会直接影响到哈希表的优劣。举个例子，比如我们要在哈希表中执行插入操作：
+
+![哈希表插入](https://ws1.sinaimg.cn/large/005CDUpdgy1g61upgsbxmj30sg0i27dt.jpg)
+
+然而万事无完美，如果两个不同的元素，通过哈希函数得出的实际存储地址相同怎么办？也就是说，当我们对某个元素进行哈希运算，得到一个存储地址，然后要进行插入的时候，发现已经被其他元素占用了，其实这就是所谓的`哈希冲突`，也叫哈希碰撞。前面我们提到过，哈希函数的设计至关重要，好的哈希函数会尽可能地保证 计算简单和散列地址分布均匀,但是，我们需要清楚的是，数组是一块连续的固定长度的内存空间，再好的哈希函数也不能保证得到的存储地址绝对不发生冲突。那么哈希冲突如何解决呢？哈希冲突的解决方案有多种:开放定址法（发生冲突，继续寻找下一块未被占用的存储地址），再散列函数法，链地址法，而HashMap在JDK 1.7中就是采用了链地址法，也就是数组+链表的方式。(在Java 1.8中采用了数组+链表+红黑树的方式)
+
+**下面我们先来分析JDK 1.7版本的HashMap源码：**
+
+参考文章：
+
+[Java：手把手带你源码分析 HashMap 1.7](https://blog.csdn.net/carson_ho/article/details/79373026)
+
+[Java1.7 HashMap 实现原理和源码分析](https://www.cnblogs.com/zsh-blogs/p/10453646.html)
+
+##### 1.类定义
+
+```java
+public class HashMap<K,V>
+         extends AbstractMap<K,V> 
+         implements Map<K,V>, Cloneable, Serializable
+
+```
+![主要介绍](https://ws1.sinaimg.cn/large/005CDUpdgy1g61uzg4mb9j30yg0f4gpz.jpg)
+
+##### 2.数据结构
+
+HashMap采用的数据结构是：数组(主)+单链表(副)，该数据结构描述又被称之为`拉链法`:
+
+对于数组(主)，其主要的作用如下：
+- 核心底层 = 1个数组(table[]),其又被称之为核心数组；
+- 数组下标 = 经过处理的键Key的hash值(通过hashCode() 计算等一系列处理)
+- 数组元素 = 1个键值对 = 1个链表(头节点)
+- 数组大小 = HashMap的容量 (capacity)
+
+而对于单链表(副)：
+- 每个链表 = 哈希表的桶(bucket)
+- 链表的节点值 = 1个键值对
+- 链表长度 = 桶的大小
+- 链表主要是用于解决哈希冲突：若是不同key值计算出来的hash值相同(即都存储到了数组的相同位置)，由于之前该hash值的数组位置已经存放好元素，则将原先位置的元素移到单链表中，冲突hash值对应的键值对放入到数组元素中。(**即发生冲突时，新元素插入到链表头部；新元素总是添加到数组中，旧元素移到链表中**)
+- 采用链表解决hash冲突的方法 = 链地址法
+  
+**Attention**: HashMap的键值对数量 = 数组的键值对 + 所有单链表的键值对
+
+给出示意图如下所示：
+
+![示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g61vcekvtaj30i20a0q3u.jpg)
+
+给出粗略的存储流程如下：
+
+![存储流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g61vdntpt1j30fa0rs75a.jpg)
+
+**数组元素、链表节点的实现类**
+
+HashMap中的数组元素采用Entry静态内部类实现，如下所示：
+
+![HashMap整体结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g61vh53b14j30sg0kok3m.jpg)
+
+> 1. HashMap的本质 =  1个存储Entry类对象的数组 + 多个单链表
+> 2. Entry对象本质 = 1个映射（键 - 值对），属性包括：键（key）、值（value） & 下1节点( next) = 单链表的指针 = 也是一个Entry对象，用于解决hash冲突
+
+给出该类的源码：
+```java
+    static class Entry<K,V> implements Map.Entry<K,V> {
+        final K key; //键
+        V value;  // 值
+        Entry<K,V> next; // 指向下一个节点 ，也是一个Entry对象，从而形成解决hash冲突的单链表
+        int hash; //对key的hashcode值进行hash运算后得到的值，存储在Entry，避免重复计算
+
+        /**
+         * Creates new entry.
+         */
+        Entry(int h, K k, V v, Entry<K,V> n) {
+            value = v;
+            next = n;
+            key = k;
+            hash = h;
+        }
+
+        public final K getKey() {
+            return key;
+        }
+
+        public final V getValue() {
+            return value;
+        }
+
+        public final V setValue(V newValue) {
+            V oldValue = value;
+            value = newValue;
+            return oldValue;
+        }
+
+       //作用：判断2个Entry是否相等，必须key和value都相等，才返回true  
+        public final boolean equals(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry e = (Map.Entry)o;
+            Object k1 = getKey();
+            Object k2 = e.getKey();
+            if (k1 == k2 || (k1 != null && k1.equals(k2))) {
+                Object v1 = getValue();
+                Object v2 = e.getValue();
+                if (v1 == v2 || (v1 != null && v1.equals(v2)))
+                    return true;
+            }
+            return false;
+        }
+
+        public final int hashCode() {
+            return Objects.hashCode(getKey()) ^ Objects.hashCode(getValue());
+        }
+
+        public final String toString() {
+            return getKey() + "=" + getValue();
+        }
+
+        /**
+         * This method is invoked whenever the value in an entry is
+         * overwritten by an invocation of put(k,v) for a key k that's already
+         * in the HashMap.
+         */
+        void recordAccess(HashMap<K,V> m) {
+        }
+
+        /**
+         * This method is invoked whenever the entry is
+         * removed from the table.
+         */
+        void recordRemoval(HashMap<K,V> m) {
+        }
+    }
+```
+
+##### 3.HashMap中的重要变量
+
+主要参数其实包括： 容量、负载因子和扩容阈值。
+```java
+
+// 1. 容量（capacity）： HashMap中数组的长度
+// a. 容量范围：必须是2的幂 & <最大容量（2的30次方）
+// b. 初始容量 = 哈希表创建时的容量
+    
+    // 默认容量为16
+    static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+
+    //最大的容量，为2的30次方
+    static final int MAXIMUM_CAPACITY = 1 << 30;
+
+// 2. 负载因子(Load factor)：HashMap在其容量自动增加前可达到多满的一种尺度
+// a. 负载因子越大、填满的元素越多 = 空间利用率高、但冲突的机会加大、查找效率变低（因为链表变长了）
+// b. 负载因子越小、填满的元素越少 = 空间利用率小、冲突的机会减小、查找效率高（链表不长)
+
+    //默认加载因子
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
+
+    //实际加载因子
+    final float loadFactor;
+
+    //当数组还没有进行扩容操作的时候，共享的一个空表对象
+    static final Entry<?,?>[] EMPTY_TABLE = {};
+
+    //table,进行扩容操作，长度必须2的n次方
+    transient Entry<K,V>[] table = (Entry<K,V>[]) EMPTY_TABLE;
+
+    //HashMap的大小，即 HashMap中存储的键值对的数量
+    transient int size;
+
+// 3. 扩容阈值（threshold）：当哈希表的大小 ≥ 扩容阈值时，就会扩容哈希表（即扩充HashMap的容量） 
+// a. 扩容 = 对哈希表进行resize操作（即重建内部数据结构），从而哈希表将具有大约两倍的桶数
+// b. 扩容阈值 = 容量 x 加载因子
+
+    //阈值，用于判断是否需要扩容（threshold = 容量*负载因子）
+    int threshold;
+
+    //HashMap改变的次数
+    transient int modCount;
+
+    static final int ALTERNATIVE_HASHING_THRESHOLD_DEFAULT = Integer.MAX_VALUE;
+```
+
+![参数示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g61vzzwto9j30jg0a4wf4.jpg)
+
+详细地介绍一下负载因子的使用建议：
+
+![加载因子](https://ws1.sinaimg.cn/large/005CDUpdgy1g61w13v0lcj30rz0indhg.jpg)
+
+##### 4.源码分析
+
+为了更具体的了解源码，从具体的使用步骤进行相关函数的详细分析，其主要内容如下所示：
+
+![分析内容](https://ws1.sinaimg.cn/large/005CDUpdgy1g61w3hhnz0j30ku0fvmzm.jpg)
+
+**1. 构造函数**
+
+```java
+    //指定“容量大小”和“加载因子”的构造函数
+    public HashMap(int initialCapacity, float loadFactor) {
+        if (initialCapacity < 0)
+            throw new IllegalArgumentException("Illegal initial capacity: " +
+                                               initialCapacity);
+        if (initialCapacity > MAXIMUM_CAPACITY)
+            initialCapacity = MAXIMUM_CAPACITY;
+        if (loadFactor <= 0 || Float.isNaN(loadFactor))
+            throw new IllegalArgumentException("Illegal load factor: " +
+                                               loadFactor);
+
+        this.loadFactor = loadFactor; //设置加载因子
+        // 设置 扩容阈值 = 初始容量
+        // 注：此处不是真正的阈值，是为了扩展table，该阈值后面会重新计算，下面会详细讲解 
+        threshold = initialCapacity; 
+        init();  // 一个空方法用于未来的子对象扩展
+    }
+
+    // 指定“容量大小”的构造函数,加载因子 = 默认 = 0.75 、容量 = 指定大小
+    public HashMap(int initialCapacity) {
+        this(initialCapacity, DEFAULT_LOAD_FACTOR);
+    }
+
+      /**
+     * 构造函数1：默认构造函数（无参）
+     * 加载因子 & 容量 = 默认 = 0.75、16
+     */
+    public HashMap() {
+        // 实际上是调用构造函数3：指定“容量大小”和“加载因子”的构造函数
+        // 传入的指定容量 & 加载因子 = 默认
+        this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR); 
+    }
+
+    // 包含“子Map”的构造函数,即 构造出来的HashMap包含传入Map的映射关系
+    // 加载因子 & 容量 = 默认
+    public HashMap(Map<? extends K, ? extends V> m) {
+        // 设置容量大小 & 加载因子 = 默认
+        this(Math.max((int) (m.size() / DEFAULT_LOAD_FACTOR) + 1,
+                      DEFAULT_INITIAL_CAPACITY), DEFAULT_LOAD_FACTOR);
+
+        // 该方法用于初始化 数组 & 阈值，下面会详细说明
+        inflateTable(threshold);
+
+        // 将传入的子Map中的全部元素逐个添加到HashMap中
+        putAllForCreate(m);
+    }
+
+```
+注意：
+- 此处仅用于接收初始容量大小（capacity）、加载因子(Load factor)，但仍无真正初始化哈希表，即初始化存储数组table；
+- **真正初始化哈希表（初始化存储数组table）是在第1次添加键值对时，即第1次调用put（）时。**下面会详细说明。
+
+**2. put()方法的解析**
+
+给出一个添加数据的流程图：
+
+![添加数据](https://ws1.sinaimg.cn/large/005CDUpdgy1g61wfmfqwkj30fa0rs3zi.jpg)
+
+```java
+    public V put(K key, V value) {
+        // (分析1) 1.若未初始化哈希表，即table为空
+        // 则使用构造函数设置的阈值(即初始容量)来初始化数组table
+        if (table == EMPTY_TABLE) {
+            inflateTable(threshold);
+        }
+
+        //(分析2) 2.判断key是否为空值null
+        // 2.1 若key == null，则将该键-值 存放到数组table 中的第1个位置，即table [0]（本质：key = Null时，hash值 = 0，故存放到table[0]中）
+        // 该位置永远只有1个value，新传进来的value会覆盖旧的value
+        if (key == null)
+            return putForNullKey(value);
+
+        // (分析3) 2.2 若 key ≠ null，则计算存放数组 table 中的位置（下标、索引）
+        // a. 根据key值计算hash值
+        int hash = hash(key);
+        // b. 根据hash值 最终获得key对应存放的数组Table中位置
+        int i = indexFor(hash, table.length);
+
+        // 3. 判断该key对应的值是否已存在（通过遍历 以该数组元素为头结点的链表 逐个判断）
+        for (Entry<K,V> e = table[i]; e != null; e = e.next) {
+            Object k;
+            // (分析4) 3.1 若该key已存在（即 key-value已存在 ），则用 新value 替换 旧value
+            if (e.hash == hash && ((k = e.key) == key || key.equals(k))) {
+                V oldValue = e.value;
+                e.value = value;
+                e.recordAccess(this);
+                return oldValue; //返回旧的value
+            }
+        }
+
+        modCount++;
+
+        //（分析5） 3.2 若 该key不存在，则将“key-value”添加到table中
+        addEntry(hash, key, value, i);
+        return null;
+    }
+```
+
+根据源码做出相对应的流程图如下：
+
+![put流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g61wpej3yzj30yg0qdgnl.jpg)
+
+下面针对源码里标明的5个分析点进行详细解释：
+
+1. 初始化哈希表(即初始化数组table, 扩容阈值)
+
+```java
+//函数使用原型
+if (table == EMPTY_TABLE) {
+    inflateTable(threshold);
+}
+
+//源码分析
+
+    private void inflateTable(int toSize) {
+        // 将传入的容量大小转化为：>传入容量大小的最小的2的次幂，即如果传入的是容量大小是19，那么转化后，初始化容量大小为32（即2的5次幂）
+        int capacity = roundUpToPowerOf2(toSize);
+
+        //重新计算阈值 threshold = 容量 * 加载因子
+        threshold = (int) Math.min(capacity * loadFactor, MAXIMUM_CAPACITY + 1);
+
+        // 使用计算后的初始容量（已经是2的次幂） 初始化数组table（作为数组长度）,即 哈希表的容量大小 = 数组大小（长度）
+        table = new Entry[capacity];
+        
+        //修改hashSeed 
+        initHashSeedAsNeeded(capacity);
+    }
+
+    // 将传入的容量大小转化为：>传入容量大小的最小的2的幂
+    // 特别注意：容量大小必须为2的幂，该原因在下面的讲解会详细分析
+    private static int roundUpToPowerOf2(int number) {
+        // 若 容量超过了最大值，初始化容量设置为最大值 ；否则，设置为：>传入容量大小的最小的2的次幂
+        return number >= MAXIMUM_CAPACITY
+                ? MAXIMUM_CAPACITY
+                : (number > 1) ? Integer.highestOneBit((number - 1) << 1) : 1;
+    }
+
+    // 与虚拟机设置有关，改变hashSeed的值
+    final boolean initHashSeedAsNeeded(int capacity) {
+        boolean currentAltHashing = hashSeed != 0;
+        boolean useAltHashing = sun.misc.VM.isBooted() &&
+                (capacity >= Holder.ALTERNATIVE_HASHING_THRESHOLD);
+        boolean switching = currentAltHashing ^ useAltHashing;
+        if (switching) {
+            hashSeed = useAltHashing
+                ? sun.misc.Hashing.randomHashSeed(this)
+                : 0;
+        }
+        return switching;
+    }
+
+```
+通过上面分析可以看出：**真正初始化哈希表（初始化存储数组table）是在第1次添加键值对时，即第1次调用put（）时**。
+
+2. 当 key ==null时，将该 key-value 的存储位置规定为数组table 中的第1个位置，即table [0].
+
+```java
+//函数使用原型
+if (key == null)
+    return putForNullKey(value);
+
+// 源码分析
+
+    private V putForNullKey(V value) {
+        // 遍历以table[0]为首的链表，寻找是否存在key==null 对应的键值对
+        // 1. 若有：则用新value 替换 旧value；同时返回旧的value值
+        for (Entry<K,V> e = table[0]; e != null; e = e.next) {
+            if (e.key == null) {
+                V oldValue = e.value;
+                e.value = value;
+                e.recordAccess(this);
+                return oldValue;
+            }
+        }
+        modCount++;
+
+        // 2. 若无key==null的键，那么调用addEntry（），将空键 & 对应的值封装到Entry中，并放到table[0]中
+        addEntry(0, null, value, 0);
+        // 注：
+    // a. addEntry（）的第1个参数 = hash值 = 传入0
+    // b. 即 说明：当key = null时，也有hash值 = 0，所以HashMap的key 可为null
+    // c. 对比HashTable，由于HashTable对key直接hashCode（），若key为null时，会抛出异常，所以HashTable的key不可为null
+    // d. 此处只需知道是将 key-value 添加到HashMap中即可，关于addEntry（）的源码分析将等到下面再详细说明，
+        return null;
+    }
+```
+从此处可以看出：
+- HashMap的键key 可为null（区别于 HashTable的key 不可为null）；
+- HashMap的键key 可为null且只能为1个，但值value可为null且为多个
+
+3. 计算存放数组 table 中的位置（即 数组下标 or 索引）
+
+```java
+//函数使用原型
+int hash = hash(key); // a. 根据键值key计算hash值 ->> 分析1
+int i = indexFor(hash, table.length); // b. 根据hash值 最终获得 key对应存放的数组Table中位置 ->> 分析2
+
+//源码分析
+
+    //将 键key 转换成 哈希码（hash值）操作  = 使用hashCode() + 4次位运算 + 5次异或运算（9次扰动）
+    final int hash(Object k) {
+        int h = hashSeed;
+        if (0 != h && k instanceof String) {
+            return sun.misc.Hashing.stringHash32((String) k);
+        }
+
+        h ^= k.hashCode();
+
+        h ^= (h >>> 20) ^ (h >>> 12);
+        return h ^ (h >>> 7) ^ (h >>> 4);
+    }
+
+
+    static int indexFor(int h, int length) {
+        // assert Integer.bitCount(length) == 1 : "length must be a non-zero power of 2";
+        return h & (length-1); //将对哈希码扰动处理后的结果 与运算(&) （数组长度-1），最终得到存储在数组table的位置（即数组下标、索引）
+    }
+```
+
+![数组下标计算过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g61x91y901j30nm0b1dhh.jpg)
+
+在了解了如何计算存放数组table 中的位置 后，所谓**知其然而需知其所以然**，下面将讲解为什么要这样计算，即主要解答以下3个问题：
+- 为什么不直接采用经过hashCode()处理的哈希码 作为存储数组table的下标位置？
+- 为什么采用哈希码 与运算(&) （数组长度-1） 计算数组下标？
+- 为什么在计算数组下标前，需对哈希码进行二次处理：扰动处理？
+
+在回答这3个问题前，有一个核心思想需要了解：
+> 所有处理的根本目的，都是为了提高 存储key-value的数组下标位置 的随机性 & 分布均匀性，尽量避免出现hash值冲突。即：对于不同key，存储的数组下标位置要尽可能不一样。
+
+**问题1：为什么不直接采用经过hashCode（）处理的哈希码 作为 存储数组table的下标位置？**
+
+这是因为如果采用这种方式，容易出现 哈希码 与 数组大小范围不匹配的情况，即 计算出来的哈希码可能 不在数组大小范围内，从而导致无法匹配存储位置。
+
+![原因描述](https://ws1.sinaimg.cn/large/005CDUpdgy1g61xf1x8jhj30yg0asgp4.jpg)
+
+为了解决 “哈希码与数组大小范围不匹配” 的问题，HashMap给出了解决方案：哈希码 与运算（&） （数组长度-1）。
+
+**问题2： 为什么采用 哈希码 与运算(&) （数组长度-1） 计算数组下标？**
+
+根据HashMap的容量大小（数组长度），按需取 哈希码一定数量的低位 作为存储的数组下标位置，从而 解决 “哈希码与数组大小范围不匹配” 的问题
+
+![具体原因描述](https://ws1.sinaimg.cn/large/005CDUpdgy1g61xifotumj30yg0hpdmt.jpg)
+
+上图同时也给出了为什么HashMap的数组长度一定是2的次幂问题的解答，其实还有一个原因，将在后面具体讲述。
+
+**问题3： 为什么在计算数组下标前，需对哈希码进行二次处理：扰动处理？**
+
+该操作是为了加大哈希码低位的随机性，使得分布更均匀，从而提高对应数组存储下标位置的随机性 & 均匀性，最终减少Hash冲突。
+
+![原因描述](https://ws1.sinaimg.cn/large/005CDUpdgy1g61xkuymsij30yg0cw0vm.jpg)
+
+4. 若对应的key已存在，则 使用 新value 替换 旧value
+
+> 当发生 Hash冲突时，为了保证 键key的唯一性哈希表并不会马上在链表中插入新数据，而是先查找该 key是否已存在，若已存在，则替换即可.
+
+```java
+   /**
+     * 函数使用原型
+     */
+// 2. 判断该key对应的值是否已存在（通过遍历 以该数组元素为头结点的链表 逐个判断）
+        for (Entry<K,V> e = table[i]; e != null; e = e.next) {
+            Object k;
+            // 2.1 若该key已存在（即 key-value已存在 ），则用 新value 替换 旧value
+            if (e.hash == hash && ((k = e.key) == key || key.equals(k))) {
+                V oldValue = e.value;
+                e.value = value;
+                e.recordAccess(this);
+                return oldValue; //并返回旧的value
+            }
+        }
+
+        modCount++;
+
+        // 2.2 若 该key不存在，则将“key-value”添加到table中
+        addEntry(hash, key, value, i);
+        return null;
+
+```
+此处无复杂的源码分析，但此处的分析点主要有2个：替换流程 & key是否存在（即key值的对比）
+
+**替换流程**
+
+![替换流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g61xo1judsj30ji18vmza.jpg)
+
+**key值的对比**
+
+采用 equals（） 或 “==” 进行比较，下面给出其介绍 & 与 “==”使用的对比：
+
+![key值比较](https://ws1.sinaimg.cn/large/005CDUpdgy1g61xpimbdmj30y608ctah.jpg)
+
+5. 若对应的key不存在，则将该“key-value”添加到数组table的对应位置中
+
+```java
+//函数使用原型
+2.2 若 该key不存在，则将“key-value”添加到table中
+addEntry(hash, key, value, i);
+
+//源码解析
+
+    void addEntry(int hash, K key, V value, int bucketIndex) {
+        // 1.插入前，先判断容量是否足够
+        // 1.1 若不足够，则进行扩容(2倍)、重新计算Hash值、重新计算数组存储下标
+        if ((size >= threshold) && (null != table[bucketIndex])) {
+            resize(2 * table.length); // a.扩容两倍 --》分析1
+            hash = (null != key) ? hash(key) : 0; // b. 重新计算该Key对应的Hash值
+            bucketIndex = indexFor(hash, table.length); // c. 重新计算该Key对应的hash值的存储数组下标位置
+        }
+
+        // 1.2 若容量足够，则创建1个新的数组元素（Entry） 并放入到数组中 --》 分析2
+        createEntry(hash, key, value, bucketIndex);
+    }
+
+    void resize(int newCapacity) {
+        //1.保存旧数组（old table）
+        Entry[] oldTable = table;
+        //2.保存旧容量（old capacity ），即数组长度
+        int oldCapacity = oldTable.length;
+        //3.若旧容量已经是系统默认最大容量了，那么将阈值设置成整型的最大值，退出  
+        if (oldCapacity == MAXIMUM_CAPACITY) {
+            threshold = Integer.MAX_VALUE;
+            return;
+        }
+        // 4. 根据新容量（2倍容量）新建1个数组，即新table
+        Entry[] newTable = new Entry[newCapacity];
+        // 5. 将旧数组上的数据（键值对）转移到新table中，从而完成扩容 ->>分析1.1 
+        transfer(newTable, initHashSeedAsNeeded(newCapacity));
+        // 6. 新数组table引用到HashMap的table属性上
+        table = newTable;
+        // 7. 重新设置阈值
+        threshold = (int)Math.min(newCapacity * loadFactor, MAXIMUM_CAPACITY + 1);
+    }
+
+    /**
+      * 分析1.1：transfer(newTable); 
+      * 作用：将旧数组上的数据（键值对）转移到新table中，从而完成扩容
+      * 过程：按旧链表的正序遍历链表、在新链表的头部依次插入
+    */
+    void transfer(Entry[] newTable, boolean rehash) {
+        // 获取新数组的大小 = 获取新容量大小 
+        int newCapacity = newTable.length;
+        for (Entry<K,V> e : table) { //通过遍历 旧数组，将旧数组上的数据（键值对）转移到新数组中
+            while(null != e) {
+                Entry<K,V> next = e.next; //遍历 以该数组元素为首 的链表,转移链表时，因是单链表，故要保存下1个结点，否则转移后链表会断开
+                if (rehash) {
+                    e.hash = null == e.key ? 0 : hash(e.key);
+                }
+                int i = indexFor(e.hash, newCapacity);
+                //将当前entry的next链指向新的索引位置,newTable[i]有可能为空，有可能也是个entry链，如果是entry链，直接在链表头部插入。
+                // 扩容后，可能出现逆序：按旧链表的正序遍历链表、在新链表的头部依次插入
+                e.next = newTable[i];
+                newTable[i] = e;
+                // 访问下1个Entry链上的元素，如此不断循环，直到遍历完该链表上的所有节点
+                e = next;
+            }
+        }
+    }
+
+    // 若容量足够，则创建1个新的数组元素（Entry） 并放入到数组中
+    void createEntry(int hash, K key, V value, int bucketIndex) {
+        // 把table中该位置原来的Entry保存 
+        Entry<K,V> e = table[bucketIndex];
+
+        // 2. 在table中该位置新建一个Entry：将原头结点位置（数组上）的键值对 放入到（链表）后1个节点中、将需插入的键值对 放入到头结点中（数组上）-> 从而形成链表
+        // 即 在插入元素时，是在链表头插入的，table中的每个位置永远只保存最新插入的Entry，旧的Entry则放入到链表中（即 解决Hash冲突）
+        table[bucketIndex] = new Entry<>(hash, key, value, e);
+        size++;
+    }
+```
+此处有2点需要特别注意的：**键值对的添加方式与扩容机制**
+
+**键值对的添加方式：单链表的头插法**
+
+即将该位置（数组上）原来的数据放在该位置的（链表）下1个节点中（next）、在该位置（数组上）放入需插入的数据-> 从而形成链表。
+
+![键值对添加方式](https://ws1.sinaimg.cn/large/005CDUpdgy1g62hz6ycr0j30ji18vwgt.jpg)
+
+**扩容机制**
+
+来看一下具体流程：
+
+![扩容流程](https://ws1.sinaimg.cn/large/005CDUpdly1g62i10umtdj30ee186tb1.jpg)
+
+扩容过程中的转移数据示意图：
+
+![数据转移](https://ws1.sinaimg.cn/large/005CDUpdly1g62i20rijoj30wn23an2p.jpg)
+
+在扩容resize()过程中，在将旧数组上的数据 转移到 新数组上时，转移操作 = 按旧链表的正序遍历链表、在新链表的头部依次插入，即在转移数据、扩容后，容易出现链表逆序的情况.
+
+> 设重新计算存储位置后不变，即扩容前 = 1->2->3，扩容后 = 3->2->1
+
+此外，此时若（多线程）并发执行 put()操作，一旦出现扩容情况，则容易出现环形链表，从而在获取数据、遍历链表时形成死循环（Infinite Loop）。在此，就直接给出`为什么HashMap是线程不安全的原因`：
+
+- `put的时候导致的多线程数据不一致`。这个问题比较好想象，比如有两个线程A和B，首先A希望插入一个key-value对到HashMap中，首先计算记录所要落到的桶的索引坐标，然后获取到该桶里面的链表头结点，此时线程A的时间片用完了，而此时线程B被调度得以执行，和线程A一样执行，只不过线程B成功将记录插到了桶里面，假设线程A插入的记录计算出来的桶索引和线程B要插入的记录计算出来的桶索引是一样的，那么当线程B成功插入之后，线程A再次被调度运行时，它依然持有过期的链表头但是它对此一无所知，以至于它认为它应该这样做，如此一来就覆盖了线程B插入的记录，这样线程B插入的记录就凭空消失了，造成了数据不一致的行为。
+- `多线程并发执行put()操作时，可能因为resize()操作出现环形链表，从而引起死循环`。
+
+**给出形成环形链表的具体分析流程：**
+
+![多线程HashMap的resize](https://ws1.sinaimg.cn/large/005CDUpdgy1g62ie5fhigj312k0hgdhn.jpg)
+
+我们假设有两个线程同时需要执行resize操作，我们原来的桶数量为2，记录数为3，需要resize桶到4，原来的记录分别为：[3,A],[7,B],[5,C]，在原来的map里面，我们发现这三个entry都落到了第二个桶里面。
+
+假设线程thread1执行到了transfer方法的Entry next = e.next这一句，然后时间片用完了，此时的e = [3,A], next = [7,B]。线程thread2被调度执行并且顺利完成了resize操作，需要注意的是，此时的[7,B]的next为[3,A]。此时线程thread1重新被调度运行，此时的thread1持有的引用是已经被thread2 resize之后的结果。线程thread1首先将[3,A]迁移到新的数组上，然后再处理[7,B]，而[7,B]被链接到了[3,A]的后面，处理完[7,B]之后，就需要处理[7,B]的next了啊，而通过thread2的resize之后，[7,B]的next变为了[3,A]，此时，[3,A]和[7,B]形成了环形链表，后面继续遍历那么就会陷入死循环。
+
+**前面提到HashMap的数组长度为什么一定是2的次幂的一些原因，其实在resize这里还有另外一种解释：**
+
+hashMap的数组长度一定保持2的次幂，比如16的二进制表示为 10000，那么length-1就是15，二进制为01111，同理扩容后的数组长度为32，二进制表示为100000，length-1为31，二进制表示为011111。从下图可以我们也能看到这样会保证低位全为1，而扩容后只有一位差异，也就是多出了最左位的1，这样在通过 h&(length-1)的时候，只要h对应的最左边的那一个差异位为0，就能保证得到的新的数组索引和老数组索引一致(大大减少了之前已经散列良好的老数组的数据位置重新调换)
+
+![求余操作](https://ws1.sinaimg.cn/large/005CDUpdgy1g62ij7trkyj30p20ek0ub.jpg)
+
+还有，数组长度保持2的次幂，length-1的低位都为1，会使得获得的数组索引index更加均匀，比如：
+
+![均匀](https://ws1.sinaimg.cn/large/005CDUpdgy1g62ik8n4msj30r40cc75o.jpg)
+
+我们看到，上面的&运算，高位是不会对结果产生影响的（hash函数采用各种位运算可能也是为了使得低位更加散列），我们只关注低位bit，如果低位全部为1，那么对于h低位部分来说，任何一位的变化都会对结果产生影响，也就是说，要得到index=21这个存储位置，h的低位只有这一种组合。这也是数组长度设计为必须为2的次幂的原因。
+
+![非全1](https://ws1.sinaimg.cn/large/005CDUpdgy1g62il31j2ej30r00d6dit.jpg)
+
+如果不是2的次幂，也就是低位不是全为1此时，要使得index=21，h的低位部分不再具有唯一性了，哈希冲突的几率会变的更大，同时，index对应的这个bit位无论如何不会等于1了，而对应的那些数组位置也就被白白浪费了。
+
+6. 总结
+
+向 HashMap 添加数据（成对 放入 键 - 值对）的全流程：
+
+![put全流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g62injydpij30yg139gp5.jpg)
+
+示意图：
+
+![示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g62iodx8jxj30yg13qtdv.jpg)
+
+**3. get()方法的解析**
+
+给出get()方法的流程如下：
+
+![get()](https://ws1.sinaimg.cn/large/005CDUpdgy1g62iqb0g40j30hs0oqjst.jpg)
+
+```java
+    public V get(Object key) {
+        if (key == null) // 1.当key == null时，则到 以哈希表数组中的第1个元素（即table[0]）为头结点的链表去寻找对应 key == null的键
+            return getForNullKey(); //分析1
+
+        // 2. 当key ≠ null时，去获得对应值 -->分析2
+        Entry<K,V> entry = getEntry(key);
+
+        return null == entry ? null : entry.getValue();
+    }
+
+    // 当key == null时，则到 以哈希表数组中的第1个元素（即table[0]）为头结点的链表去寻找对应 key == null的键
+    private V getForNullKey() {
+        if (size == 0) {
+            return null;
+        }
+        for (Entry<K,V> e = table[0]; e != null; e = e.next) {
+            if (e.key == null)
+                return e.value;
+        }
+        return null;
+    }
+
+    final Entry<K,V> getEntry(Object key) {
+        if (size == 0) {
+            return null;
+        }
+
+        // 1. 根据key值，通过hash（）计算出对应的hash值
+        int hash = (key == null) ? 0 : hash(key);
+        for (Entry<K,V> e = table[indexFor(hash, table.length)];
+             e != null;
+             e = e.next) { // 遍历 以该数组下标的数组元素为头结点的链表所有节点，寻找该key对应的值
+            Object k;
+            if (e.hash == hash &&
+                ((k = e.key) == key || (key != null && key.equals(k))))
+                return e;
+        }
+        return null;
+    }
+```
+
+**4. 其他常用方法的解析**
+
+HashMap除了核心的put（）、get（）函数，还有以下主要使用的函数方法：
+
+```java
+void clear(); // 清除哈希表中的所有键值对
+int size();  // 返回哈希表中所有 键值对的数量 = 数组中的键值对 + 链表中的键值对
+boolean isEmpty(); // 判断HashMap是否为空；size == 0时 表示为 空 
+
+void putAll(Map<? extends K, ? extends V> m);  // 将指定Map中的键值对 复制到 此Map中
+V remove(Object key);  // 删除该键值对
+
+boolean containsKey(Object key); // 判断是否存在该键的键值对；是 则返回true
+boolean containsValue(Object value);  // 判断是否存在该值的键值对；是 则返回true
+```
+
+下面将简单介绍上面几个函数的源码分析:
+
+```java
+  /**
+   * 函数：isEmpty()
+   * 作用：判断HashMap是否为空，即无键值对；size == 0时 表示为 空 
+   */
+
+public boolean isEmpty() {  
+    return size == 0;  
+} 
+
+ /**
+   * 函数：size()
+   * 作用：返回哈希表中所有 键值对的数量 = 数组中的键值对 + 链表中的键值对
+   */
+
+   public int size() {  
+    return size;  
+}  
+
+ /**
+   * 函数：clear()
+   * 作用：清空哈希表，即删除所有键值对
+   * 原理：将数组table中存储的Entry全部置为null、size置为0
+   */ 
+public void clear() {  
+    modCount++;  
+    Arrays.fill(table, null);
+    size = 0;
+}  
+
+/**
+   * 函数：putAll(Map<? extends K, ? extends V> m)
+   * 作用：将指定Map中的键值对 复制到 此Map中
+   * 原理：类似Put函数
+   */ 
+
+    public void putAll(Map<? extends K, ? extends V> m) {  
+    // 1. 统计需复制多少个键值对  
+    int numKeysToBeAdded = m.size();  
+    if (numKeysToBeAdded == 0)  
+        return; 
+
+    // 2. 若table还没初始化，先用刚刚统计的复制数去初始化table  
+    if (table == EMPTY_TABLE) {  
+        inflateTable((int) Math.max(numKeysToBeAdded * loadFactor, threshold));  
+    }  
+  
+    // 3. 若需复制的数目 > 阈值，则需先扩容 
+    if (numKeysToBeAdded > threshold) {  
+        int targetCapacity = (int)(numKeysToBeAdded / loadFactor + 1);  
+        if (targetCapacity > MAXIMUM_CAPACITY)  
+            targetCapacity = MAXIMUM_CAPACITY;  
+        int newCapacity = table.length;  
+        while (newCapacity < targetCapacity)  
+            newCapacity <<= 1;  
+        if (newCapacity > table.length)  
+            resize(newCapacity);  
+    }  
+    // 4. 开始复制（实际上不断调用Put函数插入）  
+    for (Map.Entry<? extends K, ? extends V> e : m.entrySet())  
+        put(e.getKey(), e.getValue());
+}  
+
+ /**
+   * 函数：remove(Object key)
+   * 作用：删除该键值对
+   */ 
+
+public V remove(Object key) {  
+    Entry<K,V> e = removeEntryForKey(key);  
+    return (e == null ? null : e.value);  
+}  
+  
+final Entry<K,V> removeEntryForKey(Object key) {  
+    if (size == 0) {  
+        return null;  
+    }  
+    // 1. 计算hash值
+    int hash = (key == null) ? 0 : hash(key);  
+    // 2. 计算存储的数组下标位置
+    int i = indexFor(hash, table.length);  
+    Entry<K,V> prev = table[i];  
+    Entry<K,V> e = prev;  
+  
+    while (e != null) {  
+        Entry<K,V> next = e.next;  
+        Object k;  
+        if (e.hash == hash &&  
+            ((k = e.key) == key || (key != null && key.equals(k)))) {  
+            modCount++;  
+            size--; 
+            // 若删除的是table数组中的元素（即链表的头结点） 
+            // 则删除操作 = 将头结点的next引用存入table[i]中  
+            if (prev == e) 
+                table[i] = next;
+
+            //否则 将以table[i]为头结点的链表中，当前Entry的前1个Entry中的next 设置为 当前Entry的next（即删除当前Entry = 直接跳过当前Entry）
+            else  
+                prev.next = next;   
+            e.recordRemoval(this);  
+            return e;  
+        }  
+        prev = e;  
+        e = next;  
+    }  
+  
+    return e;  
+} 
+
+ /**
+   * 函数：containsKey(Object key)
+   * 作用：判断是否存在该键的键值对；是 则返回true
+   * 原理：调用get（），判断是否为Null
+   */
+   public boolean containsKey(Object key) {  
+    return getEntry(key) != null; 
+} 
+
+ /**
+   * 函数：containsValue(Object value)
+   * 作用：判断是否存在该值的键值对；是 则返回true
+   */   
+public boolean containsValue(Object value) {  
+    // 若value为空，则调用containsNullValue()  
+    if (value == null)
+        return containsNullValue();  
+    
+    // 若value不为空，则遍历链表中的每个Entry，通过equals（）比较values 判断是否存在
+    Entry[] tab = table;
+    for (int i = 0; i < tab.length ; i++)  
+        for (Entry e = tab[i] ; e != null ; e = e.next)  
+            if (value.equals(e.value)) 
+                return true;//返回true  
+    return false;  
+}  
+  
+// value为空时调用的方法  
+private boolean containsNullValue() {  
+    Entry[] tab = table;  
+    for (int i = 0; i < tab.length ; i++)  
+        for (Entry e = tab[i] ; e != null ; e = e.next)  
+            if (e.value == null)
+                return true;  
+    return false;  
+} 
+```
+
+
+
+##### 5.与JDK1.8的区别
+
+HashMap 的实现在 JDK 1.7 和 JDK 1.8 差别较大，具体区别如下：
+
+**1. 数据结构**
+
+![数据结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g62j4hsuh6j30yg09i423.jpg)
+
+**2.获取数据过程**
+
+![数据获取过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g62j55qt3pj30x207swg7.jpg)
+
+**3.扩容机制**
+
+![扩容机制](https://ws1.sinaimg.cn/large/005CDUpdgy1g62j8rmqoej30uk078gn2.jpg)
+
+##### 6.关于HashMap的其他问题
+
+**1. HashMap如何解决Hash冲突？**
+
+![Hash冲突解决](https://ws1.sinaimg.cn/large/005CDUpdgy1g62ja9taafj30yg0jbn1j.jpg)
+
+**2. 为什么HashMap具备下述特点：键-值（key-value）都允许为空、线程不安全、不保证有序、存储位置随时间变化?**
+
+![HashMap特点](https://ws1.sinaimg.cn/large/005CDUpdgy1g62jbe1tzuj30wa0f8dh2.jpg)
+
+**3.为什么 HashMap 中 String、Integer 这样的包装类适合作为 key 键？**
+
+![HashMap键的选择](https://ws1.sinaimg.cn/large/005CDUpdgy1g62jcirm7dj30yg0agjtj.jpg)
+
+**4.HashMap 中的 key若 Object类型， 则需实现哪些方法？**
+
+![Object类型](https://ws1.sinaimg.cn/large/005CDUpdgy1g62jdkwoobj30yg0cntav.jpg)
+
+
+#### 1.2.3 HashMap源码分析(JDK 1.8)
+
+HashMap的设计就是为了在查找获得最优的性能(希望基本获取O(1)的时间复杂度),因此HashMap主要使用了数组作为核心的数据存储的结构，同时使用链地址法解决K-V映射时产生的碰撞，在Java8中同时加入红黑树来优化碰撞时数据匹配的性能。下面，我将通过分析源码，讲解HashMap1.8相对应JDK 1.7版本的更新内容。
+
+##### 1.类声明
+
+```java
+public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, Cloneable, Serializable
+```
+HashMap继承自AbstractMap，实现了Map接口，Map接口定义了所有Map子类必须实现的方法。AbstractMap也实现了Map接口，并且提供了两个实现Entry的内部类：SimpleEntry和SimpleImmutableEntry。其具体介绍与JDK 1.7一样。
+
+##### 2.数据结构
+
+主要的数据结构介绍如下：
+
+![jdk1.8数据结构](https://ws1.sinaimg.cn/large/005CDUpdly1g647z912bkj30lx0jzmxy.jpg)
+
+红黑树(R-B Tree,即Red-Black Tree),是一种特殊的二叉查找数，其主要有以下特点：
+- 每个节点的颜色 = 黑色/红色，其根节点为黑色，空叶子节点为黑色；
+- 父、子节点必须是不同颜色；
+- 从1个节点到该节点的子孙节点的所有路径上包含相同数量的黑色节点。(确保了没有1条路径会比其他路径长出2倍，因此，红黑树是相对接近于平衡二叉树)；
+- 其时间复杂度为O(log n)。
+
+
