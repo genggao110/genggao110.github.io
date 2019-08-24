@@ -1,0 +1,781 @@
+---
+layout:     post
+title:      "面试知识点"
+subtitle:   " \"知识点总结\""
+date:       2019-08-23 20:29:07
+author:     "ming"
+catalog: true
+header-img: "img/post-bg-girl.jpg"
+tags:
+    - 面试知识点
+---
+
+> "The purpose of human life is to serve, and to show compassion and the will to help others."
+
+### 1.Hadoop知识总结
+
+#### 1.1 MR架构
+
+**JobClient、JobTracker、TaskTracker**
+
+![MR架构](https://upload-images.jianshu.io/upload_images/697231-069e09ede059d164?imageMogr2/auto-orient/strip|imageView2/2/w/810/format/webp)
+
+1. JobClient向JobTracker请求一个新的JobId;
+2. 检查作业输出说明；
+3. 计算作业输出划分split
+4. 将运行作业所需的资源(作业的jar文件、配置文件、计算所得的输入划分)复制到一个以作业ID命名的目录JobTracker的文件系统；
+5. 通过调用JobClient的submitJob()方法，告诉JobTracker作业准备运行
+6. JobTracker接收到submitJob()方法调用后，把此调用放到一个内部队列中，交由作业调度器进行调度，并对其进行初始化；
+7. 创建任务运行列表，作业调度去首先从共享文件系统中获取JobClient已经计算好的输入划分信息（图中step6），然后为每个划分创建一个Map任务（一个split对应一个map，有多少split就有多少map）。
+8. TaskTracker执行一个简单的循环，定期发送心跳（heartbeat）调用JobTracker。
+
+JobTracker 负责工作节点的资源管理，监控资源的使用情况，管理作业的生命周期。
+
+TaskTracker 的职责是根据JobTracker 的命令启动/清除任务，并且周期性的向JobTracker 汇报任务的状态信息。
+
+**Yarn运行机制**
+
+YARN 的基本思想就是将JobTracker 的两大主要职能：资源管理、作业的调度监控分为两个独立的进程。一个是全局的ResourceManager,另一个是每一个应用对应的ApplicationMaster。
+
+ResourceManager 是一个纯粹的调度器，它根据应用程序的资源请求严格限制系统的可用资源。在保证容量、公平性及服务器等级的前提下，优化集群资源利用率，即让所有的资源都能被充分利用。
+
+ApplicationMaster 负责与ResourceManager 协商资源，并和NodeManager 进行协同工作来执行容器和监控容器的状态。
+
+NodeManager 是YARN 节点上的工作进程，管理集群中独立的计算节点。其职责包括启动应用程序的容器，监控它们的资源使用情况，并且报告给ResourceManager。
+
+![YARN](https://upload-images.jianshu.io/upload_images/697231-ea265a5516b96af5.png?imageMogr2/auto-orient/strip|imageView2/2/w/657/format/webp)
+
+- ResourceManager 代替集群管理器
+- ApplicationMaster 代替一个专用且短暂的 JobTracker
+- NodeManager 代替 TaskTracker
+- 一个分布式应用程序代替一个 MapReduce 作业
+
+一个全局 ResourceManager 以主要后台进程的形式运行，它通常在专用机器上运行，在各种竞争的应用程序之间仲裁可用的集群资源。
+在用户提交一个应用程序时，一个称为 ApplicationMaster 的轻量型进程实例会启动来协调应用程序内的所有任务的执行。这包括监视任务，重新启动失败的任务，推测性地运行缓慢的任务，以及计算应用程序计数器值的总和。有趣的是，ApplicationMaster 可在容器内运行任何类型的任务。
+NodeManager 是 TaskTracker 的一种更加普通和高效的版本。没有固定数量的 map 和 reduce slots，NodeManager 拥有许多动态创建的资源容器。
+
+#### 1.2 Spark
+
+1. spark有几种部署模式，每种模式特点？
+
+- 本地模式：Spark不一定非要跑在hadoop集群，可以在本地，起多个线程的方式来指定。方便调试，本地模式分三类。
+- standalone模式：分布式部署集群，自带完整的服务，资源管理和任务监控是Spark自己监控，这个模式也是其他模式的基础。
+- spark on yarn:分布式部署集群，资源和任务监控交给yarn管理;粗粒度资源分配方式，包含cluster和client运行模式(cluster 适合生产，driver运行在集群子节点，具有容错功能;client 适合调试，dirver运行在客户端)
+- spark on mesos
+
+2. spark技术栈有哪些组件，每个组件有什么功能，适用于什么应用场景？
+
+- Spark core:是其它组件的基础，spark的内核,其主要包括有向循环图、RDD、Lingage、Cache、broadcast等。
+- Spark Streaming:是一个对实时数据流进行高通量、容错处理的流式处理系统,将流式计算分解成一系列短小的批处理作业.
+- Spark SQL：能够统一处理关系表和RDD，使得开发人员可以轻松地使用SQL命令进行外部查询。
+- MLBase: 是Spark生态圈的一部分专注于机器学习，让机器学习的门槛更低.
+- GraphX: 是Spark中用于图和图并行计算.
+
+3. spark有哪些组件?
+
+- master:管理集群和节点，不参与计算；
+- worker: 计算节点，进程本身不参与计算，和master汇报。
+- Driver: 运行程序的main方法，创建spark context对象；
+- Spark Context:控制整个application的生命周期，包括dagsheduler和task scheduler等组件.
+- client: 用户提交程序的入口。
+
+4. spark工作机制
+
+- 用户在client端提交任务后，会由Driver运行main方法并创建spark context上下文
+- 执行add算子，形成dag图输入dagscheduler
+- 按照add之间的依赖关系划分stage输入task scheduler
+- task scheduler会将stage划分为taskset分发到各个节点的executor中执行
+
+5. RDD机制
+
+- 分布式弹性数据集，简单的理解成一种数据结构，是spark框架上的通用货币
+- 所有算子都是基于rdd来执行的
+- rdd执行过程中会形成dag图，然后形成lineage保证容错性等
+- 从物理的角度来看rdd存储的是block和node之间的映射
+
+#### 1.3 TODO
+
+```java
+package ogms.pufa;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Scanner;
+
+/**
+ * 浦发机2018年试题整理
+ * @Author: wangming
+ * @Date: 2019-08-22 20:23
+ */
+public class Solution {
+
+    //1. 找出正整数中偶数，并输出相加后的数
+    public static int getSum(int data){
+        int sum = 0;
+        while (data > 0){
+            int tmp = data % 10;
+            sum += (tmp & 1) == 1 ? 0 : tmp;
+            data = data / 10;
+        }
+        return sum;
+    }
+
+    //2.判断一个数是不是素数
+    public static boolean isPrime(int data){
+        if(data < 2){
+            return false;
+        }
+        for(int i= 2; i <= Math.sqrt(data); i++){
+            if (data % i == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    //3. 输入n和b,找出1到n中被b整除的个数
+    public static int getCount(int n, int b){
+        int count = 0;
+        for (int i = 1; i <= n; i++){
+            if(i % b == 0){
+                count++;
+            }
+        }
+        return count;
+    }
+
+    //4. 爬楼梯问题，爬上一个或两个台阶，问有多少种方式
+    public static int JumpStep(int target){
+        if(target <= 1){
+            return 1;
+        }
+        int pre2 = 1; int pre1 = 1;
+        for(int i = 2; i <= target; i++){
+            int cur = pre2 + pre1;
+            pre2 = pre1;
+            pre1 = cur;
+        }
+        return pre1;
+    }
+
+    //变态跳台阶
+    public static int JumpFloorII(int target){
+        //动态规划求解
+        int[] dp = new int[target + 1];
+        dp[0] = dp[1] = 1;
+        for(int i = 2; i <= target; i++){
+            dp[i] = 2*dp[i-1];
+        }
+        return dp[target];
+    }
+
+    //5. 判断从1900到2010的闰年并打印
+    public static void printYear(){
+        for (int i = 1900; i <= 2010; i++){
+            if( i % 4 == 0 && i % 100 != 0 || i % 400 == 0){
+                System.out.println(i);
+            }
+        }
+    }
+
+    //6.字符串字母变换
+    public static String changeWord(String input){
+        char[] chars = input.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            if (chars[i] >= 'a' && chars[i] <= 'z'){
+                chars[i] = (char)('z' - (chars[i] - 'a'));
+            }
+            if (chars[i] >= 'A' && chars[i] <= 'Z'){
+                chars[i] = (char)('Z' - (chars[i] - 'A'));
+            }
+        }
+        String result = String.valueOf(chars);
+        return result;
+    }
+
+    //7. 输入10个数，最大数和最后一个数交换，最小数和第一个数交换
+    public static int[] exchangeArray(int[] data){
+        int max = 0;
+        int min = 0;
+        for (int i = 0; i < data.length; i++) {
+            if(data[i] > data[max]) {
+                max = i;
+            }
+            if (data[i] < data[min]){
+                min = i;
+            }
+        }
+
+        //进行交换
+        swap(data,max,data.length -1);
+        swap(data, min, 0);
+        return data;
+    }
+
+    private static void swap(int[] array, int i, int j){
+        int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
+    //8.猴子吃桃子问题——猴子第一天摘下若干个桃子，当即吃了一半，还不过瘾，又多吃了一个。
+    // 第二天又将剩下的桃子吃掉了一半，又多吃了一个。以后每天将前一天剩下的桃子吃掉一半，再多吃一个。
+    // 直到第十天只剩下一个桃子了，求第一天共摘了多少个桃子。
+    public static int getPeachCount(int n){
+        int t = 1;
+        for (int i = 1; i < n; i++) {
+            t = (t + 1) << 1;
+        }
+        return t;
+    }
+
+    //9.分段函数实现
+    //编写程序，计算下列分段函数y=f(x)的值。
+    //当 0<= x <2，y= -x+2.5；
+    //当 2<= x <4，y=2-1.5(x-3)(x-3)；
+    //当 4<= x <6，y=x/2-1.5；
+
+    public static double fengduan(int x){
+        double y = 0;
+        if( x >= 0 && x < 2){
+            y = -x + 2.5;
+        }else if(x >= 2 && x < 4){
+            y = 2 - 1.5*(x-3)*(x-3);
+        }else if(x >= 4 && x < 6){
+            y = x / 2 - 1.5;
+        }
+        return y;
+    }
+
+    //10.凯撒密码加密解密
+    public static String caesar(String s, int offset){
+        StringBuilder cipher = new StringBuilder();
+        for (int i = 0; i < s.length(); i++){
+            char c = s.charAt(i);
+            if(c >= 'a' && c <= 'z'){
+                //是小写字母时
+                c += offset % 26;
+                if(c < 'a'){
+                    c += 26;
+                }
+                if (c > 'z'){
+                    c -= 26;
+                }
+            }else if( c >= 'A' && c <= 'Z'){
+                //是大写字母的时候
+                c += offset % 26;
+                if (c < 'A'){
+                    c += 26;
+                }
+                if (c > 'Z'){
+                    c -= 26;
+                }
+            }
+            cipher.append(c);
+        }
+        return cipher.toString();
+    }
+
+    //11.把字符串中的字符a和A替换成c输出
+    public static String repalceAaToC(String input){
+        return input.replaceAll("a","c").replaceAll("A","c");
+    }
+
+    //12.给你年月日，求出是这年的第几天
+    //如果可以用Calendar类的话,dateStr必须是2014-04-02的格式
+    public static int printDayOfYear1(String dateStr){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date startDate;
+        try{
+            startDate = sdf.parse(dateStr);
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(startDate);
+            int index = calendar.get(Calendar.DAY_OF_YEAR);
+            System.out.println("输入的日期" + dateStr + "是这一年中的第" + index + "天。");
+            return index;
+        }catch (ParseException e){
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    //12. 给你年月日，求出是这年的第几天
+    //手撸,date必须是2014-04-02的格式
+    public static int printDayOfYear(String date){
+        int dayeSum = 0;
+        int year = Integer.valueOf(date.substring(0,4));
+        int month = Integer.valueOf(date.substring(5,7));
+        int day = Integer.valueOf(date.substring(8,10));
+        for (int i = 1; i < month; i++){
+            switch (i){
+                case 1:
+                case 3:
+                case 5:
+                case 7:
+                case 8:
+                case 10:
+                case 12:
+                    dayeSum += 31;
+                    break;
+                case 4:
+                case 6:
+                case 9:
+                case 11:
+                    dayeSum += 30;
+                    break;
+                case 2:
+                    if((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)){
+                        dayeSum += 29;
+                    }else{
+                        dayeSum += 28;
+                    }
+            }
+        }
+        System.out.println("您输入的日期是该年的第："+(dayeSum+day)+"天");
+        return (dayeSum + day);
+    }
+
+    //13. 小球从100m下落，每次回弹一半距离，第几次落地后的总距离
+    public static double summiles(int count){
+        double all = 100.0d;
+        for (; count > 0; count--){
+            all /= 2.0;
+        }
+        return all;
+    }
+
+    //14. 从求组中找出唯一出现一次的数
+    public static int unique(int[] numarr){
+        int single = 0;
+        for (int i = 0; i < numarr.length; i++){
+            single = single ^ numarr[i];
+        }
+        return single;
+    }
+
+    //15. A,B两个字符串,求在第一个字符串出现,第二个字符串中未出现的,重复只取第一次出现,输出字符串。
+    public static String uniqueABstr(String stra, String strb){
+        String newstr = "";
+        for (int i = 0; i < stra.length(); i++){
+            String s = stra.charAt(i) + "";
+            if(!strb.contains(s)){
+                if(!newstr.contains(s)){
+                    newstr += s;
+                }
+            }
+        }
+        return newstr;
+    }
+
+    //16. 喝饮料问题：一块钱一瓶饮料，两个空瓶子换一瓶饮料
+    //求4块钱能喝多少饮料
+    public static int heyinliao(int num){
+        int money = num;
+        int ping = 0;
+        int kongping = 0;
+        while (money > 0){
+            money--;
+            ping++;
+            kongping++;
+            if (kongping == 2){
+                ping++;
+                kongping = 0;
+                kongping++;
+            }
+        }
+        if (kongping == 2){
+            ping++;
+        }
+        return ping;
+    }
+
+    //17. 求给定字符串的最长回文子串（重点）
+    public static String longestPalindrome(String s){
+        int len = s.length();
+        if(len <= 1){
+            return s;
+        }
+        boolean[][] dp = new boolean[len][len];
+        int maxLen = 0;
+        int a = 0;
+        String res = "";
+        //针对于长度为1和长度为2的情况单独讨论
+        for(int i = 0; i < len; i++){
+            dp[i][i] = true;
+            if(i < len - 1 && s.charAt(i) == s.charAt(i+1)){
+                dp[i][i+1] = true;
+                a = i;
+                res = s.substring(i, i + 2);
+                maxLen = 2;
+            }
+        }
+
+        for(int l = 3; l <= len; l++){
+            for(int start = 0; start < len - l + 1; start++){
+                int end = start + l -1;
+                if(dp[start + 1][end - 1] && s.charAt(start) == s.charAt(end)){
+                    dp[start][end] = true;
+                    a = start;
+                    res = s.substring(start,end + 1);
+                    maxLen = l;
+                }
+            }
+        }
+        if(maxLen == 0 && a == 0){
+            res = String.valueOf(s.charAt(0));
+        }
+        return res;
+    }
+
+
+    public static int fun(){
+        int i= 10;
+        try{
+            i = i / 0;
+            return i--;
+        }catch (Exception e){
+            --i;
+            return i--;
+        }finally {
+            --i;
+            return i--;
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(fun());
+    }
+}
+
+```
+
+```java
+package ogms.pufa;
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 浦发今年所收集的机试题
+ * @Author: wangming
+ * @Date: 2019-08-23 10:35
+ */
+public class Current {
+
+    //1. 数组中奇数多还是偶数多，输出yes或者no
+    public static void judgeCount(int[] array){
+        int oddNumber = 0;
+        int evenNumber = 0;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] % 2 == 0){
+                evenNumber++;
+            }else {
+                oddNumber++;
+            }
+        }
+        if(oddNumber > evenNumber){
+            System.out.println("yes");
+        }else{
+            System.out.println("no");
+        }
+    }
+
+    //2. 输出字符串中仅出现一次的第一个字符
+    public static void outputFirstLetter(String str){
+        Map<Character,Integer> characterIntegerMap = new HashMap<>();
+
+        for (int i = 0; i < str.length(); i++) {
+            if (characterIntegerMap.containsKey(str.charAt(i))) {
+                int value = characterIntegerMap.get(str.charAt(i));
+                characterIntegerMap.put(str.charAt(i),value+1);
+            }else{
+                characterIntegerMap.put(str.charAt(i),1);
+            }
+        }
+
+        for (int i = 0; i < str.length(); i++) {
+            if (characterIntegerMap.get(str.charAt(i)) == 1) {
+                System.out.println(str.charAt(i));
+                break;
+            }
+        }
+    }
+
+    //3. 输出字符串的最大回文字符串的长度,暴力法求解
+
+    //解法1： 暴力法求解，两层 for 循环 O(n²），for 循环里边判断是否为回文 O(n），所以时间复杂度为 O(n³）。
+    // 领扣上运行超出时间限制，废弃
+    public static String longestPalindrome1(String s){
+        String ans = "";
+        int max = 0;
+        int len = s.length();
+        for (int i = 0; i < len; i++) {
+            for(int j = i + 1; j <= len; j++){
+                String test = s.substring(i,j);
+                if(isPalindrome(test) && test.length() > max){
+                    ans = s.substring(i,j);
+                    max = Math.max(max, ans.length());
+                }
+            }
+        }
+        return ans;
+    }
+
+    private static boolean isPalindrome(String s){
+        int len = s.length();
+        for(int i = 0; i < len / 2; i++){
+            if(s.charAt(i) != s.charAt(len - i - 1)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    //解法2：最长公共子串方法，用双数组的方式
+   public static String longestPalindrome(String s){
+        if(s.equals("")){
+            return "";
+        }
+        String origin = s;
+        String reverse = new StringBuilder(s).reverse().toString(); //字符串倒置
+        int lenght = s.length();
+        int[][] arr = new int[lenght][lenght];
+        int maxLen = 0;
+        int maxEnd = 0;
+        for (int i = 0; i < lenght; i++){
+            for (int j = 0; j < lenght; j++){
+                if(origin.charAt(i) == reverse.charAt(j)){
+                    if (i == 0 || j == 0){
+                        arr[i][j] = 1;
+                    }else{
+                        arr[i][j] = arr[i-1][j-1] + 1;
+                    }
+                }
+                //修改的地方，需要判断下标是否对应
+                if(arr[i][j] > maxLen){
+                    int beforeRev = lenght - 1 -j;
+                    if(beforeRev + arr[i][j] - 1 == i){
+                        //判断下标是否对应
+                        maxLen = arr[i][j];
+                        maxEnd = i; //以i位置结尾的字符
+                    }
+                }
+            }
+        }
+        return s.substring(maxEnd - maxLen + 1, maxEnd + 1);
+   }
+
+   //解法2 ：优化一下最长公共子串,用单数组
+   public static String longestPalindrom2(String s){
+        if(s.equals("")){
+            return "";
+        }
+        String origin = s;
+        String reverse = new StringBuilder(s).reverse().toString(); //反转字符串
+        int maxLen = 0;
+        int maxEnd = 0;
+        int length = s.length();
+        int[] dp = new int[reverse.length()];
+        for (int i = 0; i < length; i++){
+            for(int j = length - 1; j >= 0; j--){
+                if(origin.charAt(i) == reverse.charAt(j)){
+                    if(i == 0 || j == 0){
+                        dp[j] = 1;
+                    }else{
+                        dp[j] = dp[j - 1] + 1;
+                    }
+                }else{
+                    dp[j] = 0;
+                }
+
+                if(dp[j] > maxLen){
+                    int beforeRev = length - 1 -j;
+                    if(beforeRev + dp[j] - 1 == i){
+                        maxLen = dp[j];
+                        maxEnd = i;
+                    }
+                }
+            }
+        }
+        return s.substring(maxEnd - maxLen + 1, maxEnd + 1);
+   }
+
+   //解法3：动态规划求解,背这个
+    public static String longestPalindrom3(String s){
+       int len = s.length();
+       if(len <= 1){
+           return s;
+       }
+
+       boolean[][] flag = new boolean[len][len];
+       int start = 0; //回文串起始位置
+       int maxLen = 0; //回文串最大子串
+
+        //子串长度为1和为2的初始化
+        for (int i = 0; i < len; i++){
+            flag[i][i] = true;
+            if(i < len - 1 && s.charAt(i) == s.charAt(i+1)){
+                flag[i][i+1] = true;
+                start = i;
+                maxLen = 2;
+            }
+        }
+
+        //m表示检索的子串长度，等于3表示先检索长度为3的子串
+        for(int m = 3; m <= len; m++){
+            for(int i = 0; i < len - m + 1;i++){
+                int j = i + m -1; //子串结束的位置
+                if(flag[i+1][j-1] && s.charAt(i) == s.charAt(j)){
+                    flag[i][j] = true;
+                    start = i;
+                    maxLen = m;
+                }
+            }
+        }
+
+        if (start == 0 && maxLen == 0){
+            return String.valueOf(s.charAt(0));
+        }
+        return s.substring(start, start + maxLen);
+     }
+
+     //4. 数字x满足 1000 <= x <= 9999 且 x%a=0，（x+1）%b=0，(x+2)%c=0，现给定abc的值，求x
+    public static int getValue(int a,int b, int c){
+        int result = 0;
+        boolean status = false;
+        for(int i = 1000; i <= 9999; i++){
+            if (i % a == 0 && (i+1) % b == 0 && (i + 2) % c == 0){
+                result = i;
+                status = true;
+                break;
+            }
+        }
+        if(status){
+            return result;
+        }else {
+            return -1;
+        }
+    }
+
+    //5. 给定一个数组nums，写一个函数将所有的值移动0到最后，同时保持非零元素的相对顺序不变
+    public void moveZones(int[] nums){
+        int slow = 0, fast = 0;
+        while (fast < nums.length){
+            if(nums[fast] != 0){
+                nums[slow] = nums[fast];
+                slow++;
+                fast++;
+            }else{
+                //如果一旦这个数组上的数字是0,则fast指针就需要向前走
+                //slow指针停留在0这个位置,在等待着fast发现了非0的数字将0位置的slow指针覆盖掉
+                fast++;
+            }
+        }
+        // slow跟fast相差了多少,就说明这个数组有多少个0,在上面填充完元素之后,
+        // 就需要将漏掉的0补上
+        for(int i = slow; i< nums.length; i++){
+            nums[i] = 0;
+        }
+    }
+
+    //6.求0-7所能组成的奇数个数
+    public static int getNumberCount(int n){
+        int sum = 0;
+        int count = 0;
+        for(int i = 1; i <= n; i++){
+            if(i == 1){
+                count = 4;
+            }else if(i ==2){
+                count *= 7;
+            }else{
+                count *= 8;
+            }
+            System.out.println("0-7组成"+i+"位数时，奇数有"+count+"个");
+            sum += count;
+        }
+        return sum;
+    }
+
+    //7. 数组连续子数列和
+    //1. 首先，我们需要定义一个变量currentSum，用for循环来记录前i项的和，currentSum每次都会更改，如果currentSum的值小于0，我们再往后加只有减小最大和，所以我们需要将array[i+1]项的值重新赋值给currentSum。
+    //
+    //2. 我们需要定义一个最大值max，每次改变currentSum的值时，我们都需要将max和currentSum进行比较，如果currentSum大于max，我们则将currentSum的值赋值给max。
+
+    public static int MaxSubsequenceSum(int[] array){
+        if(array == null || array.length == 0){
+            return 0;
+        }
+        //最大的子数组和
+        int maxSum = array[0];
+        //累加的子数组和
+        int curSum = array[0];
+
+        for (int i = 1; i < array.length; i++){
+            if(curSum < 0){
+                curSum = array[i];
+            }else {
+                curSum += array[i];
+            }
+            if(curSum > maxSum){
+                maxSum = curSum;
+            }
+        }
+        return maxSum;
+    }
+
+    //8.求两个数的最大公约数（欧几里得算法）
+    public static int getGCD(int num1, int num2){
+        num1 = Math.abs(num1);
+        num2 = Math.abs(num2);
+        while (num2 != 0){
+            int remainder = num1 % num2;
+            num1 = num2;
+            num2 = remainder;
+        }
+        return num1;
+    }
+
+    //9. n个骰子的点数
+    public String[] printProbabiity(int n){
+        if (n <= 0) {
+            return null;
+        }
+        //结果可能性总数
+        int total = (int) Math.pow(6,n);
+        String[] result = new String[6*n - n + 1];
+        int[][] dp = new int[n+1][6*n+1];
+
+        //初始化
+        for(int x = 1; x <= 6; x++){
+            dp[1][x] = 1;
+        }
+
+        //执行计算
+        for(int i = 2; i <= n; i++){
+            for(int j = i; j <= 6*n;j++){
+                for(int k = 1; k <= 6 && k <= j; k++){
+                    dp[i][j] += dp[i-1][j-k];
+                }
+            }
+        }
+
+        for (int k = n; k <= 6 * n; k++) {
+            result[k - n] = dp[n][k] + "/" + total;
+        }
+        return result;
+    }
+
+    public static void main(String[] args) {
+        int a = 2;
+        int b = 3;
+        int c = 5;
+        System.out.println(getValue(2,3,5));
+    }
+}
+
+```

@@ -110,7 +110,7 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V>{
 
 #### 2.LRUCache的链表加上HashMap的实现
 
-![LRU缓存的链表+哈希表实现](https://ws1.sinaimg.cn/large/005CDUpdgy1g64qf21aknj30io0gut8x.jpg)
+![LRU缓存的链表+哈希表实现](https://i.loli.net/2019/08/21/4DLMWCYztPkI3op.jpg)
 
 将Cache的所有位置都用双链表连接起来，当一个位置被命中之后，就将通过调整链表的指向，将该位置调整到链表头的位置，新加入的Cache直接加到链表头中。这样，在进行多次Cache操作后，最近被命中的，就会被向链表头方向移动，而没有命中的，而想链表后面移动，链表尾则表示最近最少使用的Cache。 
 

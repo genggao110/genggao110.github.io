@@ -99,13 +99,16 @@ private Set<Integer> compare(int[] smallArray, int[] bigArray){
                 if (smallArray[indexArrayA] == bigArray[i]) {
                     intersectionSet.add(smallArray[indexArrayA]);
                     indexArrayA++;
-                    indexArrayB++;
+                    indexArrayB = i;
                     break;
                 } else if (smallArray[indexArrayA] < bigArray[i]) {
                     indexArrayA++;
+                    indexArrayB = i;
                     break;
                 } else if (i == sizeArrayB - 1) {
+                    //如果sizeArrayB直到最后一个节点都未发现有，这时smallArray后面的元素肯定不小于这个元素大了，也就没必要再查找有没有相等的了，直接返回
                     indexArrayA++;
+                    return intersectionSet;
                 }
             }
         }
