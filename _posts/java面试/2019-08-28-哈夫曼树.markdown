@@ -1,0 +1,240 @@
+---
+layout:     post
+title:      "哈夫曼树"
+subtitle:   " \"哈夫曼树总结\""
+date:       2019-08-28 22:57:07
+author:     "ming"
+catalog: true
+header-img: "img/post-bg-funny.jpg"
+tags:
+    - 哈夫曼树
+    - 二叉树
+---
+
+> "Only those who have the patience to do simple things perfectly ever acquire the skill to do difficult things easily."
+
+### 1.定义
+
+首先给出哈夫曼树的一些定义：
+- 节点之间的路径长度：在树中从一个节点搭配另一个节点所经历的分支，构成了这两个节点间的路径上的经过的分支数称为它的路径长度。
+- 树的路径长度：从树的根节点到树中每一节点的路径长度之和。在节点数目相同的二叉树中，完全二叉树的路径长度最短。
+- 节点的权：在一些应用中，赋予树中节点的一个有某种意义的实数。
+- 节点的带权路径长度：节点到树根之间的路径长度与该节点上权的乘积。
+- 树的带权路径长度(Weighted Path Length of Tree:WPL):定义为树中所有叶子节点的带权路径长度之和。
+
+例如如下图所示的二叉树中，给出了带权路径长度的计算方式：
+
+![WPL计算](https://i.loli.net/2019/08/29/yudeqQ8j6vfbYzX.jpg)
+
+一般来说，用n(n>0)个带权值的叶子来构造二叉树，限定二叉树中除了这n个叶子节点外只能出现度为2的节点。那么符合这样条件的二叉树往往可以构造出许多棵。其中带权路径长度最小的二叉树就称为**哈夫曼树**或者**最优二叉树**。(最优二叉树的特点是带权值的节点都是叶子节点，权重越小的节点，其到根节点的路径越长)
+
+注意：
+- 叶子上的权值均相同时，完全二叉树一定是最优二叉树，否则完全二叉树不一定是最优二叉树。
+- 最优二叉树中，权越大的叶子离根越近。
+- 最优二叉树的形态不唯一，WPL最小。
+
+### 2.哈夫曼树的构造
+
+根据哈夫曼树的定义，一棵二叉树要使得WPL最小，必须使得权重越大的叶子节点越靠近根节点，而权值越小的叶子节点越远离根节点。其基本构造思想如下所示：
+
+1. 根据给定的n个权重{w1, w2, w3, w4...wn}构成n棵二叉树的森林F ={T1, T2, T3.....Tn}，其中每棵二叉树只有一个权重为wi的根节点，其左右子树都为空；
+2. 在森林F中选择两课根节点的权重最小的二叉树，作为一棵新的二叉树的左右子树，且令新的二叉树的根节点的权重为其左右子树的权值和；
+3. 从F中删除被选的两颗子树，并且把构成的新的二叉树加到F森林中；
+4. 重复2，3操作，直到森林只含有一棵二叉树为止，此时得到的这课二叉树就是哈夫曼树。
+
+构造过程如下图所示：
+
+![哈夫曼树构造](https://i.loli.net/2019/08/29/5Abqd9ck2P17MyL.jpg)
+
+### 3.哈夫曼树的实现
+
+```java
+public class MyHuffmanTree {
+
+    public static class Node<E>{
+        E data;
+        double weight;
+        Node leftChild;
+        Node rightChild;
+
+        public Node(E data, double weight){
+            super();
+            this.data = data;
+            this.weight = weight;
+        }
+
+        @Override
+        public String toString(){
+            return "Node[data=" + data + ", weight=" + weight + "]";
+        }
+    }
+
+    /**
+     * 构造哈夫曼树
+     * @param nodes 节点集合
+     * @return DataStructure.Tree.MyHuffmanTree.Node 构造出来的哈夫曼树的根节点
+     * @author wangming
+     * @date 2019/8/29 11:11
+     */
+    public static Node createTree(List<Node> nodes){
+        //只有nodes集合还有两个以上的节点
+        while (nodes.size() > 1){
+            quickSort(nodes);
+            //获取权重最小的两个节点
+            Node left = nodes.get(0);
+            Node right = nodes.get(1);
+
+            //生成新节点，节点的权值为两个子节点的权值之和
+            Node parent = new Node(null,left.weight + right.weight);
+
+            //让新节点作为两个权重最小节点的父节点
+            parent.leftChild = left;
+            parent.rightChild = right;
+
+            //删除权重最小的两个节点
+            nodes.remove(0);
+            nodes.remove(0);
+
+            //新节点加入到集合中
+            nodes.add(parent);
+
+        }
+        return nodes.get(0);
+    }
+
+    public static void quickSort(List<Node> nodes){
+        subSort(nodes,0,nodes.size()-1);
+    }
+
+    /**
+     * 实现快排算法，用于对节点进行排序
+     * @param nodes
+     * @param start
+     * @param end
+     * @return void
+     * @author wangming
+     * @date 2019/8/29 11:26
+     */
+    public static void subSort(List<Node> nodes, int start, int end){
+        if(end <= start){
+            return;
+        }
+        int partition = partition(nodes,start,end);
+        subSort(nodes,start,partition-1);
+        subSort(nodes,partition+1,end);
+    }
+
+    private static int partition(List<Node> nodes, int left, int right){
+        Node base = nodes.get(left);
+        int i = left;
+        int j = right;
+        while (i < j){
+
+            while (i < j && nodes.get(j).weight >= base.weight){
+                j--;
+            }
+
+            while (i < j && nodes.get(i).weight <= base.weight){
+                i++;
+            }
+            swap(nodes,i,j);
+        }
+        swap(nodes,left,j);
+        return j;
+    }
+
+    private static void swap(List<Node> nodes, int i, int j){
+        Node temp = nodes.get(i);
+        nodes.set(i,nodes.get(j));
+        nodes.set(j,temp);
+    }
+
+    /**
+     * 树的层次遍历(广度优先遍历)
+     * @param root
+     * @return java.util.List<DataStructure.Tree.MyHuffmanTree.Node>
+     * @author wangming
+     * @date 2019/8/29 17:25
+     */
+    public static List<Node> breadthFirst(Node root){
+        Queue<Node> queue = new ArrayDeque<>();
+        List<Node> list = new ArrayList<>();
+        if(root != null){
+            //将根元素加入队列
+            queue.offer(root);
+        }
+
+        while (!queue.isEmpty()){
+            list.add(queue.peek());
+            Node p = queue.poll();
+
+            if(p.leftChild != null){
+                queue.offer(p.leftChild);
+            }
+
+            if(p.rightChild != null){
+                queue.offer(p.rightChild);
+            }
+        }
+        return list;
+    }
+
+    public static void main(String[] args) {
+        List<Node> nodes = new ArrayList<>();
+        nodes.add(new Node("A",40.0));
+        nodes.add(new Node("B", 8.0));
+        nodes.add(new Node("C", 10.0));
+        nodes.add(new Node("D", 30.0));
+        nodes.add(new Node("E", 10.0));
+        nodes.add(new Node("F", 2.0));
+
+        Node root = MyHuffmanTree.createTree(nodes);
+        List<Node> result = breadthFirst(root);
+        result.forEach((e) ->{
+            System.out.println(e.data);
+        });
+    }
+}
+```
+构造哈夫曼树的关键流程如下：
+- 对list集合中所有节点进行排序；
+- 找出list集合中权重最小的两个节点；
+- 以权值最小的两个节点作为子节点创建新节点；
+- 从list集合中删除权值最小的两个节点，将新节点添加到list集合中。
+- 程序采用循环不断执行上面的步骤，直到list集合中只剩下一个节点，最后剩下的这个节点就是哈夫曼树的头节点。
+
+### 4.哈夫曼编码
+
+在电文传输中，需要将电文中出现的每个字符进行二进制编码。在设计编码时需要遵守两个原则：
+- 发送方传输的二进制编码，到接收方解码后必须具有唯一性，即解码结果与发送方发送的电文完全一样。
+- 发送的二进制编码尽可能短。
+
+下面我们来看看两种常用的编码方式：
+
+**1.等长编码**
+
+这种编码方式的特点是每个字符的编码长度相同（编码长度就是每个编码所含的二进制位数）。假设字符集只含有4个字符A，B，C，D，用二进制两位表示的编码分别为00，01，10，11。若现在有一段电文为：ABACCDA，则应发送二进制序列：00010010101100，总长度为14位。当接收方接收到这段电文后，将按两位一段进行译码。这种编码的特点是译码简单且具有唯一性，但编码长度并不是最短的。
+
+**2.不等长编码**
+
+在传送电文时，为了使其二进制位数尽可能地少，可以将每个字符的编码设计为不等长的，使用频度较高的字符分配一个相对比较短的编码，使用频度较低的字符分配一个比较长的编码。例如，可以为A，B，C，D四个字符分别分配0，00，1，01，并可将上述电文用二进制序列：000011010发送，其长度只有9个二进制位，但随之带来了一个问题，接收方接到这段电文后无法进行译码，因为无法断定前面4个0是4个A，1个B、2个A，还是2个B，即译码不唯一，因此这种编码方法不可使用。
+
+因此，为了设计长短不等的编码，以便减少电文的总长，还必须考虑编码的唯一性，即在建立不等长编码时必须使用任何一个字符的编码都不是另外一个字符的前缀，这宗编码称为前缀编码。`哈夫曼树`为此就可以用来解决报文编码的问题。
+
+1. 利用字符集中每个字符的使用频率作为权值构造一个哈夫曼树；
+2. 从根节点开始，为到每一个叶子节点路径上的左分支赋予0，右分支赋予1，并从根到叶子节点方向形成叶子节点的编码。
+
+给出下面一个例题：
+
+假设一个文本文件TFile中只包含7个字符{A，B，C，D，E，F，G}，这7个字符在文本中出现的次数为{5，24，7，17，34，5，13},利用哈夫曼树可以为文件TFile构造出符合前缀编码要求的不等长编码.
+
+**具体做法**：
+
+1. 将TFile中7个字符都作为叶子结点，每个字符出现次数作为该叶子结点的权值；
+2. 规定哈夫曼树中所有左分支表示字符0，所有右分支表示字符1,将依次从根结点到每个叶子结点所经过的分支的二进制位的序列作为该结点对应的字符编码
+3. 由于从根结点到任何一个叶子结点都不可能经过其他叶子，这种编码一定是前缀编码，哈夫曼树的带权路径长度正好是文件TFile编码的总长度。
+
+为此，通过哈夫曼树来构造的编码称为`哈弗曼编码`(huffman code)，给出上面的例子如下所示:
+
+![案例](https://i.loli.net/2019/08/29/FB218GV359QfKla.jpg)
+
