@@ -38,7 +38,7 @@ public boolean Find(int target, int [][] array) {
             int low = 0;
             int high = array[i].length - 1;
             while(low <= high){
-                int mid = (low + high) >> 1;
+                int mid = (low + high) >>> 1;
                 if(target > array[i][mid])
                     low = mid + 1;
                 else if(target < array[i][mid])
@@ -52,7 +52,7 @@ public boolean Find(int target, int [][] array) {
     }
 ```
 
-> 思路2： 因为矩阵是有序的，从左下角来看，向上数字递减，向右数字递增。所以从左下角元素往上查找，右边元素是比这个元素打，上边的元素是比这个元素小。所以，target比这个元素小就往上找，比这个元素大就往右找。如果出了边界，则说明二维数组中不存在target这个元素。
+> 思路2： 因为矩阵是有序的，从左下角来看，向上数字递减，向右数字递增。所以从左下角元素往上查找，右边元素是比这个元素大，上边的元素是比这个元素小。所以，target比这个元素小就往上找，比这个元素大就往右找。如果出了边界，则说明二维数组中不存在target这个元素。
 
 ```java
 public boolean Find(int target, int [][] array) {
@@ -224,7 +224,7 @@ private void helper(ArrayList<Integer> res, ListNode head){
 
 **解题思路**：(二叉树天然的递归特性，使得我们可以利用递归算法对二叉树进行遍历和重建)
 
-> 思路1：在二叉树的前序遍历序列(`根-左-右`)中，第一个数字总是树的根节点的值。但在中序遍历序列(`左-根-右`)中，根节点的值在序列的中间，左子树的节点的值位于根节点的值得左边，而右子树的节点的值位于根节点的值的右边。因此，我们需要扫描中序遍历序列，确定出左右子树。以给出的题目为例子：前序遍历序列的第一个数字1就是根节点的值。扫描中序遍历序列，就能确定根节点的值的位置，根据中序遍历的特点，在根节点的值1前面的3个数字都是左子树节点的值，位于1后面的数字都是右子树节点的值。由于在中序遍历序列中，有3个数字是左子树节点的值，因此左子树总共有3个左子节点。同样，在前序遍历的系列中，根节点后面的3个数字就是3个左子树节点的值，再后面的所有数字就是右子树节点的值。**所以**，这样就在前序和中序遍历的两个序列中，分别找到了左右子树对应的子序列。我们已经分别找到了左右子树的前序遍历和中序遍历，这样我们就可以用同样的办法去构建左右子树，实现递归。
+> 思路1：在二叉树的前序遍历序列(`根-左-右`)中，第一个数字总是树的根节点的值。但在中序遍历序列(`左-根-右`)中，根节点的值在序列的中间，左子树的节点的值位于根节点的值的左边，而右子树的节点的值位于根节点的值的右边。因此，我们需要扫描中序遍历序列，确定出左右子树。以给出的题目为例子：前序遍历序列的第一个数字1就是根节点的值。扫描中序遍历序列，就能确定根节点的值的位置，根据中序遍历的特点，在根节点的值1前面的3个数字都是左子树节点的值，位于1后面的数字都是右子树节点的值。由于在中序遍历序列中，有3个数字是左子树节点的值，因此左子树总共有3个左子节点。同样，在前序遍历的系列中，根节点后面的3个数字就是3个左子树节点的值，再后面的所有数字就是右子树节点的值。**所以**，这样就在前序和中序遍历的两个序列中，分别找到了左右子树对应的子序列。我们已经分别找到了左右子树的前序遍历和中序遍历，这样我们就可以用同样的办法去构建左右子树，实现递归。
 
 ```java
     public TreeNode reConstuctBinaryTree(int[] pre, int[] in){
@@ -633,7 +633,7 @@ public class Solution {
     }
 }
 ```
-我们在观察上面的代码其实可以发现，sum只在每次计算第n项的时候用一下，其实还可以用sum来存储第n-1项，例如当计算完 f(5) 时 sum 存储的是 f(5) 的值，当需要计算 f(6) 时，f(6) = f(5) - f(4)，sum 存储的 f(5)，f(4) 存储在 one 中，由 f(5)-f(3) 得到。
+我们在观察上面的代码其实可以发现，sum只在每次计算第n项的时候用一下，其实还可以用sum来存储第n-1项，例如当计算完 f(5) 时 sum 存储的是 f(5) 的值，当需要计算 f(6) 时，f(6) = f(5) + f(4)，sum 存储的 f(5)，f(4) 存储在 one 中，由 f(5)-f(3) 得到。
 
 ```java
 public class Solution {
@@ -668,48 +668,770 @@ public class Solution {
 
 [【剑指Offer】斐波那契数列](https://blog.csdn.net/FightLei/article/details/89391112)
 
-```java
-// 简单实现了2*2矩阵的乘法
-public int[,] matrixMul(int[,] m, int[,] n)
-{
-    int[,] ret = {
-        { m[0,0] * n[0,0] + m[0,1] * n[1,0],  m[0,0] * n[0,1] + m[0,1] * n[1,1]} ,
-        { m[1,0] * n[0,0] + m[1,1] * n[1,0],  m[1,0] * n[0,1] + m[1,1] * n[1,1]}
-    };
-    return ret;
-}
-// 矩阵的快速幂
-public int[,] matrixPow(int[,] m, int n)
-{
-	// 单位矩阵，作用相当于整数乘法中的1
-    int[,] ret = { { 1, 0 }, { 0, 1 } };
-    while(n > 0)
-    {
-        if ((n & 1) > 0)
-        {
-            ret = matrixMul(m, ret);
-        }
-        m = matrixMul(m, m);
-        n >>= 1;
-    }
-    return ret;
-}
+[斐波那契数列](https://www.cnblogs.com/iwiniwin/p/10798884.html)
 
-public int FibonacciOptimize4(int n)
-{
-    if (n == 0)
-    {
-        return 0;
+```java
+    //简单实现方阵的乘法
+    public static int[][] matrixMul(int[][] m, int[][] n){
+        int[][] ret = new int[m.length][m.length];
+        for(int i = 0; i < m.length; i++){
+            for(int j = 0; j < m.length; j++){
+                for(int k = 0; k < m.length; k++){
+                    ret[i][j] += m[i][k]*n[k][j];
+                }
+            }
+        }
+        return ret;
     }
-    int[,] matrix = { { 1, 1 }, { 1, 0 } };
-    // 这里的F1和F0矩阵多加了一列0,0，不会影响最终结果，是因为matrixMul只实现了2*2矩阵的乘法
-    int[,] unit = { { 1, 0 }, { 0, 0 } };
-    // 调用前面代码的矩阵乘法和矩阵快速幂
-    int[,] ret = matrixMul(matrixPow(matrix, n - 1), unit);
-    return ret[0, 0];
-}
+
+    // 矩阵的快速幂
+    public static int[][] matrixPow(int[][] m, int n){
+        //构建2*2单位矩阵
+        int[][] ret = {{1,0},{0,1}};
+        while (n > 0){
+            if((n & 1) > 0){
+                ret = matrixMul(m,ret);
+            }
+            m = matrixMul(m,m);
+            n >>= 1;
+        }
+        return ret;
+    }
+
+    public static int Fibonacc(int n){
+        if(n == 0){
+            return 0;
+        }
+        int[][] matrix = {{1,1},{1,0}};
+        int[][] unit = {{1,0},{0,0}};
+        int[][] ret = matrixMul(matrixPow(matrix, n-1),unit);
+        return ret[0][0];
+    }
 
 ```
 
 ### 8. 跳台阶
+
+**题目描述**
+
+一只青蛙一次可以跳上1级台阶，也可以跳上2级台阶。求该青蛙跳上一个n级的台阶总共有多少种跳法(先后次序不同算不同的结果)。
+
+**解题思路**：
+
+> 思路1：按照斐波那契数列的解题思路。
+
+分析：青蛙每次只有一阶或者两阶两种跳法，那么：
+- 假设第一次跳的是一阶，那么剩下的n-1个台阶，跳法是f(n-1)
+- 假设第一次跳的是两阶，那么剩下的n-2个台阶，跳法是f(n-2)
+- 由以上两种假设可得：f(n) = f(n-1) + f(n-2)
+- 由实际情况可知：f(1) = 1, f(2) = 2。为此，可以得出这是一个斐波那契数列问题。
+
+```java
+          | 1, n = 1
+f(n) =    | 2, n = 2
+          | f(n-1) + f(n-2)
+```
+为此，就可以采用上一题的解决方案(矩阵的快速幂、递归、动态规划)，给出其中一种方案如下：
+
+```java
+public class Solution {
+    public int JumpFloor(int target) {
+        if(target <= 2){
+            return target;
+        }
+        int pre2 = 1, pre1 = 2;
+        for (int i = 3; i <= target; i++){
+            int cur = pre2 + pre1;
+            pre2 = pre1;
+            pre1 = cur;
+        }
+        return pre1;
+    }
+}
+```
+
+> 思路2：排列组合
+
+青蛙可以跳上1级台阶，也可以跳上2级台阶。对于n级台阶来说，青蛙它最多可以跳n/2次2级台阶，也就是说总的跳法数是跳0次2级台阶跳法，1次2级台阶跳法，2次2级跳阶跳法...n/2次2级台阶跳法数的总和。现在问题就变成了求跳指定次数2级台阶的跳法数。
+
+假设有n级台阶，指定要跳m次2级台阶，还剩下n-2m个1级台阶，则青蛙一共要跳n-2m+m = n-m次才能跳完。即在n-m从跳跃中选择m次跳2级台阶，有多少种跳法数呢？C(n-m,m)种。所以我们求出C(n-1,1),C(n-2,2),C(n-3,3),..,C(n-n/2,n/2)，然后将其相加，记得再加上1(选0个2级台阶，1中跳法),也就是总的跳法数。
+
+![公式](https://i.loli.net/2019/08/30/rvVqD2BbQfiA3sS.png)
+
+其实，计算上述公式可以存在一定的优化策略：
+1. 如果C(n,m)的结果用java的int类型存储，则最大值为2^31^-1，如果按照公式依次计算分子和分母，可能分子或分母会超过2^31^-1，从而造成异常。所以优化为分子和分母的计算同步进行，当判断分子除以分母可以除整的时候，就先相除，避免累计数过大。后面的代码会有对应注释;
+2. 可以省略的计算就省略.比如求解C(5,4)，其中的4 * 3 * 2，分子分母可以直接相约，本来分子分母的计算都需要连乘4次，现在只需要连乘1次.
+
+
+给出代码实现如下：
+
+```java
+    //求解C(n,m)
+    public static int c(int n, int m){
+        int count = m;
+        int nf = 1, mf = 1;
+        if(m >= n-m+1){
+            //对应优化2，只需要连乘以n-m次
+            count = n - m;
+        }
+        for(int i = 0; i < count; i++){
+            nf *= (n - i);
+            mf *= (i+1);
+            //对应优化1，可以整除的时候就先除
+            if(nf % mf == 0){
+                nf = nf / mf;
+                mf = 1;
+            }
+        }
+        return nf / mf;
+    }
+
+    public static int jumpFloor(int number){
+        int ret = 1;
+        int count = number / 2;
+        for (int i = 1; i <= count; i++) {
+            ret += c(number-i,i);
+        }
+        return ret;
+    }
+```
+
+**参考文章**：
+
+[跳台阶](https://www.cnblogs.com/iwiniwin/p/10798889.html)
+
+### 9. 变态跳台阶
+
+**题目描述**
+
+一只青蛙一次可以跳上1级台阶，也可以跳上2级......它也可以跳上n级。求该青蛙跳上一个n级的台阶总共有多少种跳法。
+
+**解题思路**
+
+分析：用f(n)表示青蛙跳上n阶台阶的跳法数，设定f(0) = 1;
+- 当n = 1时，只有一种跳的方式，一阶跳,f(1) = 1;
+- 当n = 2时，有两种跳的方式，一阶跳或者二阶跳,f(2) = 2;
+- 当n = 3时，有三种跳的方式，第一次跳出一阶后，后面还有f(3-1)中跳法；第一次跳出二阶后，后面还有f(3-2)中跳法；第一次跳出三阶后，后面还有f(3-3)种跳法，f(3) = f(2) + f(1) + f(0) = 2 + 1 + 1 = 4;
+- 当n = n时，第一次跳出一阶后，后面还有f(n-1)中跳法； 第一次跳出二阶后，后面还有f(n-2)中跳法......第一次跳出n阶后，后面还有 f(n-n)中跳法，即：f(n) = f(n-1) + f(n-2) + f(n-3) + ... + f(n-n) = f(0) + f(1) + ... + f(n-1).
+
+又因为f(n-1) = f(0) + f(1) + ... + f(n-2)，所以两个式子相减得到：f(n) = 2 * f(n-1) (n >= 2).所以：
+
+```java
+          | 0, n = 0
+f(n)  =   | 1. n = 1
+          | 2*f(n-1), n >= 2
+```
+
+给出代码如下所示：
+
+```java
+
+	public static int jumpFloor(int target) {
+		if (target <= 0) return 0;
+		if (target == 1) return 1;
+		int a = 1;
+		int b = 2;
+		for (int i = 2; i <= target; i++) {
+			b = 2 * a;
+			a = b;
+		}
+		return b;
+	}
+```
+其实，更快的解法是f(n) = 2^(n-1)的递推公式
+
+```java
+public class Solution {
+    public int JumpFloorII(int target) {
+        // if(target < 0)return 0;
+        // if(target == 1) return 1;
+        // return 2 <<(target - 2);
+        return 1<<(target - 1);
+    }
+}
+```
+
+**拓展延伸：**
+
+这个问题还有一个延伸：一次最多跳M个台阶，共有N个台阶，问有多少种方法？
+
+不妨将跳法数记为f(m,n),我们可以这样来思考：第一次跳1个台阶，剩下f(m,n-1)个台阶跳法;第一次跳2个台阶，剩下f(m,n-2)个跳法;.........第一次跳m个台阶，剩下f(m,n-m)个跳法。
+
+所以f(m,n) = f(m,n-1) + f(m,n-2) + ... + f(m,n-m),跳出递归的边界是当n==1的时候，f(1,1)=1 ,其实f(m,1)总是等于1； f(1,2)=1;f(2,2)=2;
+
+在计算f(m,n)的时候，用上面的递归公式就可以了(需要注意一点的是：当m>=n的时候，问题就变成了 变态跳台阶 这个问题了，也就是最多跳N阶，共有N阶)给出实现代码如下：
+
+```java
+    // 表示每次最多跳N个，共N个台阶。就是原本的变态跳台阶问题
+    public int JumpFloorII(int target) {
+         if(target < 0)return 0;
+         if(target == 1) return 1;
+         return 2 <<(target - 2);
+    }
+
+    // 表示每次可以跳M个，共N个台阶
+    public int JumpFloor(int m, int n){
+        if(n == 1){
+            return 1;
+        }
+        if(n == 2 && m == 1){
+            return 1;
+        }
+        if(m == 2 && n == 2){
+            return 2;
+        }
+
+        int count = 0;
+
+        if(m >= n){
+            return JumpFloorII(n); // 1 <<(n - 1)
+        }else{
+            for(int i = 1; i <= m; i++){
+                count += JumpFloor(m,n-i);
+            }
+        }
+        return count;
+    }
+```
+
+给出一种动态规划的解题方法，用map存储中间结果：
+
+```java
+public static int JumpFloor(int n, int m, Map<Integer, Integer> map) {
+		int count = 0;
+		if (n== 0) {
+			return 1;
+		}
+		if (map.containsKey(n)) {
+			return map.get(n);
+		} else if (n>= m) {
+			for (int i = 1; i <= m; i++) {
+				count += JumpFloor(n- i, m, map);
+			}
+		} else {
+            //如果n小于m，则将一步最大台阶数缩小为n，重新递归
+			count = JumpFloor(n, n, map);
+		}
+		map.put(n, count);
+		return count;
+}
+```
+
+### 10. 矩形覆盖
+
+**题目描述**
+
+我们可以用2 * 1的小矩形横着或者竖着去覆盖更大的矩形，请问用n个2 * 1的小矩形无重叠地覆盖一个2*n的大矩形，总共有多少种方法？
+
+**解题思路**
+
+分析：2 * n的大矩形，和n个2 * 1的小矩形，其中target * 2为大矩阵的大小，其有以下几种情况：
+- (1)target <= 0 时，大矩形为 <= 2 * 0,直接return 0;
+- (2)target = 1时，大矩形为 2 * 1，只有一种摆放位置，return 1；
+- (3)target = 2时，大矩形为2 * 2,有两种摆放方法， return 2;
+- (4)target = n时，大矩形为2 * n，分成两步考虑：
+
+第一次摆放一块2 * 1的小矩形，则摆放方法共有f(target-1)种：
+
+![第一次](https://i.loli.net/2019/09/12/snLKNeqV6UEYijC.png)
+
+第一次摆放一块1 * 2的小矩形，则摆放方法总共有f(target - 2)种。因为，摆放了一块1 * 2的小矩形(用√√表示)，对应下方的1*2（用××表示）摆放方法就确定了，所以为f(targte-2)
+
+![第二次](https://i.loli.net/2019/09/12/KoNEcOhsD3wjxrC.png)
+
+很明显就是典型的斐波那契数列问题。为此，给出代码如下：
+
+```java
+public class Solution {
+    public int RectCover(int target) {
+        if(target <= 1){
+            return target;
+        }
+        int pre2 = 1, pre1 = 1;
+        for(int i = 2; i <= target; i++){
+            int cur = pre1 + pre2;
+            pre2 = pre1;
+            pre1 = cur;
+        }
+        return pre1;
+    }
+}
+```
+
+### 11. 矩阵中的路径
+
+**题目描述**
+
+请设计一个函数，用来判断咋一个矩阵中是否存在一条包含某字符串所有字符的路径。路径可以从矩阵中的任意一个格子开始，每一步可以在矩阵中向左，向右，向上，向下移动一个格子。如果一条路径经过了矩阵中的某一个格子，则该路径不能再进入该格子。例如：
+
+```
+a b c e
+s f c s
+a d e e
+```
+上述矩阵中包含一条字符串“bcced”的路径，但是矩阵中不包含“abcb”的路径，因为字符串的第一个字符b占据了矩阵中的第一行第二个格子之后，路径不能再次进入改格子。
+
+**解题思路**
+
+回溯法的典型例题。首先，在矩阵中任选一个格子作为路径的起点。假设矩阵中某个格子的字符为ch，并且这个格子将对应于路径上的第i个字符。如果路径上的第i个字符不是ch，那么这个格子不可能处于路径上的第i个位置。如果路径上的第i个字符正好是ch，那么到相邻的格子寻找路径上的第i+1个字符。除了矩阵边界上的格子之外，其他格子都有4个相邻的格子，重复这个过程，直到路径上的所有字符都在矩阵中找到相应的位置。
+
+由于回溯法的递归特性，路径可以被看成是一个栈。当在矩阵中定位了路径中前n个字符的位置之后，在于第n个字符对应的格子的周围都没有找到第n+1个字符，这个时候只好在路径上回到第n-1个字符，重新定位第n个字符。并且，由于路径不能重复进入矩阵的格子，所以还需要定义和字符矩阵大小一样的布尔型矩阵，用来标识路径是否已经进入了每个格子。
+
+为此，给出实现的基本思想如下：
+1. 根据给定数组，初始化一个标志位数组，初始化为false,表示未走过，true表示已经走过，不能走第二次；
+2. 根据行数和列数，遍历数组，先找到一个与str字符串的第一个元素相匹配的矩阵元素，进入judge;
+3. 根据i和j先确定一维数组的位置，因为给定的matrix是一个一维数组；
+4. 确定递归终止条件：越界、当前找到的矩阵值不等于数组对应位置的值、已经走过的，这三类情况就直接false，表明这条路不通；
+5. 若k，也就是带判定的字符串str的索引已经判断到了最后一位，此时说明匹配是成功的，返回true;
+6. 精髓所在，递归不断地寻找周围四个格子是否符合条件，只要有一个格子符合条件，就继续再找这个符合条件的格子四周是否存在符合条件的格子，直到k到达末尾或者不满足递归条件就停止。
+7. 如果上一步未找到，那么走到这一步，说明本次是不成功的，我们要还原一下标志位数组index处的标志位，进入下一轮的判断。
+
+给出递归的回溯法代码如下：
+
+```java
+public class Solution {
+    public boolean hasPath(char[] matrix, int rows, int cols, char[] str)
+    {
+        //标志位，初始化为false
+        boolean[] flag = new boolean[matrix.length];
+        for(int i=0;i<rows;i++){
+            for(int j=0;j<cols;j++){
+                 //循环遍历二维数组，找到起点等于str第一个元素的值，再递归判断四周是否有符合条件的----回溯法
+                 if(judge(matrix,i,j,rows,cols,flag,str,0)){
+                     return true;
+                 }
+            }
+        }
+        return false;
+    }
+     
+    //judge(初始矩阵，索引行坐标i，索引纵坐标j，矩阵行数，矩阵列数，待判断的字符串，字符串索引初始为0即先判断字符串的第一位)
+    private boolean judge(char[] matrix,int i,int j,int rows,int cols,boolean[] flag,char[] str,int k){
+        //先根据i和j计算匹配的第一个元素转为一维数组的位置
+        int index = i*cols+j;
+        //递归终止条件
+        if(i<0 || j<0 || i>=rows || j>=cols || matrix[index] != str[k] || flag[index] == true)
+            return false;
+        //若k已经到达str末尾了，说明之前的都已经匹配成功了，直接返回true即可
+        if(k == str.length-1)
+            return true;
+        //要走的第一个位置置为true，表示已经走过了
+        flag[index] = true;
+         
+        //回溯，递归寻找，每次找到了就给k加一，找不到，还原
+        if(judge(matrix,i-1,j,rows,cols,flag,str,k+1) ||
+           judge(matrix,i+1,j,rows,cols,flag,str,k+1) ||
+           judge(matrix,i,j-1,rows,cols,flag,str,k+1) ||
+           judge(matrix,i,j+1,rows,cols,flag,str,k+1)  )
+        {
+            return true;
+        }
+        //走到这，说明这一条路不通，还原，再试其他的路径
+        flag[index] = false;
+        return false;
+    }
+ 
+}
+```
+
+上面给出了递归的写法，下面我们给出一种非递归形式的标准DFS(带记忆的BFS或者DFS，需要辅助容器帮助记录路径，选用栈stack，还需要标记是否遍历过，用boolean[] visited)，其具体思路如下：
+1. DFS深度优先
+   - 进：peek一次，str的位子index++，对应位子visited[j + i * cols]=true，并且把周围合适的点（上下左右&&字符匹配&&未遍历）加入到stack中
+   - 退：当前遍历过，复位：visited设为false，并且s.pop移除当前元素，str的位置减一
+2. 如果str匹配成功则返回true
+
+```java
+    //标准的DFS，非递归写法，需要辅助容器帮助记录路径，选用栈stack，还需要标记是否遍历过，用boolean[] visited
+    public boolean hasPath(char[] matrix, int rows, int cols, char[] str){
+        if(matrix == null || matrix.length != rows * cols
+                || str == null || str.length == 0
+                || str.length > matrix.length ){
+            return false;
+        }
+        boolean[] visited = new boolean[matrix.length];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if(dfs(matrix,rows,cols,str,i,j,visited)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    //这里方便遍历上下左右
+    private static int[] x = {0,1,0,-1}; //顺时针
+    private static int[] y = {1,0,-1,0};//顺时针
+
+    private boolean dfs(char[] matrix, int rows, int cols, char[] str,int i, int j, boolean[] visited){
+        //第一个字符必须相等
+        if(matrix[j + i*cols] != str[0]){
+            return false;
+        }
+        Stack<Integer> s = new Stack<>(); //存坐标
+        int index = 0; //当前str的索引
+        s.push(j + i * cols);
+        while (!s.empty()){
+            int location = s.peek();
+            if(visited[location] == true){
+                //访问过的话，全部复位
+                visited[location] = false; //取消访问记录
+                s.pop(); //退出该节点
+                if (--index < 0){
+                    return false;
+                }
+                continue; //防止该路径再次被遍历
+            }
+            visited[location] = true; //标记访问过
+            if (++index == str.length){
+                //如果这个字符恰好是最后一个字符，直接返回true
+                return true;
+            }
+            /*将当前节点周围(上下左右符合标准的点加入到s中)
+                1. 边界条件：j = location % cols i = location / cols ,i和j判断边界
+                2. 必须未遍历过visited[cur] == false
+                3. 当前字符匹配matrix[cur] == str[index]
+             */
+            for (int k = 0; k < 4; k++){
+                int xn = location / cols + x[k];
+                int yn = location % cols + y[k];
+                int cur = yn + xn * cols;
+                if(xn >= 0 && xn < rows && yn >= 0 && yn < cols && visited[cur] == false && matrix[cur] == str[index]){
+                    s.push(cur);
+                }
+            }
+        }
+        return false;
+    }
+```
+
+### 12. 机器人的运动范围
+
+**题目描述**
+
+地上有一个m行和n列的方格。一个机器人从坐标0,0的格子开始移动，每一次只能向左，右，上，下四个方向移动一格，但是不能进入行坐标和列坐标的数位之和大于k的格子。 例如，当k为18时，机器人能够进入方格（35,37），因为3+5+3+7 = 18。但是，它不能进入方格（35,38），因为3+5+3+8 = 19。请问该机器人能够达到多少个格子？
+
+**解题思路**
+
+> 解法1：回溯法(不算是严格意义上的回溯，其实就是图的遍历)。和上一题类似，这个方格也可以看成是一个m*n的矩阵。同样，在这个矩阵中，除了边界上的格子之外，其他格子都有4个相邻的格子。机器人从坐标(0,0)开始移动，当它准备进入坐标为(i,j)的格子时，通过检查坐标的数位和来判断机器人是否能够进入。如果机器人能够进入坐标为(i,j)的格子，则再判断它能否进入4个相邻的格子(i,j-1)、(i-1,j)、(i,j+1)、(i+1,j)。写出回溯法的代码如下所示：
+
+```java
+    public int movingCount(int threshold, int rows, int cols) {
+        boolean[][] visited = new boolean[rows][cols];
+        return countingSteps(threshold,rows,cols,0,0,visited);
+    }
+    public int countingSteps(int limit,int rows,int cols,int r,int c,boolean[][] visited){
+        if (r < 0 || r >= rows || c < 0 || c >= cols
+                || visited[r][c] || bitSum(r) + bitSum(c) > limit)  return 0;
+        visited[r][c] = true;
+        return countingSteps(limit,rows,cols,r - 1,c,visited)
+                + countingSteps(limit,rows,cols,r,c - 1,visited)
+                + countingSteps(limit,rows,cols,r + 1,c,visited)
+                + countingSteps(limit,rows,cols,r,c + 1,visited)
+                + 1;
+    }
+    public int bitSum(int t){
+        int count = 0;
+        while (t != 0){
+            count += t % 10;
+            t /= 10;
+        }
+        return  count;
+    }
+```
+
+> 解法2：动态规划写法。用dp[i][j]表示是否可达，统计dp数组中数字中true的个数，即为可达的格子数。(dp[i][j]能否到达其实是由dp[i-1][j]与dp[i][j-1]及其本身行列坐标之和是否小于等于阈值所决定)
+
+```java
+    //动态规划解法,dp[i][j]能否到达其实是由dp[i-1][j]与dp[i][j-1]及其本身行列坐标之和是否小于等于阈值所决定
+    public int movingCount1(int threshold, int rows, int cols){
+        if(threshold < 0 || rows < 0 || cols < 0){
+            return 0;
+        }
+        boolean[][] dp = new boolean[rows+1][cols+1];
+        dp[0][0] = true;
+        //dp数组初始化
+        for (int i = 1; i <= rows; i++){
+            if(dp[i-1][0] && canReach(threshold,i,0)){
+                dp[i][0] = true;
+            }else {
+                dp[i][0] = false;
+            }
+        }
+        for (int i= 1; i <= cols;i++){
+            if(dp[0][i-1] && canReach(threshold,0,i)){
+                dp[0][i] = true;
+            }else {
+                dp[0][i] = false;
+            }
+        }
+        for(int i = 1; i<= rows; i++){
+            for (int j = 1; j <= cols; j++){
+                if((dp[i-1][j] && canReach(threshold,i,j)) || (dp[i][j-1] && canReach(threshold,i,j))){
+                    dp[i][j] = true;
+                }else {
+                    dp[i][j] = false;
+                }
+            }
+        }
+
+        int count = 0;
+        for(int i = 0; i < rows;i++){
+            for (int j = 0; j < cols; j++) {
+                if(dp[i][j]){
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private boolean canReach(int threshold, int x, int y){
+        int sum = 0;
+        while (x != 0){
+            sum += x % 10;
+            x /= 10;
+        }
+        while (y != 0){
+            sum += y % 10;
+            y /= 10;
+        }
+        return sum <= threshold;
+    }
+```
+
+> 解法3：其实该题的算法本质就是DFS||BFS求连通分量的过程。
+
+对于该题，假设我们把矩阵的每一个“格子”抽象成一个“结点”，把“格子相邻”抽象为“结点连通”(结点之间存在无向边)，把“无法进入的格子”抽象成为“与所有普通结点都不连通(不存在无向边)的孤点”，则整个问题就可以抽象成为：从某个节点出发，寻找无向图的连通分量的节点个数。很显然，使用DFS或者BFS就可以进行实现。(DFS的实现其实就是解法1的实现，下面还是给出DFS与BFS的实现策略)
+
+```java
+    //DFS的实现
+    public int movingCount(int threshold, int rows, int cols) {
+        if(threshold <= 0) {
+            return 0;
+        }
+        boolean[][] visited = new boolean[rows][cols];
+        return movingCount(threshold, 0, 0, rows, cols, visited);
+    }
+    public int movingCount(int threshold, int i, int j, int rows, int cols, boolean[][] visited) {
+        if (i < 0 || i >= rows || j < 0 || j >= cols || visited[i][j] || countNum(i) + countNum(j) > threshold){
+            return 0;
+        }
+        visited[i][j] = true;
+        return 1 + movingCount(threshold, i - 1, j, rows, cols, visited) + movingCount(threshold, i + 1, j, rows, cols, visited) + 
+            movingCount(threshold, i, j - 1, rows, cols, visited) + movingCount(threshold, i, j + 1, rows, cols, visited);
+    }
+ 
+    public int countNum(int target){
+        int count = 0;
+        while(target != 0) {
+            count += (target % 10);
+            target = target / 10;
+        }
+        return count;
+    }
+
+    //BFS的实现，利用队列
+    public int movingCount2(int threshold, int rows, int cols){
+        if(threshold < 0 || rows < 0 || cols < 0){
+            return 0;
+        }
+        LinkedList<Point> queue = new LinkedList<>();
+        boolean[][] visited = new boolean[rows][cols];
+        visited[0][0] = true;
+        queue.add(new Point(0,0));
+        int count = 0;
+        while (!queue.isEmpty()){
+            Point curPoint = queue.poll();
+            count++;
+            int x = curPoint.x;
+            int y = curPoint.y;
+            if(isAvailable(x-1,y,rows,cols,threshold,visited)){
+                queue.add(new Point(x-1,y));
+                visited[x-1][y] = true;
+            }
+            if (isAvailable(x + 1, y, rows, cols, threshold, visited)) {
+                queue.add(new Point(x + 1, y));
+                visited[x + 1][y] = true;
+            }
+            if (isAvailable(x, y - 1, rows, cols, threshold, visited)) {
+                queue.add(new Point(x , y - 1));
+                visited[x][y - 1] = true;
+            }
+            if (isAvailable(x, y + 1, rows, cols, threshold, visited)) {
+                queue.add(new Point(x, y + 1));
+                visited[x][y + 1] = true;
+            }
+        }
+        return count;
+    }
+
+    public boolean isAvailable(int x, int y , int rows, int cols, int threshold, boolean[][] visited) {
+        return (x >= 0 && x < rows && y >= 0 && y < cols && !visited[x][y] && countNum(x) + countNum(y) <= threshold);
+    }
+
+```
+
+### 13. 二进制中1的个数
+
+**题目描述**
+
+输入一个整数，输出该数二进制表示中1的个数。其中负数用补码表示。
+
+**解题思路**
+
+> 解法1：整体思路就是判断整数二进制表示中最右边一位是不是1，接着我们把输入的整数整体右移一位，此时原来处于从右边数起的第二位就被移到最右边了，再判断是不是1；这样每次移动一位，直到整个整数变成0为止。我们也知道判断一个数最右边是不是1只需要与1做位与运算就可以。注意，这里输入整数存在负数，所以我们需要进行无符号右移(>>>)。
+
+```java
+    public int NumberOf1(int n) {
+        int count = 0;
+        while(n != 0){
+            if((n & 1 ) == 1){
+                count++;
+            }
+            n = n >>> 1;
+        }
+        return count;
+    }
+```
+
+> 解法2：我们可以不右移输入的数字n，我们可以对1进行左移。其思路是：我们首先把n与1做与运算，判断n的最低位是不是1.接着把1左移一位得到2，再和n做与运算，就能判断n的次低位是不是1......这样反复左移，每次都能判断n的其中一位是不是1.
+
+```java
+public int NumberOf1(int n) {
+    int count = 0;
+    int flag = 1;
+    while (flag != 0) {
+        if ((n & flag) != 0) {
+            count++;
+        }
+        flag = flag << 1;
+    }
+    return count;
+}
+```
+
+> 解法3：把一个整数减去1，再和原整数做与运算，会把该整数最右边的1变成0.那么一个整数的二进制表示中有多少个1，就可以进行多少次这样的操作。一个二进制数1100，从右边数起第三位是处于最右边的一个1。减去1后，第三位变成0，它后面的两位0变成了1，而前面的1保持不变，因此得到的结果是1011.我们发现减1的结果是把最右边的一个1开始的所有位都取反了。这个时候如果我们再把原来的整数和减去1之后的结果做与运算，从原来整数最右边一个1那一位开始所有位都会变成0。如1100&1011=1000.也就是说，把一个整数减去1，再和原整数做与运算，会把该整数最右边一个1变成0.那么一个整数的二进制有多少个1，就可以进行多少次这样的操作。(极其巧妙)
+
+```java
+public class Solution {
+    public int NumberOf1(int n) {
+        int count = 0;
+        while(n!= 0){
+            count++;
+            n = n & (n - 1);
+         }
+        return count;
+    }
+}
+```
+
+### 14. 数值的整数次方
+
+**题目描述**
+
+给定一个double类型的浮点数base,和int类型的整数exponent.求base的exponent次方。保证base和exponent不同时为0.
+
+**解题思路**
+
+> 解法1：常规解法。本题考查的目的就在于边界值的考虑。例如，当指数为负数的时候，需要先对指数求绝对值，算出次方的结果后再取倒数。既然求倒数，自然就需要排除base是0且指数是负数的情况。并且我们知道0的0次方在数学上没有意义，且题目也给出了这两者不同时为0.为此，给出下面直接进行累乘的方法。
+
+```java
+public class Solution {
+    public double Power(double base, int exponent) {
+        if (base == 0.0){
+            return 0.0;
+        }
+        // 前置结果设为1.0，即当exponent=0 的时候，就是这个结果
+        double result = 1.0d;
+        // 获取指数的绝对值
+        int e = exponent > 0 ? exponent : -exponent;
+        // 根据指数大小，循环累乘
+        for(int i = 1 ; i <= e; i++){
+            result *= base;
+        }
+        // 根据指数正负，返回结果
+        return exponent > 0 ? result : 1 / result;
+  }
+}
+```
+
+> 解法2： 快速幂算法。在常规解法中，如果输入的指数exponent为32，那么我们需要在循环中做31次乘法。但是，其实我们可以换一种思路考虑：我们的目标是求一个数字的32次方，如果我们知道了它的16次方，那么只要在16次方的基础上再平方一次就可以了。而16次方又是8次方的平方。这样依次类推，我们求32次方只需要做5次乘法：先求平方，在平方的基础上求4次方，在4次方的基础上求8次方，8次方基础上求16次方，最后求32次方。
+
+根据上面的描述，可以用下面公式求a的n次方：
+- 当n为偶数，a^n =（a^n/2）*（a^n/2）；
+- 当n为奇数，a^n = a^[(n-1)/2] * a^[(n-1)/2] * a
+
+我们下面给出求快速幂的一个案例。例如，我们对于n可以用二进制表示，以14为例子。14 = 1110，则m的n次方可以表示为：
+
+![公式](https://i.loli.net/2019/09/13/5m6bxoEdtzY9T13.png)
+
+可以发现一个规律，指数n的二进制从低位到高位依次对应着底数m的1次方，2次方，4次方，8次方...，当该二进制位是1的时候，则乘以底数对应的次方数，如果该二进制位是0，则表示乘以1.使用快速幂后，原本需要14次连乘，现在只需要4次连乘。为此，我们可以用与运算与右移操作，例如14 = 1110
+- 和1按位与得到0，即第一个二进制位是0
+- 1110右移一位，得到0111，和1按位与得到1，即第二个二进制位是1
+- 0111右移一位，得到0011，和1按位与得到1，即第三个二进制位是1
+- 0011右移一位，得到0001，和1按位与得到1，即第四个二进制位是1
+- 0001右移一位，得到0000，等于0则，算法结束
+
+为此，给出本题的两种解法：递推和递归
+
+```java
+//1. 递推法
+public class Solution {
+    public double Power(double base, int exponent) {
+        double res = 1.0;
+        boolean flag = false;
+        if(exponent < 0){
+            if(base == 0){
+                throw new RuntimeException("分母不能为0");
+            }
+            flag = true;
+            exponent = -exponent;
+        }else if(exponent == 0){
+            return 1;
+        }
+        while (exponent != 0){
+            if((exponent & 1) == 1){
+                res *= base;
+            }
+            base *= base;
+            exponent >>= 1;
+        }
+        return flag ? 1 / res : res;
+    }
+}
+```
+
+```java
+//2. 递归写法
+public class Solution {
+    public static double Power(double base, int exp) {
+        boolean flag = exp < 0;
+        if (flag) {
+            exp = -exp;
+        }
+        double result = getPower(base, exp);
+        return flag ? 1 / result : result;
+    }
+ 
+    public static double getPower(double base, int exp) {
+        if (exp == 0) {
+            return 1;
+        }
+        if (exp == 1) {
+            return base;
+        }
+        double ans = getPower(base, exp >> 1);
+        ans *= ans;
+        if ((exp & 1) == 1) {
+            ans *= base;
+        }
+        return ans;
+    }
+}
+```
+
+### 15. 调整数组顺序使得奇数位于偶数前面
+
+
 

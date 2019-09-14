@@ -1,0 +1,874 @@
+---
+layout:     post
+title:      "MySQL必知必会"
+subtitle:   " \"MySQL数据库\""
+date:       2019-09-03 17:36:20
+author:     "ming"
+catalog: true
+header-img: "img/post-bg-lighthouse.jpg"
+tags:
+    - MySQL
+    - 数据库
+---
+
+> "Every new day begins with possibilities. It’s up to us to fill it with the things that move us toward progress and peace."
+
+
+## 1. 基本概念
+
+- 数据库(database)：保存有组织的数据的容器。
+- 表(table)：某种特定类型数据的结构化清单。
+- 模式(schema)：关于数据库和表的布局及特性的信息。
+- 列和数据类型：表由列组成，列中存储着表中的某部分的信息。(列是表中的一个字段，所有表都是由一个或多个列组成的)
+- 行：表中的一个记录，表中的数据是按行存储的。
+- 主键(primary key):一列或者一组列，其值能够唯一区分表中的每个行。
+
+## 2.MySQL的使用
+
+### 2.1 基本连接与信息查看
+
+```sql
+1. SHOW DATABASES;   //返回可用数据库的列表
+2. USE mysql; //使用mysql数据库
+3. SHOW TABLES; //返回当前选择的数据库中可用表的列表
+4. SHOW COLUMNS FROM customers; //给出一个表的详细信息，DESCRIBE customers；是其快捷方式
+```
+### 2.2 数据检索
+
+`SELECT 语句`：使用该语句，至少需要给出两条信息，想选什么以及从哪里选择。
+
+`DISTINCT 关键字`：该关键字知识MySQL只返回不同的值(去重操作，**该关键字必须直接放在列名的前面**)。并且不能够部分使用DISTINCT,distinct关键字应用于所有列而不仅仅是前置它的列。
+
+`LIMIT 关键字`：为了返回第一行或者前几行，可使用LIMIT关键字。(“LIMIT 5”指示MYSQL返回不多于5行，而“LIMIT 5,5”指示MySQL从行5开始的5行)带一个值的LIMIT总是从第一行开始，给出的数为返回的行数。带有两个值的LIMIT可以指定从行号为第一个值的位置开始。("LIMIT 4,3"等同于"LIMIT 3 OFFSET 4",从行4开始取3行)。**检索出来的第一行是行0而不是行1.**
+
+
+```sql
+1. SELECT prod_name FROM products;  //检索单列
+2. SELECT prod_id, prod_name, prod_price FROM products;  //检索多列
+3. SELECT * FROM products; //检索所有列
+4. SELECT DISTINCT vend_id FROM products; //检索不同的行
+5. SELECT prod_name FROM products LIMIT 5; //返回不多于5行
+6. SELECT prod_name FROM products LIMIT 5,5; // 返回从行5开始的5行，等同于 limit 5 offset 5;
+7. SELECT products.prod_name FROM crashcourse.products; //使用完全限定的表名
+```
+
+`ORDER BY 子句`：为了能够明确地排序用SELECT语句检索出来的数据，可用`ORDER BY`子句。`ORDER BY`子句取一个或多个列的名字，据此对输出进行排序。 
+
+`DESC 关键字`：数据排序不限于升序排序(从A到Z)，这只是默认的排序顺序，还可以使用`ORDER BY`子句以降序(从Z到A)顺序排序。为了进行`降序排序`，必须指定DESC关键字。
+
+`ASC 关键字`：升序排序时可以指定，默认就是升序排序，所有ASC无多大作用。
+
+```sql
+1. SELECT prod_name FROM products ORDER BY prod_name; //对prod_name列以字母顺序排序数据返回
+2. SELECT prod_id, prod_price, prod_name FROM products ORDER BY prod_price,prod_name; //检索3个列，并按其中两个列对结果进行排序，先按prod_price,然后再按prod_name排序
+3. SELECT prod_id, prod_price, prod_name FROM products ORDER BY prod_price DESC;  //按价格以降序排序产品
+4. SELECT prod_id, prod_price, prod_name FROM products ORDER BY prod_price DESC, prod_name; //prod_price列按降序排序，而prod_name(在每个价格内)仍然按标准的升序排序
+5. SELECT prod_price FROM products ORDER BY prod_price DESC LIMIT 1; //找出prod_price中最高的值
+```
+
+> **Attention:** 在给出`ORDER BY`子句时，应该保证它位于FROM子句之后。如果使用LIMIT,它必须位于ORDER BY之后。使用子句的次序不对将会导致错误。且同时使用ORDER BY 和 WHERE子句时，ORDER BY 必须位于 WHERE 之后。
+
+### 2.3 过滤数据
+
+`WHERE 子句`：在SELECT语句中，数据根据WHERE子句中指定的搜索条件进行过滤。WHERE子句在表名(FROM子句)之后给出。
+
+`BETWEEN a AND b`:WHERE字句的操作符之一，在指定的两个值之间。
+
+`IS NULL 子句`：用来检查具有NULL值的列。
+
+```sql
+1. SELECT prod_name, prod_price FROM products WHERE prod_price = 2.50; // 查找返回prod_price值为2.50的行
+2. SELECT vend_id, prod_name FROM products WHERE vend_id <> 1003; //查找vend_id不是1003的产品信息
+3. SELECT prod_name, prod_price FROM products WHERE prod_price BETWEEN 5 AND 10; // 检索价格在5和10之间的所有产品信息
+4. SELECT prod_name FROM products WHERE prod_price IS NULL; //返回没有价格的所有产品，空prod_price字段
+```
+
+`AND 操作符`：为了通过不止一个列进行过滤，可以使用AND操作符给WHERE子句附加条件。用来指示检索满足所有给定条件的行。
+
+`OR 操作符`：它指示检索匹配任一条件的行。用来表示检索匹配任一给定条件的行。
+
+> 注意：SQL在处理OR操作符前，优先处理AND操作符，为此，例如“WHERE vend_id = 1002 OR vend_id = 1003 AND prod_price >= 10”语句执行时，它理解为“由供应商1003制造的任何价格为包含10美元以上的产品，或者由供应商1002制造的任何产品，而不管价格如何。”为此，由于AND在计算次序中优先级更高，所以操作符会被错误地进行组合。为此，可以使用圆括号明确地分组相对应的操作符。
+
+```sql
+1. SELECT prod_id, prod_price, prod_name FROM products WHERE vend_id = 1003 AND prod_price <= 10; //检索id为1003且prod_price小于等于10的所有产品名称与价格
+2. SELECT prod_price, prod_name FROM products WHERE vend_id = 1003 OR vend_id = 1002;  //检索id为1003或者id为1002的所有产品价格与名称信息
+3. SELECT prod_name, prod_price FROM products WHERE (vend_id = 1002 OR vend_id = 1003) AND prod_price >= 10; //检索id为1003或者id为1002的且价格大于或等于10的所有产品名称与价格信息
+```
+
+`IN 操作符`：圆括号在WHERE子句中还有另外一种用法。IN操作符用来指定条件范围，范围内的每个条件都可以进行匹配。IN取合法值的由逗号分隔的清单，全部包括在圆括号内。(其最大的优点就是可以包含其他SELECT语句，使得能够更动态地建立WHERE子句)
+
+`NOT 操作符`：WHERE子句中的NOT操作符有且只有一个功能，那就是否定它之后跟的任何条件。
+
+```sql
+1. SELECT prod_name, prod_price FROM products WHERE vend_id IN (1002,1003) ORDER BY prod_name; // 检索id为1002和1003制造的所有产品。
+2. SELECT prod_name, prod_price FROM products WHERE vend_id NOT IN (1002,1003) ORDER BY prod_name; //检索id为1002和1003之外的所有产品。
+```
+
+前面介绍了的所有操作符都是针对已知值进行过滤的，但是对于复杂的过滤往往还需要通配符，利用通配符可以构建比较特定数据的搜索模式。为了在搜索语句的时候使用通配符，必须使用`LIKE 操作符`。其指示MySQL,后面跟的搜索模式利用通配符匹配而不是直接相等匹配进行比较。
+
+`LIKE 操作符`：后接通配符，指示MySQL,后面跟的搜索模式利用通配符匹配而不是直接相等匹配进行比较。
+
+常见的几种通配符如下所示：
+- 百分号(%)通配符：在搜索串中，`%` 表示任意字符出现任意次数。(%通配符似乎能够匹配任何东西，但是不能匹配用值NULL作为产品名的行)
+- 下划线(_)通配符：下划线只匹配单个字符而不是多个字符。
+
+```sql
+1. SELECT prod_id, prod_name FROM products WHERE product_name LIKE 'jet%'; //查找所有以词jet起头的产品id与名称信息
+2. SELECT prod_id, prod_name FROM products WHERE product_name LIKE '_ ton anvil'; //查找匹配单个字符后面跟“ ton anvil”的产品id与名称信息
+```
+
+### 2.4 正则表达式进行搜索
+
+`REGEXP 操作符`：后接正则表达式，指示MySQL后跟的东西作为正则表达式处理。(可使用 `BINARY`关键字来区分大小写)
+
+给出其中几种常用的正则表达式：
+- '.': 表示匹配任一一个字符。
+- '|': 表示匹配其中之一，功能上类似于在SELECT中使用OR语句。
+- '[]': 另一种形式的OR语句，[123]定义一组字符，它的意思是匹配1或2或3，[a-z]匹配任意字符
+- '\\': 为了匹配特殊字符，必须使用\\作为前导。
+- '{}': 匹配多个实例，例如{n}表示指定数目的匹配。
+- '^': 文本的开始。
+- '$': 文本的结尾。
+- [[:<:]]: 词的开始。
+- [[:>:]]: 词的结尾。
+
+```sql
+1. SELECT prod_name FROM products WHERE prod_name REGEXP '.000' ORDER BY prod_name; // 使用正则表达式.000来匹配以000结尾且前面可以匹配任一一个字符的记录
+2. SELECT prod_name FROM products WHERE prod_name REGEXP '1000|2000' ORDER BY prod_name; //匹配1000或2000
+3. SELECT prod_name FROM products WHERE prod_name REGEXP '[123] Ton' ORDER BY prod_name; // 1 ton 和 2 ton或者3 ton被匹配
+4. SELECT prod_name FROM products WHERE prod_name REGEXP '^[0-9]\\.' ORDER BY prod_name; // 只在.或任意数字为串的第一个字符时匹配
+```
+
+注意：在LIKE 和REGEXP之间有一个重要的差别。可以来看一下下面两条语句：
+
+```sql
+SELECT prod_name FROM products WHERE prod_name LIKE '1000' ORDER BY prod_name;
+
+SELECT prod_name FROM products WHERE prod_name REGEXP '1000' ORDER BY prod_name;
+```
+
+如果执行上面的语句，会发现第一条语句不返回数据，而第二条语句返回一行。这是为什么呢？因为LIKE匹配整个列。如果被匹配的文本在列值中出现，LIKE将不会找到它，相应的行也不被返回(除非使用通配符)。而REGEXP在列值呢进行匹配，如果被匹配的文本在列值中出现，REGEXP将会找到它，相应的列将会被返回。
+
+### 2.2 计算字段与函数
+
+`Concat() 函数`：拼接两个列(拼接是指将值联结到一起构成单个值)。(**注意：**多数DBMS采用+或||来实现拼接，MySQL则使用Concat()函数来实现)。
+
+`AS 关键字`：别名是一个字段或者值的替换名，别名用AS关键字赋予。(别名还有其他用途，比如包括在实际的表列名包含不符合规定的字符，例如空格时重新命名它，在原来的名字含混或容易误解时扩充它等等)
+
+```sql
+1. SELECT Concat(vend_name, ' (', vend_country, ')') FROM vendors ORDER BY vend_name; // 以特定格式返回供应商名和位置的信息
+2. SELECT Concat(RTrim(vend_name), ' (', RTrim(vend_country), ')') FROM vendors ORDER BY vend_name; //RTrim()函数去掉值右边的所有空格
+3. SELECT Concat(RTrim(vend_name), ' (', RTrim(vend_country), ')') AS vend_title FROM vendors ORDER BY vend_name; //给计算字段赋予vend_title的别名
+4. SELECT prod_id, quantity, item_price, quantity*item_price AS expanded_price FROM orderitems WHERE order_num = 20005; //执行算术计算
+```
+
+1. 文本处理函数
+   - `RTrim()`：Rtrime函数可以去掉值右边的所有空格。此外，SQL还支持`LTrime()`(去掉串左边的空格)以及`Trim()`(去掉串左右两边的空格)。
+   - `Upper()`：将文本转换为大写。
+   - `Left()`： 返回串左边的字符。
+   - `Length()`: 返回串的长度。
+   - `Locate()`: 找出串的一个子串。
+   - `Lower()`: 将串转换成小写。
+   - `LTrim()`: 去掉串左边的空格。
+   - `Right()`: 返回串右边的字符。
+   - `Soundex()`: 返回串的SOUNDEX值。(将任何文本串转换为描述其语音表示的字母数字模式的算法)。
+   - `SubString()`: 返回子串的字符。
+   - `Upper()`: 将串转换为大写。
+
+2. 日期和时间处理函数
+   - `AddDate()`: 增加一个日期(天、周等)。
+   - `AddTime()`: 增加一个时间(时、分等)。
+   - `CurDate()`: 返回当前日期。
+   - `CurTime()`: 返回当前时间。
+   - `Date()`: 返回日期时间的日期部分。
+   - `DateDiff()`: 计算两个日期之差。
+   - `Date_Add()`: 高度灵活的日期运算函数。
+   - `Date_Format()`: 返回一个格式化的日期或时间串。
+   - `Day()`: 返回一个日期的天数部分。
+   - `DayOfWeek()`: 对于一个日期，返回对应的星期几。
+   - `Hour()`: 返回一个日期的小时部分。
+   - `Minute()`: 返回一个日期的分钟部分。
+   - `Month()`: 返回一个日期的月份部分。
+   - `Now()`: 返回当前日期和时间。
+   - `Second()`: 返回一个时间的秒部分。
+   - `Time()`: 返回一个日期时间的时间部分。
+   - `Year()`: 返回一个日期的年份部分。
+
+3. 数值处理函数
+   - `Abs()`: 返回一个数的绝对值。
+   - `Cos()`: 返回一个角度的余弦值。
+   - `Sin()`: 返回一个角度的正弦值。
+   - `Exp()`: 返回一个数的指数值。
+   - `Mod()`: 返回除操作的余数。
+   - `Pi()`: 返回圆周率。
+   - `Rand()`: 返回一个随机数。
+   - `Sqrt()`: 返回一个数的平方根。
+   - `Tan()`: 返回一个角度的正切值。
+
+
+```sql
+1. SELECT vend_name, Upper(vend_name) AS vend_name_upcase FROM vendors ORDER BY vend_name; // 将文本转换为大写
+2. SELECT cust_name, cust_contact FROM customers WHERE Soundex(cust_contact) = Soundex('Y Lie'); //获取与'Y Lie'发音一样，即SOUNDEX值相匹配的数据
+3. SELECT cust_id, order_num FROM orders WHERE Date(order_date) = '2005-09-01'; // 查找日期为‘2005-09-01’的订单记录
+4. SELECT cust_id, order_num FROM orders WHERE Year(order_date) = 2005 AND Month(order_date) = 9; //检索出2005年9月下的所有订单
+```
+
+### 2.3 数据汇总与分组
+
+聚集函数：是指运行在行组上，计算和返回单个值的函数。其常见的聚集函数如下所示：
+- `AVG()`: 返回某列的平均值。(通过对表中行数计数并计算特定列值之和，求得该列的平均值)
+- `COUNT()`: 返回某列的行数。(确定表中行的数目或者符合特定条件的行的数目)
+   - 使用Count(*)对表中行的数目进行计数，不管列表中包含的是空值(NULL)还是非空值。
+   - 使用Count(column)对特定列中具有值的行进行计数，忽略NULL值。
+- `MAX()`: 返回某列的最大值。
+- `MIN()`: 返回某列的最小值。
+- `SUM()`: 返回某列值之和。
+
+```sql
+1. SELECT AVG(prod_price) AS avg_price FROM products WHERE vend_id = 1003; //返回id为1003所有列的价格平均值
+2. SELECT COUNT(*) AS num_cust FROM customers; // 对所有行计数
+3. SELECT COUNT(cust_email) AS num_cust FROM customers; //对只有电子邮件的客户计数
+3. SELECT MAX(prod_price) AS max_price FROM products; //返回products中最贵的物品的价格
+4. SELECT MIN(prod_price) AS max_price FROM products; //返回products中最便宜的物品的价格
+5. SELECT SUM(quantity) AS item_ordered FROM orderitems WHERE order_num = 20005; //检索预定编号为20005的所订购物品的总数
+6. SELECT AVG(DISTINCT prod_price) AS avg_price FROM products WHERE vend_id = 1003; //考虑各个不同价格的平均值
+```
+
+数据分组：分组允许把数据分为多个逻辑组，以便能对每个组进行聚集计算。
+
+`GROUP BY 子句`：GROUP BY字句指示MySQL分组数据，然后对每个组而不是整个结果集进行聚集。Group BY子句有一些**规定**：
+- GROUP BY 子句可以包含任意数目的列。这使得能对分组进行嵌套，为数据分组提供更细致的控制。
+- 如果在GROUP BY子句中嵌套了分组，数据将在最后规定的分组上进行汇总。换句话说，在建立分组时，指定的所有列都一起计算。(所以不能从个别的列取回数据)
+- GROUP BY子句中列出的每个列都必须是检索列或者有效的表达式(但不能是聚集函数)。如果在SELECT中使用表达式，则必须在GROUP BY子句中指定相同的表达式。不能使用别名。
+- 除了聚集计算语句外，SELECT语句中的每个列都必须在GROUP BY子句中给出。
+- 如果分组列中具有NULL值，则NULL将作为一个分组返回。如果列中有多行NULL值，它们将分为一组。
+- GROUP BY子句必须出现在WHERE子句之后，ORDER BY 子句之前。
+
+`WITH ROLLUP 关键字`：使用WITH ROLLUP关键字，可以得到每个分组以及每个分组汇总级别(针对每个分组)的值。
+
+**GROUP BY和ORDER BY的差别**：
+
+ORDER BY | GROUP BY
+--- | --- 
+排序产生的输出 | 分组行。但输出可能不是分组的顺序
+任意列都可以使用(甚至非选择的列也可以使用) | 只可能使用选择列或表达式列，而且必须使用每个选择列表达式
+不一定需要 | 如果与聚集函数一起使用列(或表达式)，则必须使用
+
+> 一般在使用GROUP BY子句时，应该也给出ORDER BY 子句。这是保证数据正确排序的唯一方法。不要仅依赖GROUP BY排序数据。
+
+```sql
+1. SELECT vend_id, COUNT(*) AS num_prods FROM products GROUP BY vend_id; //根据vend_id进行排序并分组数据
+2. SELECT vend_id, COUNT(*) AS num_prods FROM products GROUP BY vend_id WITH ROLLUP; // 根据vend_id进行排序并分组数据，并且得到每个分组汇总的值。
+```
+
+过滤分组：规定包含哪些分组，排除哪些分组。例如，想要列出至少有两个订单的所有顾客。为了得出这种数据，必须基于完整的分组而不是个别的进行过滤。
+
+`HAVING 子句`: HAVING子句非常类似于WHERE，事实上所学过的所有类型的WHERE子句都可以用HAVING来替代。唯一的差别就是WHERE过滤行，而HAVING过滤分组。
+
+**HAVING和WHERE的区别：**有另外一种理解方式，WHERE在数据分组前进行过滤，HAVING在数据分组后进行过滤。这是一个重要的区别，WHERE排除的行不包括在分组中，这可能会改变计算值，从而影响HAVING子句中基于这些值过滤掉的分组。
+
+```sql
+1. SELECT cust_id, COUNT(*) AS orders FROM orders GROUP BY cust_id HAVING COUNT(*) >= 2; //根据cust_id进行分组，对分组的结果进行过滤出两个以上订单的分组
+2. SELECT vend_id, COUNT(*) AS num_prods FROM products WHERE prod_price >= 10 GROUP BY vend_id HAVING COUNT(*) >= 2; //列出具有两个以上，价格为10以上的产品的供应商信息
+3. SELECT order_num, SUM(quantity * item_price) FROM orderitems GROUP BY order_num HAVING SUM(quantity*item_price) >= 50; //检索总订单价格大于等于50的订单的订单号和总计订单价格
+4. SELECT order_num, SUM(quantity * item_price) AS ordertotal FROM orderitems GROUP BY order_num HAVING SUM(quantity*item_price) >= 50 ORDER BY ordertotal; //检索总订单价格大于等于50的订单的订单号和总计订单价格，并按照订单价格排序输出
+```
+
+### 2.4 子查询与联结
+
+#### 2.4.1 子查询
+
+子查询：即嵌套在其他查询中的查询。给出具体利用子查询进行过滤的例子，例如需要列出订购物品TNT2的所有客户，其应该如何实现：
+- 检索包含物品TNT2的所有订单的编号;
+- 检索具有前一步骤列出的订单编号的所有客户的ID;
+- 检索前一步骤返回的所有客户ID的客户信息。
+
+给出子查询语句如下：(下一节给出另外一种写法)
+
+```sql
+SELECT cust_name, cust_contact 
+FROM customers
+WHERE cust_id IN(SELECT cust_id
+                 FROM orders
+                 WHERE order_num IN(SELECT order_num
+                                    FROM orderitems
+                                    WHERE prod_id = 'TNT2'
+                                    ));
+```
+
+再给出一个利用子查询的案例，显示customers表中每个客户的订单总数，订单与相应的客户ID存储在orders订单表中。其具体步骤如下：
+- 从customers表中检索出客户列表；
+- 对于检索出的每个客户，统计其在orders表中的订单数目。
+
+```sql
+SELECT cust_name, cust_state,
+       (SELECT COUNT(*)
+        FROM orders
+        WHERE orders.cust_id = customers.cust_id) AS orders
+FROM customers
+ORDER BY cust_name;
+```
+
+返回结果如下所示：
+
+```
++----------------+------------+--------+
+| cust_name      | cust_state | orders |
++----------------+------------+--------+
+| Coyote Inc.    | MI         |      2 |
+| E Fudd         | IL         |      1 |
+| Mouse House    | OH         |      0 |
+| Wascals        | IN         |      1 |
+| Yosemite Place | AZ         |      1 |
++----------------+------------+--------+
+5 rows in set (0.00 sec)
+```
+
+上面的sql语句中用到了相关子查询(涉及到外部查询的子查询)。任何时候只要列名可能有多义性，就必须使用这种语法(表名和列名由一个句点分隔)。我们可以来看看如果不使用完全限定的列名会发生什么：
+
+```sql
+SELECT cust_name, cust_state,
+       (SELECT COUNT(*)
+        FROM orders
+        WHERE cust_id = cust_id) AS orders
+FROM customers
+ORDER BY cust_name;
+```
+
+语句执行返回结果：
+
+```
++----------------+------------+--------+
+| cust_name      | cust_state | orders |
++----------------+------------+--------+
+| Coyote Inc.    | MI         |      5 |
+| E Fudd         | IL         |      5 |
+| Mouse House    | OH         |      5 |
+| Wascals        | IN         |      5 |
+| Yosemite Place | AZ         |      5 |
++----------------+------------+--------+
+5 rows in set (0.00 sec)
+```
+
+很明显，返回的结果不正确。其原因是因为有两个cust_id列，一个在customers中，另一个在orders中，需要比较这两个列以正确地把订单与它们相应的顾客匹配。如果不限定列名，MySQL将假定你是对orders表中的cust_id进行自身比较。而`SELECT COUNT(*) FROM WHERER orders.cust_id = cust_id;`总是返回orders表中的订单总数(因为MySQL查看每个订单的cust_id是否与本身相互匹配，当然，它们总是匹配的)。为此，虽然子查询在构建这种SELECT语句时极有用，但是必须注意限制有歧义性的列名。
+
+#### 2.4.2 联结
+
+在介绍内容之前，我们先来了解一下外键相关的定义以及使用外键的好处。首先外键为某个表中的一列，它包含了另一个表的主键值，定义了两个表之间的关系。这样做的好处如下(以供应商和产品信息两个表尾案例)：
+- 供应商信息不重复，从而不浪费时间和空间；
+- 如果供应商信息发生变动，可以只用更新供应商表中的单个记录，而相关表中的数据不用改动；
+- 由于数据无重复，显然数据是一致的，这就使得处理数据更加简单。
+- 可伸缩性(能够适应不断增加的工作量而不失败)比较好。
+
+我们知道关系表的设计就是要把信息分解成多个表，使得信息能够更有效地存储，更方便地处理，并且具有更大的可伸缩性。但是，这些好处是有代价的。例如，如果数据存储在多个表中，怎样利用单条SELECT语句检索出数据？(通过前面的子查询我们可以看出是多么的麻烦)，为此，`联结机制`就起到了重要的作用，其用来在一条SELECT语句中关联表。使用特殊的语法，可以联结多个表返回一组输出，联结在运行时关联表中正确的行。
+
+联结的创建非常简单，规定要联结的所有表以及他们如何关联即可，例如：
+
+```sql
+SELECT vend_name, prod_name, prod_price
+FROM vendors, products
+WHERE vendors.vend_id = products.vend_id
+ORDER BY vend_name, prod_name;
+```
+
+执行结果如下：
+
+```
++-------------+----------------+------------+
+| vend_name   | prod_name      | prod_price |
++-------------+----------------+------------+
+| ACME        | Bird seed      |      10.00 |
+| ACME        | Carrots        |       2.50 |
+| ACME        | Detonator      |      13.00 |
+| ACME        | Safe           |      50.00 |
+| ACME        | Sling          |       4.49 |
+| ACME        | TNT (1 stick)  |       2.50 |
+| ACME        | TNT (5 sticks) |      10.00 |
+| Anvils R Us | .5 ton anvil   |       5.99 |
+| Anvils R Us | 1 ton anvil    |       9.99 |
+| Anvils R Us | 2 ton anvil    |      14.99 |
+| Jet Set     | JetPack 1000   |      35.00 |
+| Jet Set     | JetPack 2000   |      55.00 |
+| LT Supplies | Fuses          |       3.42 |
+| LT Supplies | Oil can        |       8.99 |
++-------------+----------------+------------+
+14 rows in set (0.00 sec)
+```
+可以看到FROM子句中列出了两个表，分别是vendors和products。它们就是这条SELECT语句联结的两个表的名字。这两个表用WHERE子句正确联结，WHERE子句指示MySQL匹配vendors表中的vend_id和products表中的vend_id。(**在联结两个表时，你实际上是将第一个表的每一行与第二个表中的每一行进行配对。WHERE子句作为过滤条件，它只包含了那些匹配给定条件的行。如果没有WHERE子句，第一个表中的每个行将与第二个表中的每个行配对，而不管它们逻辑上是否可以配在一起**。其结果就是一个笛卡尔积，检索出来的行的数目将是第一个表中的行数乘以第二个表中的行数)
+
+**1.内部联结**
+
+目前为止所用的联结称为等值联结，它基于两个表之间的相等测试，这种联结也称为内部联结。其实，对于这种联结可以使用稍微不同的语法来明确指定联结的类型。给出下面的sql写法(与上面语句作用相同)：
+
+```sql
+SELECT vend_name, prod_name, prod_price
+FROM vendors INNER JOIN products
+ON vendors.vend_id = products.vend_id
+ORDER BY vend_name, prod_name;
+```
+分析：此语句中的SELECT与前面的SELECT语句相同，但是FROM子句不同。这里，两个表之间的关系是FROM子句的组成部分，以INNER JOIN指定。在使用这种语句时，联结条件用特定的ON子句而不是WHERE子句给出。传递给ON的实际条件与传递给WHERE的相同。
+
+SQL对一条SELECT语句中可以联结的表的数目没有限制(但是联结的表越多，性能下降的越厉害)。我们可以用内部联结来重新解决一下子查询的问题，即列出订购物品TNT2的所有客户的查询需求：
+
+```sql
+SELECT cust_name, cust_contact
+FROM customers, orders, orderitems
+WHERE customers.cust_id = orders.cust_id 
+    AND orderitems.order_num = orders.order_num
+    AND prod_id = 'TNT2';
+```
+
+**2.自联结**
+
+从一个具体的案例入手：比如发现某物品(ID为DTNTR)存在问题，因此想知道生产该物品的供应商生产的其他物品是否也存在这些问题。此查询就要求首先找到ID为DTNTR的物品的供应商，然后找出这个供应商生产的其他物品。首先，我们回顾一下前面的知识，可以给出下面的解决办法(使用子查询)：
+
+```sql
+SELECT prod_id, prod_name
+FROM products
+WHERE vend_id = (SELECT vend_id
+                 FROM products
+                 WHERE prod_id = 'DTNTR');
+```
+得出结果如下：
+
+```
++---------+----------------+
+| prod_id | prod_name      |
++---------+----------------+
+| DTNTR   | Detonator      |
+| FB      | Bird seed      |
+| FC      | Carrots        |
+| SAFE    | Safe           |
+| SLING   | Sling          |
+| TNT1    | TNT (1 stick)  |
+| TNT2    | TNT (5 sticks) |
++---------+----------------+
+7 rows in set (0.00 sec)
+```
+
+下面我们来看看使用自联结的相同查询：
+
+```sql
+SELECT p1.prod_id, p1.prod_name
+FROM products AS p1, products AS p2
+WHERE p1.vend_id = p2.vend_id
+AND p2.prod_id = 'DTNTR';
+```
+
+在这里，必须要使用表别名来消除products的引用的二义性。例如，SELECT 语句中使用p1前缀明确地给出了所需列的全名。如果不这样，MYSQL将返回有误，因为分别存在两个名为prod_id,prod_name的列，MYSQL不知道想要的是哪一个(即使他们事实上是同一个列)。WHERE(通过匹配p1中的vend_id和p2中的vend_id)首先联结两个表，然后按第二个表中的prod_id过滤数据，返回所需要的数据。
+
+**Attention:**用自联结而不是子查询。自联结通常作为外部语句用来替代从相同表中检索数据时使用的子查询语句。虽然最终的结果是相同的，但有时处理联结远远比处理子查询快的多。
+
+**3.自然联结**
+
+标准的联结返回所有数据，甚至相同的列多次出现。自然联结排除多次出现，使得每个列只返回一次。自然联结是这样的一种联结，其中你只能选择那些唯一的列。这一般就是通过对表使用通配符(SELECT *),对所有其他表的列使用明确的子集来完成的。给出一个例子：
+
+```sql
+SELECT c.*, o.order_num, o.order_date, oi.prod_id, oi.quantity, oi.item_price
+FROM customers AS c, orders AS o, orderitems AS oi
+WHERE c.cust_id = o.cust_id AND oi.order_num = o.order_num AND prod_id = 'FB';
+```
+> 事实上，迄今为止我们建立的每个内部联结都是自然联结，很可能我们永远都不会用到不是自然联结的内部联结。
+
+**4.外部联结**
+
+MySQL 中内连接是在交叉连接的结果集上返回满足条件的记录；而外连接先将连接的表分为基表和参考表，再以基表为依据返回满足和不满足条件的记录。这样解释好像有点抽象，举个实例吧：许多联结将一个表中的行与另一个表中的行相关联，但是有时候会需要包含没有关联行的那些行。例如，下面给出的几个案例:
+1. 对每个客户下了多少订单进行计数。包括那些至今还尚未下订单的客户；
+2. 列出所有产品以及订购数量，包括没有人订购的产品；
+3. 计算平均销售规模，包括那些至今尚未下订单的客户。
+
+在上述例子中，联结包含了那些在相关表中没有关联行的行，这种类型的联结就被称为`外部联结`。外联结更注重与两张表之间的关系，按照连接表的顺序，可以分为左外联结和右外部联结。
+
+```sql
+SELECT customers.cust_id, orders.order_num
+FROM customers LEFT OUTER JOIN orders
+ON customers.cust_id = orders.cust_id;
+```
+输出结果如下所示：
+
+```
++---------+-----------+
+| cust_id | order_num |
++---------+-----------+
+|   10001 |     20005 |
+|   10001 |     20009 |
+|   10002 |      NULL |
+|   10003 |     20006 |
+|   10004 |     20007 |
+|   10005 |     20008 |
++---------+-----------+
+6 rows in set (0.00 sec)
+```
+分析：这条SELECT语句使用了关键字OUTER JOIN来指定联结的类型(而不是在WHERE子句中指定)。但是，与内部联结关联两个表中的行不同的是，外部联结还包括没有关联行的行。在使用OUTER JOIN语法时，必须使用RIGHT或LEFT关键字指定包括其所在行的表(RIGHT指出的是OUTER JOIN右边的表，而LEFT指出的是OUTER JOIN左边的表)。上面的例子使用LEFT OUTER JOIN从FROM子句的左边表(customers表)中选择所有行。为了从右边的表中选择所有行，应该使用RIGHT OUTER JOIN。如下所示：
+
+```sql
+SELECT customers.cust_id, orders.order_num
+FROM customers RIGHT OUTER JOIN orders
+ON customers.cust_id = orders.cust_id;
+```
+输出结果如下所示:
+
+```
++---------+-----------+
+| cust_id | order_num |
++---------+-----------+
+|   10001 |     20005 |
+|   10001 |     20009 |
+|   10003 |     20006 |
+|   10004 |     20007 |
+|   10005 |     20008 |
++---------+-----------+
+5 rows in set (0.00 sec)
+```
+> 左外部联结和右外部联结它们之间的唯一区别是所关联的表的顺序不同。换句话说，左外部联结可以通过颠倒FROM子句中的表的顺序转换为右外部联结。
+
+给出聚集函数与联结一起使用的例子:检索所有客户及每个客户所下的订单数.
+
+```sql
+SELECT customers.cust_name, 
+       customers.cust_id, 
+       COUNT(orders.order_num) AS num_ord
+FROM customers INNER JOIN orders
+ON customers.cust_id = orders.cust_id
+GROUP BY customers.cust_id;
+```
+
+结果：
+
+```
++----------------+---------+---------+
+| cust_name      | cust_id | num_ord |
++----------------+---------+---------+
+| Coyote Inc.    |   10001 |       2 |
+| Wascals        |   10003 |       1 |
+| Yosemite Place |   10004 |       1 |
+| E Fudd         |   10005 |       1 |
++----------------+---------+---------+
+4 rows in set (0.00 sec)
+```
+
+最后，给出关于联结及其使用的相关总结：
+- 注意所使用的联结类型。一般我们使用内部联结，但使用外部联结也是有效的。
+- 保证所使用正确的联结条件，否则将会返回不正确的数据。
+- 应该总是提供联结条件，否则会得出笛卡尔积。
+- 在一个联结中可以包含多个表，甚至对于每个联结可以采用不同的联结类型。虽然这样做是合法的，一般也很有用，但应该在一起测试他们之前，分别测试每个联结。
+
+### 2.5 组合查询
+
+`UNION 操作符`：合并两个或多个SELECT语句的结果。其在进行并操作时有几条规则需要注意：
+- UNION必须由两条或两条以上的SELECT语句组成，语句之间用关键字UNION分隔(因此，如果组合4条SELECT语句，将要使用3个UNION关键字)。
+- UNION的每个查询必须包含相同的列、表达式或聚集函数(不过各个列不需要以相同的次序列出)
+- 列数据类型必须兼容：类型不必完全相同，但必须是DBMS可以隐含地转换的类型(例如，不同的数值类型或不同的日期类型)。
+- UNION默认从查询结果集中自动去除了重复的行，如果需要返回所有匹配行，可使用UNION ALL。
+
+```sql
+SELECT vend_id, prod_id, prod_price
+FROM products
+WHERE prod_price <= 5
+UNION
+SELECT vend_id, prod_id, prod_price
+FROM products
+WHERE vend_id IN (1001, 1002);
+```
+
+### 2.6 数据插入与删除
+
+`INSERT 语句`：用来插入行到数据库表中。插入可以用几种方式使用：
+- 插入完整的行；
+- 插入行的一部分；
+- 插入多行；
+- 插入某些查询的结果。
+
+```sql
+1. INSERT INTO customers VALUES(NULL,'Pep E. LaPew', '100 Main Street', 'Los Angeles', 'CA', '90046', 'USA', NULL, NULL); //插入数据，不推荐使用
+2. INSERT INTO customers(cust_name, cust_address, cust_city, cust_state, cust_zip, cust_country, cust_contact, cust_email) VALUES('Pep E. LaPew', '100 Main Street', 'Los Angeles', 'CA', '90046', 'USA', NULL, NULL); //插入一行数据，推荐使用
+3. INSERT INTO customers(cust_id, cust_contact, cust_email, cust_name, cust_address, cust_city, cust_state, cust_zip, cust_country) SELECT cust_id, cust_contact, cust_email, cust_name, cust_address, cust_city, cust_state, cust_zip, cust_country FROM custnew; //使用INSERT SELECT 从custnew中将所有数据导入到customers
+```
+
+> 如果数据检索是最重要的(通常是这样)，则你可以通过在INSERT和INTO语句之间添加关键字LOW_PRIORITY,指示MySQL降低INSERT语句的优先级(INSERT LOW_PRIORITY INTO)。
+
+`UPDATE 语句`：更新修改表中的数据。其一般可以用来更新表中特定行和表中的所有行。(如果使用UPDATE更新多行，并且在更新这些行中的某一行或者多行时出现一个错误，则整个UPDATE操作被取消，错误发生前更新的所有行被恢复到它们原来的值。即使是错误，也继续进行更新，可使用IGNORE关键字，例如`UPDATE IGNORE customers ...`)
+
+`DELETE 语句`：从一个表中删除数据，其可以用两种方式(从表中删除特定的行或者从表中删除所有行)。
+
+`TRUNCATE 语句`：可以快速地删除所有行。因为其本质是删除原来的表并重新创建一个表，而不是逐行删除表中的数据。
+
+```sql
+1. UPDATE customers SET cust_name = 'The Fudds', cust_email = 'elmer@fudd.com' WHERE cust_id = 1005; //更新客户1005的cust_name和cust_email列
+2. DELETE FROM customers WHERE cust_id = 10006; //删除客户10006
+```
+
+### 2.7 表的创建与操纵
+
+`CREATE TABLE`:利用CREATE TABLE语句创建表，必须要给出下列信息：
+- 新表的名字，在关键字CREATE TABLE之后给出；
+- 表列的名字和定义，用逗号分隔。
+
+`AUTO_INCREMENT 关键字`：使得每列新增一行时自动增量。(每个表只允许一个AUTO_INCREMENT列，并且它必须被索引)
+
+```sql
+CREATE TABLE customers
+(
+    cust_id       int        NOT NULL AUTO_INCREMENT,
+    cust_name     char(50)   NOT NULL  ,
+    cust_address  char(50)   NULL  ,
+    cust_city     char(5)    NULL  ,
+    cust_state    char(10)   NULL  ,
+    cust_zip      char(50)   NULL  ,
+    cust_country  char(50)   NULL  ,
+    cust_contact  char(50)   NULL  ,
+    cust_email    char(255)  NULL  ,
+    PRIMARY KEY (cust_id)
+)ENGINE=InnoDB;
+```
+
+常见的数据引擎：
+- InnoDB是一个可靠的事务处理引擎，它不支持全文搜索；
+- MEMORY在功能上等同于MyISAM,但由于数据存储在内存(不是磁盘)，速度很快(特别适合于临时表)；
+- MyISAM是一个性能极高的引擎，它支持全文本搜索，但不支持事务处理。
+
+`ALTER TABLE`:更新表定义语句，为了更改表结构，必须给出下面的信息：
+- 在ALTER TABLE之后给出要更改的表名(该表必须存在，否则将出错)；
+- 所做更改的列表。
+
+其中，ALTER TABLE最常见的用途是定义外键。且针对于复杂的表结构更改一般需要手动删除过程，它涉及到以下步骤：
+- 用新的列布局创建一个新表；
+- 使用INSERT SELECT 语句从旧表复制数据到新表，如果有必要，可使用转换函数和计算字段；
+- 检验包含所需数据的新表；
+- 重命名旧表(如果确定，可以删除它)；
+- 用旧表原来的名字重命名新表；
+- 根据需要，重新创建触发器、存储过程、索引和外键。
+
+`DROP TABLE`:删除表语法。
+
+`RENAME TABLE`:重命名表。
+
+```sql
+1. ALTER TABLE vendors ADD vend_phone CHAR(20); //给vendors表添加新列
+2. ALTER TABLE vendors DROP COLUMN vend_phone;  //删除vendors表的名为vend_phone列
+3. ALTER TABLE orderitems ADD CONSTRAINT fk_orderitems FOREIGN KEY (order_num) REFERENCES orders (order_num); //为表orderitems添加外键
+4. DROP TABLE customer2;  //删除customer2表
+5. RENAME TABLE customer2 TO customers; //重命名表
+```
+
+### 2.8 视图与存储过程
+
+#### 2.8.1 视图
+
+视图，一种虚拟的表，它不包括表中应该有的任何列或数据，它包含的是一个SQL查询。在视图被创建之后，可以利用与表相同的方式利用它们，可以对视图执行SELECT操作、过滤和排序数据，将视图联结到其他视图或者表，甚至还能添加和更新数据。**重要的是要知道视图仅仅是用来查看存储在别处的数据的一种设施。视图本身不包含数据，因此他们返回的数据是从其他表中检索出来。在添加或更改这些表中的数据时，视图将返回改变过后的数据。**
+
+视图常见的应用包括：
+- 重用SQL语句；
+- 简化复杂的SQL操作。在编写查询后，可以方便地重用它而不必知道它的基本查询细节。
+- 使用表的组成部分而不是整个表。
+- 保护数据。可以给用户授予表的特定部分的访问权限而不是整个表的访问权限。
+- 更改数据格式和表示。视图可以返回与底层表的表示和格式不同的数据。
+
+`CREATE VIEW 语句`：创建视图。
+
+`SHOW CREATE VIEW viewname`: 来查看创建视图的语句。
+
+`DROP VIEW viewname`: 删除视图。
+
+`CREATE OR REPLACE VIEW`: 更新视图。
+
+```sql
+CREATE VIEW productcustomers AS
+SELECT cust_name, cust_contact, prod_id
+FROM customers, orders, orderitems
+WHERE customers.cust_id = orders.cust_id
+AND orderitems.order_num = orders.order_num;   //创建视图
+```
+
+并非所有的视图都是可更新的，视图主要用于数据的检索。当视图中定义有以下操作，则不能进行视图的更新：
+- 分组(GROUP BY 和 HAVING)
+- 联结
+- 子查询
+- 并
+- 聚集函数(MIN(), Count(), Sum()等)
+- DISTINCT
+- 导出计算列
+
+#### 2.8.2 使用存储过程
+
+存储过程简单来说，就是为了以后的使用而保存的一条或多条MySQL语句的集合。可以将其视为批文件，虽然它们的作用不仅限于批处理。使用存储过程有3个主要的好处：简单、安全、高性能。
+
+`CALL 语句`：执行存储过程，CALL接受存储过程的名字以及需要传递给它的任意参数。
+
+`CREATE PROCEDURE 语句`：创建存储过程的语句。
+
+下面给出一个创建存储过程具体的例子(使用了DELIMITER // 语句临时更改了命令行实用程序的语句分隔符,DELIMITER //告诉命令行提示符使用//作为新的语句结束分割符)：
+
+```sql
+1. DELIMITER // 
+
+CREATE PROCEDURE productpricing()
+BEGIN
+    SELECT Avg(prod_price) AS priceaverage
+    FROM products;
+END //
+
+DELIMITER ;
+
+2. CALL productpricing();  //调用存储过程
+3. DROP PROCEDURE productpricing;  //删除存储过程
+
+4. 
+CREATE PROCEDURE productpricing(
+    OUT pl DECIMAL(8,2)
+    OUT ph DECIMAL(8,2)
+    OUT pa DECIMAL(8,2)
+)
+BEGIN
+    SELECT Min(prod_price)
+    INTO pl
+    FROM products;
+    SELECT Max(prod_price)
+    INTO ph
+    FROM products;
+    SELECT Avg(prod_price)
+    INTO pa
+    FROM products;
+END;
+
+5. CALL productpricing(@pricelow, @pricehigh, @priceaverage);  //调用上面的存储过程，所有MySQL变量都必须用@开始
+```
+
+构建智能存储过程：考虑下面这样一个场景，你需要获取与以前一样的订单合计，但需要对合计增加营业税，不过只针对某些顾客(或许是你所在州中的某些顾客)，那么。你需要做以下几件事：
+- 获取合计；
+- 把营业税有条件地添加到合计；
+- 返回合计(带税或不带税)。
+
+```sql
+-- Name: ordertotal
+-- Parameters: onumber = order number
+--             taxable = 0 if not taxable, 1 if taxable
+--             ototal  = order total variable
+
+CREATE PROCEDURE ordertotal(
+    IN onumber INT,
+    IN taxable BOOLEAN,
+    OUT ototal DECIMAL(8,2)
+)COMMENT 'Obtain order total, optionally adding tax'
+BEGIN
+    -- Declare variable for total
+    DECLARE total DECIMAL(8,2);
+    -- Declare tax percentage
+    DECLARE taxrate INT DEFAULT 6;
+
+    --Get the order total
+    SELECT Sum(item_price*quantity)
+    FROM orderitems
+    WHERE order_num = onumber
+    INTO total;
+
+    --Is this taxable?
+    IF taxable THEN
+        -- yes ,so add taxrate to the total
+        SELECT total+(total/100*taxrate) INTO total;
+    END IF;
+    -- And Finally, save to out variable
+    SELECT total INTO ototal;
+END;
+```
+
+```sql
+CALL ordertotal(20005, 0, @total);
+SELECT @total;
+```
+
+### 2.9 触发器
+
+MySQL语句在需要时被执行，存储过程也是如此。但是，如果你想要某条语句在时间发生是自动执行，该如何处理，例如：
+- 每当增加一个顾客到某个数据库表时，都会检查其电话号码格式是否正确，州的缩写是否为大写；
+- 每当订购一个产品时，都从库存数量中减去订购的数量
+- 无论何时删除一行，都在某个存档表中保存一个副本。
+
+这些例子都是在某个表发生更改时而自动处理，这确切地说就是触发器。触发器是指MySQL响应以下任意语句而自动执行的一条MySQL语句(或位于BEGIN和END语句之间的一组语句)：
+- DELETE
+- INSERT
+- UPDATE
+
+在创建触发器时，需要给出4条信息：
+- 唯一的触发器名
+- 触发器关联的表
+- 触发器应该响应的活动(DELETE,INSERT,UPDATE)
+- 触发器何时执行(处理之前或之后)
+
+```sql
+1. CREATE TRIGGER newproduct AFTER INSERT ON products FOR EACH ROW SELECT 'Product added'; //添加一个触发器
+2. DROP TRIGGER newproduct; //删除触发器
+```
+
+**1.INSERT触发器**
+
+INSERT触发器发生在INSERT语句执行之前或之后执行。需要知道一下几点：
+- 在INSERT触发器代码内，可引用一个名为NEW的虚拟表，访问被插入的行。
+- 在BEFORE INSERT触发器中，NEW中的值也可以被更新(允许更改被插入的值)。
+- 对于AUTO_INCREMENT列，NEW在INSERT执行之前包含0，在INSERT执行之后包含新的自动生成值。
+
+**2.DELETE触发器**
+
+DELETE触发器在DELETE语句执行之前或之后执行。需要知道一下几点：
+- 在DELETE触发器代码内，可引用一个名为OLD的虚拟表，访问被删除的行。
+- OLD中的值全部都是只读的，不可更新。
+
+```sql
+CREATE TRIGGER deleteorder BEFORE DELETE ON orders
+FOR EACH ROW
+BEGIN
+    INSERT INTO archive_orders(order_num, order_date, cust_id)
+    VALUES(OLD.order_num, OLD.order_date, OLD.cust_id)
+END; //将要被删除的订单保存到一个名为archive_orders的存档表中
+```
+
+**3.UPDATE触发器**
+
+UPDATE触发器在UPDATE语句执行之前或之后执行。需要知道一下几点：
+- 在UPDATE触发器代码中，你可以引用一个名为OLD的虚拟表访问以前的值，引用一个名为NEW的虚拟表访问新更新的值。
+- 在BEFORE UPDATE触发器中，NEW中的值可能也被更新(允许更改将要用于UPDATE语句中的值)
+- OLD中的值全都是只读的，不能更新。
+
+### 2.10 管理事务处理与安全控制
+
+`事务`：指的是一组SQL语句。
+
+`回退`：指撤销指定SQL语句的过程。
+
+`提交`：指将未存储的SQL语句结果写入到数据库。
+
+`保留点(savepoint)`: 指事务处理中设置的临时占位符，你可以对它发布回退(与回退整个事务处理不同)。
+
+`GRANT 语句`：设置用户权限。
+
+`REVOKE 语句`：撤销用户特定的权限。
+
+关于安全控制的内容如下所示：
+
+```sql
+1. CREATE USER ben IDENTIFIED BY \'P@WORD'; //创建一个新用户账号
+2. RENAME USER ben TO bforta; //更改用户账户名
+3. DROP USER bforta; //删除用户账户
+4. SHOW GRANTS FOR bforta; //查看用户已有权限
+5. GRANT SELECT ON crashcourse.* TO bforta; //允许用户bforta在crashcourse.* 上使用SELECT
+6. REVOKE SELECT ON crashcourse.* FROM bforta; //撤销特定的权限，权限必须存在
+7. SET PASSWORD FOR bforta = Password('n3w p@word'); //更改口令
+```
+
+数据库维护：
+- 使用EXPLAIN语句让MySQL解释它将如何执行一条SELECT语句。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

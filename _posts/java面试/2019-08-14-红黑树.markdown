@@ -543,7 +543,7 @@ RB-DELETE(T, z)
         }else{
             y = successor(node);
         }
-        x = (node.left != null ? node.left : node.right);
+        x = (y.left != null ? y.left : y.right);
         if(x != null){
             x.parent = y.parent;
         }
@@ -728,6 +728,7 @@ RB-DELETE-FIXUP(T, x)
         RBTNode<T> other;
 
         while (node != this.root && colorOf(node) == BLACK){
+            
             if(parentOf(node).left == node){
                 other = parentOf(node).right;
                 if(isRed(other)){
@@ -811,5 +812,7 @@ RB-DELETE-FIXUP(T, x)
 [漫画算法：5分钟搞明白红黑树到底是什么？](https://www.bilibili.com/read/cv3112315?share_source=weixin&share_medium=iphone&bbid=ZE4E52E8FA669E54490C8A9163E25CDC0688&ts=1566145567)
 
 [教你初步了解红黑树](https://blog.csdn.net/v_july_v/article/details/6105630)
+
+[红黑树详细分析](http://www.tianxiaobo.com/2018/01/11/%E7%BA%A2%E9%BB%91%E6%A0%91%E8%AF%A6%E7%BB%86%E5%88%86%E6%9E%90/)
 
 

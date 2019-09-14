@@ -548,9 +548,40 @@ ln -s /dev/null ~/.netscape/cookies
 
 /dev/zero的另一个应用是为特定的目的而用零去填充一个指定大小的文件，如挂载一个文件系统到环回设备或者安全地删除一个文件。
 
-#### 7.
+#### 7.linux中查看最消耗CPU的线程
 
+1. 定位进程：top命令后按c查看最消耗CPU的进程，得到进程pid(例如得到pid = 1893)。
+2. 定位线程：利用top -Hp pid 查看该进程里面的线程资源使用情况，找到最耗资源的线程pid。(例如，在pid=1893进程里发现，ID = 4519的线程占用CPU最高)
+3. 定位代码：首先，我们需要将4519这个线程转成16进制：
 
+```
+$printf %x 4519
+11a7
+```
+接下来，通过jsstack命令，查看栈信息：
+
+```s
+$sudo -u admin  jstack 1893 |grep -A 200 11a7
+"HSFBizProcessor-DEFAULT-8-thread-5" #500 daemon prio=10 os_prio=0 tid=0x00007f632314a800 nid=0x11a2 runnable [0x000000005442a000]
+   java.lang.Thread.State: RUNNABLE
+  at sun.misc.URLClassPath$Loader.findResource(URLClassPath.java:684)
+  at sun.misc.URLClassPath.findResource(URLClassPath.java:188)
+  at java.net.URLClassLoader$2.run(URLClassLoader.java:569)
+  at java.net.URLClassLoader$2.run(URLClassLoader.java:567)
+  at java.security.AccessController.doPrivileged(Native Method)
+  at java.net.URLClassLoader.findResource(URLClassLoader.java:566)
+  at java.lang.ClassLoader.getResource(ClassLoader.java:1093)
+  at java.net.URLClassLoader.getResourceAsStream(URLClassLoader.java:232)
+  at org.hibernate.validator.internal.xml.ValidationXmlParser.getInputStreamForPath(ValidationXmlParser.java:248)
+  at org.hibernate.validator.internal.xml.ValidationXmlParser.getValidationConfig(ValidationXmlParser.java:191)
+  at org.hibernate.validator.internal.xml.ValidationXmlParser.parseValidationXml(ValidationXmlParser.java:65)
+  at org.hibernate.validator.internal.engine.ConfigurationImpl.parseValidationXml(ConfigurationImpl.java:287)
+  at org.hibernate.validator.internal.engine.ConfigurationImpl.buildValidatorFactory(ConfigurationImpl.java:174)
+  at javax.validation.Validation.buildDefaultValidatorFactory(Validation.java:111)
+  at com.test.common.util.BeanValidator.validate(BeanValidator.java:30)
+```
+
+通过以上代码，我们可以清楚的看到，BeanValidator.java的第30行是有可能存在问题的。之后针对具体的代码进行改善就可以了。
 
 
 
