@@ -687,7 +687,7 @@ public class Solution {
     // 矩阵的快速幂
     public static int[][] matrixPow(int[][] m, int n){
         //构建2*2单位矩阵
-        int[][] ret = {{1,0},{0,1}};
+        int[][] ret = { { 1,0 }, { 0,1 } };
         while (n > 0){
             if((n & 1) > 0){
                 ret = matrixMul(m,ret);
@@ -702,12 +702,11 @@ public class Solution {
         if(n == 0){
             return 0;
         }
-        int[][] matrix = {{1,1},{1,0}};
-        int[][] unit = {{1,0},{0,0}};
+        int[][] matrix = { {1,1}, {1,0} };
+        int[][] unit = { {1,0},{0,0} };
         int[][] ret = matrixMul(matrixPow(matrix, n-1),unit);
         return ret[0][0];
     }
-
 ```
 
 ### 8. 跳台阶
@@ -1272,7 +1271,129 @@ public class Solution {
 
 ```
 
-### 13. 二进制中1的个数
+### 13. 剪绳子
+
+**题目描述**
+
+给你一根长度为n的绳子，请把绳子剪成m段（m、n都是整数，n>1并且m>1），每段绳子的长度记为k[0],k[1],...,k[m]。请问k[0]xk[1]x...xk[m]可能的最大乘积是多少？例如，当绳子的长度是8时，我们把它剪成长度分别为2、3、3的三段，此时得到的最大乘积是18。
+
+**解题思路**
+
+> 解法1：动态规划。f(n)定义为将长度为n的绳子分成若干段后的各段长度的最大乘积（最优解），在剪第一刀时有n-1种剪法，可选择在0 < i < n处下刀。在i处下刀，分成长度为i的左半绳子和长度为n-i的右半绳子，对于这两根绳子，定义最优解为f(i)和f(n-i)，于是f(n) = max(f(i) * f(n-i))，即求出各种相乘可能中的最大值就是f(n)的最优解。就这样从上到下的分下去，但是问题的解决从下到上。即先求出f(2)、f(3)的最优解，然后根据这两个值求出f(4)、f(5)...直到f(n)。 f(2) = 1，因为只能分成两半，f(3) = 2，因为分成两段2 * 1大于分成三段的1 * 1* 1。
+
+```java
+    public int cutRope(int target) {
+        // n<=3的情况，m>1必须要分段，例如：3必须分成1、2；1、1、1 ，n=3最大分段乘积是2,
+        if(target < 2){
+            return 0;
+        }
+        if(target == 2){
+            return 1;
+        }
+        if(target == 3){
+            return 2;
+        }
+        int[] dp = new int[target + 1];
+        /*下面4行是n>=4的情况，跟n<=3不同，4可以分很多段，比如分成1、3，
+        这里的3可以不需要再分了，因为3分段最大才2，不分就是3。记录最大的。
+        */
+        dp[0] = 0;
+        dp[1] = 1;
+        dp[2] = 2;
+        dp[3] = 3;
+        int max = 0;
+        for (int i = 4; i <= target; i++){
+            max = 0;
+            for (int j = 1; j <= i / 2; ++j){
+                max = Math.max(max, dp[j]*dp[i-j]);
+            }
+            dp[i] = max;
+        }
+        return dp[target];
+    }
+```
+
+> 解法2：贪心法。如果我们按照如下的策略来剪绳子，则得到各段绳子的长度的乘积将最大：当n>=5时，我们尽可能地剪长度为3的绳子；当剩下的绳子长度为4时，把绳子剪成两段长度为2的绳子。
+
+```java
+    public int cutRope(int target) {
+        // 长度为1时不满足题意，返回0
+        if (target < 2) {
+            return 0;
+        }
+        // f(2)
+        if (target == 2) {
+            return 1;
+        }
+        // f(3)
+        if (target == 3) {
+            return 2;
+        }
+        // 	统计能分出多少段长度为3的绳子
+        int timesOf3 = target / 3;
+        // 如果最有只剩下长度为1的绳子，需要退一步，得到长度为4的绳子，重新分成2*2的
+        if (target - timesOf3 * 3 == 1) {
+            timesOf3--;
+        }
+        // 到这步length - timesOf3 * 3的值只可能是0,2,4，所以timesOf2只可能是0, 1, 2
+        int timesOf2 = (target - timesOf3 * 3) / 2;
+        return (int) Math.pow(3, timesOf3) * (int) Math.pow(2, timesOf2);
+
+    }
+```
+
+牛客网上还看到一个很好的分析贪心的案例如下：
+
+```C
+#include <iostream>
+#include <cmath>
+ 
+using namespace std;
+ 
+/**
+ * 题目分析：
+ * 先举几个例子，可以看出规律来。
+ * 4 ： 2*2
+ * 5 ： 2*3
+ * 6 ： 3*3
+ * 7 ： 2*2*3 或者4*3
+ * 8 ： 2*3*3
+ * 9 ： 3*3*3
+ * 10：2*2*3*3 或者4*3*3
+ * 11：2*3*3*3
+ * 12：3*3*3*3
+ * 13：2*2*3*3*3 或者4*3*3*3
+ *
+ * 下面是分析：
+ * 首先判断k[0]到k[m]可能有哪些数字，实际上只可能是2或者3。
+ * 当然也可能有4，但是4=2*2，我们就简单些不考虑了。
+ * 5<2*3,6<3*3,比6更大的数字我们就更不用考虑了，肯定要继续分。
+ * 其次看2和3的数量，2的数量肯定小于3个，为什么呢？因为2*2*2<3*3，那么题目就简单了。
+ * 直接用n除以3，根据得到的余数判断是一个2还是两个2还是没有2就行了。
+ * 由于题目规定m>1，所以2只能是1*1，3只能是2*1，这两个特殊情况直接返回就行了。
+ *
+ * 乘方运算的复杂度为：O(log n)，用动态规划来做会耗时比较多。
+ */
+long long n_max_3(long long n) {
+    if (n == 2) {
+        return 1;
+    }
+    if (n == 3) {
+        return 2;
+    }
+    long long x = n % 3;
+    long long y = n / 3;
+    if (x == 0) {
+        return pow(3, y);
+    } else if (x == 1) {
+        return 2 * 2 * (long long) pow(3, y - 1);
+    } else {
+        return 2 * (long long) pow(3, y);
+    }
+}
+```
+
+### 14. 二进制中1的个数
 
 **题目描述**
 
@@ -1326,7 +1447,7 @@ public class Solution {
 }
 ```
 
-### 14. 数值的整数次方
+### 15. 数值的整数次方
 
 **题目描述**
 
@@ -1431,7 +1552,225 @@ public class Solution {
 }
 ```
 
-### 15. 调整数组顺序使得奇数位于偶数前面
+### 16. 打印从1到最大的n位数
 
+**题目描述**
+
+输入数字n,按顺序打印从1到最大的n位十进制数。比如输入3，则打印出1、2、3一直到最大的3位数999.
+
+**解题思路**
+
+> 解法1： 在字符串上模拟数字加法。在用字符串表示数字的时候，最直观的方法就是字符串里每个字符都是'0'~'9'之间的某一个字符，用来表示数字中的某一位。我们需要构建一个长度为n的字符串，初始化每一位都为'0'，然后每一次都为字符串表示的数字加1，再打印出来。在这其中，有两个坑。
+> 
+> 1.首先我们需要知道在什么时候来停止在number上加1。我们注意到只有对“9999...99”加1的时候，才会在第一个字符(下标为0)的基础上产生进位，而其他所有情况都不会在第一个字符上产生进位。因此，当我们发现在加1的时候第一个字符产生了进位，则已经是最大的n位情况了，可以退出循环了；
+> 
+> 2. 在打印字符的时候，我们前面提到当数字不够n位的时候，我们在数字的前面补0，打印的时候这些补位的0不应该打印出来。因此，在打印函数的时候，只有在碰到第一个非0的字符之后我们才开始打印，直到字符的末端。
+
+给出代码如下所示：
+
+```java
+    public void printFrom1ToMaxOfDigit(int n){
+        if(n <= 0){
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < n;i++){
+            sb.append("0");
+        }
+
+        while (stillIncrease(sb,n)){
+            print(sb);
+        }
+        System.out.println();
+    }
+
+    private boolean stillIncrease(StringBuilder sb, int len){
+        //进位，应该要给下一位进行相加
+        int toTen = 0;
+        // 从个位开始相加，如果有进位就看十位。。。如果到最高位还有进位，说明溢出
+        for (int i = len - 1;i >= 0; i--){
+            int sum = sb.charAt(i) - '0' + toTen;
+            //在个位上，先自增
+            if(i == len - 1){
+                sum++;
+            }
+            if(sum == 10){
+                //进位溢出
+                if (i == 0){
+                    return false;
+                }else {
+                    sb.setCharAt(i, '0');
+                    toTen = 1;
+                }
+            }else {
+                sb.setCharAt(i,(char)(sum + '0'));
+                // 在某位上自增后不再进位，自增完成立即退出循环
+                break;
+            }
+        }
+        return true;
+    }
+
+    private void print(StringBuilder sb){
+        int start = sb.length();
+        //找到第一个不为0的索引
+        for (int i = 0; i < sb.length(); i++){
+            if(sb.charAt(i) != '0'){
+                start = i;
+                break;
+            }
+        }
+        //如果全是0,就不打印
+        if(start < sb.length()){
+            System.out.print(sb.substring(start) + " ");
+        }
+    }
+```
+
+> 解法2：递归解法，将问题变成数字排列的解法。我们可以换一种思路来思考这个问题，如果我们在数字前面补0，就会发现n位所有十进制数其实就是n个从0到9的全排列。也就是说，我们把数字的每一位都从0到9排列一遍，就得到了所有的十进制数。只是我么你在打印的时候，排在前面的0不打印出来而已。全排列用递归很容易表达，数字的每一位都可能是0~9中的一个数，然后设置下一位。递归结束的条件是我们已经设置了数字的最后一位。
+
+```java
+private void print(StringBuilder sb){
+        int start = sb.length();
+        //找到第一个不为0的索引
+        for (int i = 0; i < sb.length(); i++){
+            if(sb.charAt(i) != '0'){
+                start = i;
+                break;
+            }
+        }
+        //如果全是0,就不打印
+        if(start < sb.length()){
+            System.out.print(sb.substring(start) + " ");
+        }
+    }
+
+    //第二种解法，递归解法
+    public void printFrom1ToMaxOfDigitRecur(int n){
+        if(n <= 0){
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < n; i++){
+            sb.append("0");
+        }
+
+        printRecur(sb,n,0);
+    }
+
+    private void printRecur(StringBuilder sb, int len, int index){
+        //递归结束条件
+        if(index == len){
+            print(sb);
+            return;
+        }
+        for (int i = 0; i < 10; i++){
+            sb.setCharAt(index, (char)(i + '0'));
+            printRecur(sb,len,index+1);
+        }
+    }
+```
+
+### 17. 删除链表的节点
+
+**题目描述**
+
+在O(1)时间内删除链表节点。给定单向链表的头指针和一个节点指针，定义一个函数在O(1)时间内删除该节点。
+
+**解题思路**
+
+在单向链表中删除一个节点，常规的做法是从链表的头节点开始，顺序遍历查找要删除的节点，并在链表中删除该节点。然而这种思路由于需要顺序查找，时间复杂度自然是O(n).传统做法中，我们之所以需要从头开始查找，是因为我们需要得到被删除节点的前一个节点。在单向链表中，节点没有指向前一个节点的指针，所以只好从链表的头节点开始顺序查找。
+
+然而，实际上我们可以不一定要得到被删除节点的前一个节点。因为我们能很方便地得到要删除节点的下一个节点。如果我们把下一个节点的内容复制到需要删除的节点上覆盖原有的内容，再把下一个节点删除，其实就相当于把当前需要删除的节点删除了。(`BST中删除节点就存在这样的一种思路，查找到后继节点替换被删除节点的值`)当然，这里还要考虑删除的节点位于链表的尾部的情况(`这种情况，就只能从链表的头部开始顺序遍历到该节点的前序节点，完成删除操作`)和链表只有一个节点的情况(在删除完节点之后，还需要将头指针设置为null)。
+
+```java
+    private class Node{
+        int val;
+        Node next;
+    }
+
+    public void deleteNode(Node head, Node toBeDel){
+        if (head == null || toBeDel == null){
+            return;
+        }
+
+        //要删除的节点不是尾节点时
+        if(toBeDel.next != null){
+            Node pNext = toBeDel.next;
+            toBeDel.val = pNext.val;
+            toBeDel.next = pNext.next;
+        }else if(head == toBeDel){
+            //是头节点且是尾结点
+            head = head.next;
+        }else {
+            //仅仅是尾结点，即在含有多个节点的链表中删除尾结点
+            Node cur = head;
+            while (cur.next != toBeDel){
+                cur = cur.next;
+            }
+            cur.next = null;
+        }
+    }
+```
+
+**拓展延伸**
+
+在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。例如，链表1->2->3->3->4->4->5 处理后为 1->2->5。注意重复的结点不保留：并不是将重复结点删除到只剩一个，而是重复结点的全部会被删除。所以 链表1->2->3->3->4->4->5不是1->2->3->4->5。
+
+> 解法1：哑结点加上快慢指针。我们从头遍历整个链表，如果当前节点的值与下一个节点的值相同，那么它们就是重复的节点，都可以被删除。为了保证删除之后的链表仍然是相连的，我们要把当前节点的前一个节点与后面值比当前节点的值大的节点相连。我们要确保前一个节点始终与下一个没有重复的节点连接在一起。
+
+```java
+public ListNode deleteDuplication(ListNode pHead)
+    {
+        if(pHead == null || pHead.next == null){
+            return pHead;
+        }
+        //建立一个哑结点替代原来的head
+        ListNode first = new ListNode(pHead.val - 1);
+        first.next = pHead;
+        //当前节点的前一个节点
+        ListNode pre = first;
+        //当前节点
+        ListNode cur = pHead;
+        while (cur != null && cur.next != null){
+            if(cur.val == cur.next.val){
+                int val = cur.val;
+                while (cur != null && cur.val == val){
+                    cur = cur.next;
+                }
+                pre.next = cur;
+            }else {
+                pre = cur;
+                cur = cur.next;
+            }
+        }
+        return first.next;
+    }
+```
+
+> 解法2：递归解法。
+
+```java
+    public ListNode deleteDuplication_2(ListNode pHead){
+        if(pHead == null ){
+            return pHead;
+        }
+        if(pHead.next != null && pHead.val == pHead.next.val){
+            while (pHead != null && pHead.next != null && pHead.val == pHead.next.val){
+                pHead = pHead.next;
+            }
+            //去掉所有重复的数字后，进行递归
+            return deleteDuplication_2(pHead);
+        }else {
+            pHead.next = deleteDuplication_2(pHead.next);
+        }
+       return pHead;
+    }
+```
+
+
+### 16. 调整数组顺序使得奇数位于偶数前面
+
+**题目描述**
 
 
