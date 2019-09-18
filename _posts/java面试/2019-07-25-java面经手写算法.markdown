@@ -226,3 +226,111 @@ public class LRUCache<K, V> {
     }
 }
 ```
+
+### 2. 求出小于数字N的所有素数
+
+#### 2.1 常规办法求解
+
+开根号法：如果一个数（>2），对这个数求平方根，如果这个数能被这个数的平方根到2之间的任何一个（只要有一个就行）整除说明就不是质数，如果不能就说明是质数！
+
+原理：假如一个数N是合数，它有一个约数a,a×b=N，则a、b两个数中必有一个大于或等于根号N，一个小于或等于根号N。因此，只要小于或等于根号N的数（1除外）不能整除N，则N一定是素数。
+
+```java
+    public static List<Integer> getPrimes(int N){
+        List<Integer> result = new ArrayList<>();
+        for(int i = 1; i <= N; i++){
+            if(isPrime(i)){
+                result.add(i);
+            }
+        }
+        return result;
+    }
+
+    //判断一个数是否是素数
+    private static boolean isPrime(int n){
+        if( n < 2){
+            return false;
+        }
+        for (int i = 2; i <= Math.sqrt(n); i++){
+            //如果被整除
+            if(n % i == 0){
+                return false;
+            }
+        }
+        return true;
+    }
+```
+
+#### 2.2 埃式筛选法(Eratosthenes筛选)
+
+原理：要得到自然是N以内的全部素数，必须把不大于根号N的所有素数的倍数剔除，剩下的就是素数。例如，给出要筛数值的范围n，找出以内的素数。先用2去筛，即把2留下，把2的倍数剔除掉；再用下一个质数，也就是3筛，把3留下，把3的倍数剔除掉；接下去用下一个质数5筛，把5留下，把5的倍数剔除掉；不断重复下去...最终未被删去的数就是素数，这样的时间复杂度是O(nloglogn)。但是这样在效率上有一个问题：一个数会被删去多次，例如42会被2 3 7都删去一遍。
+
+给出埃式筛选法的两个图如下所示：(图1中第二行9忘记删除了)
+
+![埃式筛选法](https://ws1.sinaimg.cn/large/005CDUpdgy1g72avqpyrgj30qg0cstbd.jpg)
+
+![埃式筛选法](https://ws1.sinaimg.cn/large/005CDUpdgy1g72b2nse9ug30cd0a9q6x.gif)
+
+```java
+    //方法2：埃式筛选法(Eratosthenes筛选),筛选过程包含N
+    public static List<Integer> getPrimes2(int N){
+        if(N < 2 ){
+           return null;
+        }
+        if(N > 9999999){
+            throw new IllegalArgumentException("输出参数N错误");
+        }
+        List<Integer> result = new ArrayList<>();
+        //假设初始所有数都是素数，且某个数是素数，则其值为0
+        long[] array = new long[N+1];
+        array[0] = 1; // 0不是素数
+        array[1] = 1; // 1不是素数
+        //筛选过程
+        for (int i = 2; i <= Math.sqrt(N); i++){
+            if(array[i] == 0){
+                for (long j = i * i; j <= N; j += i){
+                    array[j] = 1; //标记该位置为非质数
+                }
+            }
+        }
+        //筛选出N以内的所有素数
+        for (int i = 0; i < array.length; i++){
+            if(array[i] == 0){
+                result.add(i);
+            }
+        }
+        return result;
+    }
+```
+
+#### 2.3 欧拉筛选
+
+欧拉筛法的基本思想是在埃氏筛法的基础上，让每个合数只被它的最小质因子筛选一次，以达到不重复的目的。
+
+[欧拉筛选法的原理](https://wenku.baidu.com/view/4881881daaea998fcc220e99.html)
+
+[欧拉筛法](https://lustoo.github.io/2019/03/18/%E6%AC%A7%E6%8B%89%E7%AD%9B/)
+
+对于一个正整数，如果其为合数，那么该数的质因数分解形式是唯一的。 现定义：对于某个范围内的任意合数，只能由其最小的质因子将其从表中删除。我们很容易得出该算法的时间复杂度为线性的，为什么呢？因为一个合数的质因数分解式是唯一的，而且我们定义了合数只能由最小质因子将其从表中删除，所以每个合数只进行了一次删除操作(需要注意的是:埃氏素数筛选法中合数可能被多个质数删除，比如12，18等合数).现在原始的问题转换为怎么将合数由其最小的质因子删除？我们考查任何一个数n，假设其最小质因子为m，那么小于等于m的质数与n相乘，会得到一个更大的合数，且其最小质因数为与n相乘的那个质数，而该合数可以直接从表中删除，因为其刚好满足之前的合数删除的定义，所以我们需要维护一个表用来记录已经找到了的质数，然后根据刚才叙述的步骤执行，就能将埃氏素数筛选法的时间复杂度降为O(n)。
+
+```java
+    public static int[] getPrimesStatusArray1(int N){
+        boolean[] visit = new boolean[N+1];
+        Arrays.fill(visit,true);
+        int[] prime = new int[N+1];
+        int num = 0;
+        for (int i = 2; i <= N;i++){
+            if(visit[i]){
+                prime[num++] = i;
+            }
+            //此处边界判断为rec[j] <= n / i,如果写成i * rec[j] <= n,需要确保i * rec[j]不会溢出int
+            for(int j = 0; j < num && prime[j] <= N / i; ++j){
+                visit[i*prime[j]] = false;
+                if(i % prime[j] == 0){
+                    break;
+                }
+            }
+        }
+        return prime;
+    }
+```
