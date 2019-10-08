@@ -1,0 +1,79 @@
+---
+layout:     post
+title:      "Lock锁的使用"
+subtitle:   " \"Lock锁\""
+date:       2019-09-18 14:29:07
+author:     "ming"
+catalog: true
+header-img: "img/post-bg-alone.jpg"
+tags:
+    - 并发编程
+    - JAVA
+---
+
+> "If you think you can, you can. And if you think you can't, you're right."
+
+### 1.Lock接口介绍
+
+锁是用于通过多个线程控制对共享资源的访问的工具。通常，锁提供对共享资源的独占访问：一次只能有一个线程可以获取锁，并且对共享资源的所有访问都要求首先获取锁。但是，一些锁可能允许并发访问共享资源，如ReadWriteLock的读写锁。
+
+在Lock接口出现之前，Java程序是靠Synchronized关键字实现锁功能的。JDK 1.5之后并发包中新增了Lock接口以及相关实现类来实现锁功能。虽然synchronized方法和语句的范围机制使得使用监视器锁更容易编程，并且有助于避免涉及锁的许多常见编程错误，但是有时候您需要以更灵活的方式处理锁。例如，用于遍历并发访问的数据结构的一些算法需要使用“手动”或“链锁定”：您需要获取节点A的锁定，然后获取节点B，获取到B之后释放锁A并获取C，然后释放锁B并获得D等。在这种情景中Synchronized关键字就不那么容易实现了，使用Lock接口更容易的多。
+
+Lock接口提供了synchronized关键字不具备的主要特性：
+
+特性 | 描述
+--- | ---
+尝试非阻塞地获取锁 | 当前线程尝试获取锁，如果这一时刻没有被其他线程获取到，则成功获取并持有锁
+能被中断地获取锁 | 获取到锁的线程能够响应中断，当获取到锁的线程被中断时，中断异常将会被抛出，同时锁会被释放
+超时获取锁 | 在指定的截止时间之前获取锁，超过截止时间后仍旧无法获取则返回
+
+总结一下，也就是Lock提供了比synchronized更多的功能，但是要注意以下几点：
+1. Lock不是Java语言内置的，synchronized是Java语言的关键字，因此是内置特性。Lock是一个接口，有具体的实现类，通过实现类来实现同步访问。
+2. Lock和Synchronized有一点非常大的不同，采用synchronized不需要用户去手动释放锁，当synchronized方法或者synchronized代码块执行完之后，系统会自动让出线程对锁的占用；而Lock则必须要用户去手动释放锁，如果没有主动释放锁，就有可能导致出现死锁现象。
+
+Lock接口的实现类具体有：
+
+ReentrantLock, ReentrantReadWriteLock.ReadLock, ReentrantReadWriteLock.WriteLock
+
+### 2. Lock接口方法介绍
+
+Lock接口中定义了6个方法：
+
+```java
+//获取锁。如果锁不可用，则当前线程将被禁用以进行线程调度，并处于休眠状态，直到获取锁。
+void lock();
+
+//获取锁，如果可用并立即返回。如果锁不可用，那么当前线程将被禁用以进行线程调度，并且处于休眠状态，和lock()方法不同的是在锁的获取中可以中断当前线程（相应中断）。
+void lockInterruptibly();
+
+//获取等待通知组件，该组件和当前绑定，当前线程只有获得了锁，才能调用该组件的wait()方法，而调用后，当前线程将释放锁
+Condition newCondition();
+
+//只有在调用时才可以获得锁。如果可用，则获取锁定，并立即返回值为true；如果锁不可用，则此方法将立即返回值为false
+boolean tryLock();
+
+// 超时获取锁，当前线程在一下三种情况下会返回： 1. 当前线程在超时时间内获得了锁；2.当前线程在超时时间内被中断；3.超时时间结束，返回false.
+boolean tryLock(long time, TimeUnit unit);
+
+//释放锁
+void unlock();
+```
+
+Lock的使用一般是以下面的模板：
+
+```java
+Lock lock = new ReentrantLock();
+try{
+    lock.lock();//标记1
+    doSomeThing();
+}finally{
+    lock.unlock();
+}
+```
+我们可以看到，通过调用`lock.lock()`一句话很简单地我们就实现了代码的同步。那其具体的实现原理是什么呢，在介绍lock()方法的实现原理之前，我们先来了解一下AQS(AbstractQueuedSynchronizer).
+
+### 3. AQS
+
+
+
+

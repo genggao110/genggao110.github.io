@@ -352,7 +352,7 @@ Thread[线程 2,5,main]waiting get resource1
 
 操作系统产生死锁必须具备以下四个条件：
 1. 互斥条件：该资源在任意一个时刻只由一个线程占用。
-2. 请求与保持条件：一个进程因请求资源而阻塞时，对以获得的资源保持不放。
+2. 请求与保持条件：一个进程因请求资源而阻塞时，对已获得的资源保持不放。
 3. 不剥夺条件：线程已获得的资源在未使用完之前不能被其他线程强行剥夺，只有自己使用完毕后才释放资源。
 4. 循环等待条件：若干进程之间形成一种头尾相接的循环等待资源关系。
 
@@ -606,3 +606,284 @@ Thread-0 19
 整体而言，推荐使用实现Runnable,Callable接口的方式来创建多线程。
 
 ### 3.线程调度与线程控制
+
+程序中的多个线程是并发执行的，某个线程若想被执行必须得到CPU的使用权。Java虚拟机会按照特定的机制为程序中的每个线程分配CPU的使用权，这种机制被称作线程的调度。
+
+在计算机中，线程调
+度有两种模型，分别是分时调度模型和抢占式调度模型。所谓的`分时调度模型`就是让所有的线程轮流获得CPU的使用权，并且平均分配每个线程占用的CPU的时间片。`抢占式调度模型`是指让可运行池中优先级高的线程优先占用CPU，而对于优先级相同的线程，随机选择一个线程使其占用CPU，当它失去了CPU的使用权后，再随机选择其他线程获取CPU的使用权。Java虚拟机默认采用抢占式调度模型，通常情况下程序员不需要去关心它，但在某些特定的需求下需要改变这种模式，由程序自己来控制CPU的调度。
+
+#### 3.1 线程调度
+
+Java线程有优先级，优先级高的线程会获得较多的运行机会。Java线程的优先级用整数表示，取值范围是1~10，Thread类有以下三个静态常量：
+
+Thread类的静态变量 | 功能描述
+--- | ---
+static int MAX_PRIORITY | 表示线程的最高优先级，值为10
+static int MIN_PRIORITY | 表示线程的最低优先级，值为1
+static int NORM_PRIORITY | 表示线程的普通优先级，值为5
+
+Thread类的setPriority()和getPriority()方法分别用来设置和获取线程的优先级。每个线程都有默认的优先级，主线程的默认优先级为Thread.NORM_PRIORITY。并且线程的优先级有继承关系，比如A线程创建了B线程，那么B将和A具有相同的优先级。JVM提供了10个线程优先级，但与常见的操作系统都不能很好的映射。如果希望程序能移植到各个操作系统中，应该仅仅使用Thread类有以下三个静态常量作为优先级，这样能保证同样的优先级采用了同样的调度方式。
+
+#### 3.2 线程控制
+
+1. 线程睡眠：Thread.sleep(long mills)方法，让当前线程暂停，进入休眠等待状态。mills参数设定休眠的时间，以毫秒为单位。当睡眠结束后，就转为就绪状态。sleep()方法平台移植性较好。
+2. 线程加入：join()方法，等待其他线程终止。在当前线程中调用另一个线程的join()方法，则当前线程则被阻塞，直到另一个线程运行结束，当前线程再由阻塞状态转为就绪状态。
+3. 线程等待：Object类中的wait()方法，导致当前线程等待，直到其他线程调用此对象的notify()方法或者notifyAll()唤醒方法。这两个唤醒方法也是Object类中的方法，行为等价于调用wait(0)一样。
+4. 线程让步： Thread.yield()方法，暂停当前正在执行的线程对象，把执行机会让给相同或者优先级更高的线程。**yield()应该做的是让当前运行线程回到可运行状态，以允许具有相同优先级的其他线程获得运行机会。因此，使用yield()的目的是让相同优先级的线程之间能适当的轮转执行。但是，实际中无法保证yield()达到让步目的，因为让步的线程还有可能被线程调度程序再次选中。**
+5. 设为守护线程：setDaemon(boolean on),将该线程标记为守护线程（后台线程）或用户线程。当正在运行的线程都是守护线程时，Java 虚拟机退出。该方法必须在启动线程前调用。
+6. 线程中断：interrupt()，中断线程。 把线程的状态终止，并抛出一个InterruptedException。
+7. 线程唤醒： Object类中的notify()方法，唤醒在此对象监视器上等待的单个线程。如果所有线程都在此对象上等待，则会选择唤醒其中一个线程。选择是任意性的，并在对实现做出决定时发生。线程通过调用其中一个 wait 方法，在对象的监视器上等待。 直到当前的线程放弃此对象上的锁定，才能继续执行被唤醒的线程。被唤醒的线程将以常规方式与在该对象上主动同步的其他所有线程进行竞争；例如，唤醒的线程在作为锁定此对象的下一个线程方面没有可靠的特权或劣势。类似的方法还有一个notifyAll()，唤醒在此对象监视器上等待的所有线程。
+
+**Attention**:Thread中suspend()和resume()两个方法在JDK1.5中已经废除，不再介绍。因为有死锁倾向。
+
+**1. sleep()和yield()方法的区别**
+
+sleep()使得当前线程进入停滞状态，所以执行sleep()的线程在指定时间内肯定不会被执行；yield()只是使得当前线程重新回到可执行状态，所以执行yield()的线程有可能在进入到可执行状态之后马上又被执行。
+
+sleep 方法允许较低优先级的线程获得运行机会，但 yield()  方法执行时，当前线程仍处在可运行状态，所以，不可能让出较低优先级的线程些时获得 CPU 占有权。在一个运行系统中，如果较高优先级的线程没有调用 sleep 方法，又没有受到 I\O 阻塞，那么，较低优先级线程只能等待所有较高优先级的线程运行结束，才有机会运行。
+
+**2.wait()方法使用**
+
+Obj.wait()与Obj.notify()必须要与synchronized(Obj)一起使用，也就是wait,与notify是针对已经获取了Obj锁进行操作，从语法角度来说就是Obj.wait(),Obj.notify必须在synchronized(Obj){...}语句块内。从功能上来说wait就是说线程在获取对象锁后，主动释放对象锁，同时本线程休眠。直到有其它线程调用对象的notify()唤醒该线程，才能继续获取对象锁，并继续执行。相应的notify()就是对对象锁的唤醒操作。但有一点需要注意的是notify()调用后，并不是马上就释放对象锁的，而是在相应的synchronized(){}语句块执行结束，自动释放锁后，JVM会在wait()对象锁的线程中随机选取一线程，赋予其对象锁，唤醒线程，继续执行。这样就提供了在线程间同步、唤醒的操作。Thread.sleep()与Object.wait()二者都可以暂停当前线程，释放CPU控制权，主要的区别在于Object.wait()在释放CPU同时，释放了对象锁的控制。
+
+下面给出一个经典的案例，三线程打印ABC，题目要求如下：建立三个线程，A线程打印10次A，B线程打印10次B，C线程打印10次C，要求线程同时运行，交替打印ABC。这个问题用Object的wait(),notify()就可以很方便的解决。代码如下：
+
+```java
+public class ABC_PrintThread implements Runnable {
+
+    private String name;
+    private Object prev;
+    private Object self;
+    public static int index = 0;
+
+    public ABC_PrintThread(String name, Object prev, Object self) {
+        this.name = name;
+        this.prev = prev;
+        this.self = self;
+    }
+
+    @Override
+    public void run() {
+        int count = 10;
+        while (count > 0){
+            synchronized (prev){
+                synchronized (self){
+                    System.out.print(name);
+                    count--;
+                    index++;
+                    if(index % 3 == 0){
+                        System.out.println();
+                    }
+                    self.notify();
+                }
+                try{
+                    prev.wait();
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        Object a = new Object();
+        Object b = new Object();
+        Object c = new Object();
+
+        ABC_PrintThread pa = new ABC_PrintThread("A",c,a);
+        ABC_PrintThread pb = new ABC_PrintThread("B",a,b);
+        ABC_PrintThread pc = new ABC_PrintThread("C",b,c);
+
+        new Thread(pa).start();
+        Thread.sleep(100);
+        new Thread(pb).start();
+        Thread.sleep(100);
+        new Thread(pc).start();
+        Thread.sleep(100);
+    }
+}
+```
+输出结果：
+```
+ABC
+ABC
+ABC
+ABC
+ABC
+ABC
+ABC
+ABC
+ABC
+ABC
+```
+我们来具体分析一下整体思路：从大的方向上来讲，该问题为三线程间的同步唤醒操作，主要的目的就是ThreadA->ThreadB->ThreadC->ThreadA循环执行三个线程。为了控制线程执行的顺序，那么就必须要确定唤醒、等待的顺序，所以每一个线程必须同时持有两个对象锁，才能继续执行。一个对象锁是prev，就是前一个线程所持有的对象锁。还有一个就是自身对象锁。主要的思想就是，为了控制执行的顺序，某个必须要先持有prev锁(也就是前一个线程要释放自身对象锁)，再去申请自身对象锁，两者兼备时打印，之后首先调用self.notify()释放自身对象锁，唤醒下一个等待线程，再调用prev.wait()释放prev对象锁，终止当前线程，等待循环结束后再次被唤醒。运行上述代码，可以发现三个线程循环打印ABC，共10次。程序运行的主要过程就是A线程最先运行，持有C,A对象锁，后释放A,C锁，唤醒B。线程B等待A锁，再申请B锁，后打印B，再释放B，A锁，唤醒C，线程C等待B锁，再申请C锁，后打印C，再释放C,B锁，唤醒A。看起来似乎没什么问题，但如果你仔细想一下，就会发现有问题，就是初始条件，三个线程按照A,B,C的顺序来启动，按照前面的思考，A唤醒B，B唤醒C，C再唤醒A。但是这种假设依赖于JVM中线程调度、执行的顺序。
+
+**3.wait()和sleep()区别**
+
+共同点：
+1. 他们都是在多线程的环境下，都可以在程序的调用处阻塞指定的毫秒数，并返回。
+2. wait()和sleep()都可以通过interrupt()方法 打断线程的暂停状态 ，从而使线程立刻抛出InterruptedException。如果线程A希望立即结束线程B，则可以对线程B对应的Thread实例调用interrupt方法。如果此刻线程B正在wait/sleep /join，则线程B会立刻抛出InterruptedException，在catch() {} 中直接return即可安全地结束线程。(**InterruptedException是线程自己从内部抛出的，并不是interrupt()方法抛出的。对某一线程调用 interrupt()时，如果该线程正在执行普通的代码，那么该线程根本就不会抛出InterruptedException。但是，一旦该线程进入到 wait()/sleep()/join()后，就会立刻抛出InterruptedException**)
+
+不同点：
+1. sleep()是Thread类的方法，而wait()是Object类的方法；
+2. sleep()方法没有释放锁，而wait()方法释放了锁，使得其他线程可以使用同步控制块或方法。
+3. wait,notify和notifyAll只能在同步控制方法或者同步控制块里面使用，而sleep可以在任何地方使用。
+
+### 4.线程同步
+
+Java提供了两种锁机制来控制多个线程对共享资源的互斥访问，第一个是JVM实现的synchronized，而另一个是JDK实现的Lock。
+
+#### 4.1 synchronized
+
+synchronized关键字的详细描述见另外一篇文章。
+
+**1.同步一个代码块**
+
+```java
+public void func() {
+    synchronized (this) {
+        // ...
+    }
+}
+```
+它只作用于同一个对象，如果调用两个对象上的同步代码块，就不会进行同步。
+
+对于以下代码，使用 ExecutorService 执行了两个线程，由于调用的是同一个对象的同步代码块，因此这两个线程会进行同步，当一个线程进入同步语句块时，另一个线程就必须等待。
+
+```java
+public class SynchronizedExample {
+
+    public void func1() {
+        synchronized (this) {
+            for (int i = 0; i < 10; i++) {
+                System.out.print(i + " ");
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        SynchronizedExample e1 = new SynchronizedExample();
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        executorService.execute(() -> e1.func1());
+        executorService.execute(() -> e1.func1());
+    }
+}
+```
+
+```
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
+```
+而对于下面的代码，两个线程调用了不同对象的同步代码块，因此这两个线程就不需要同步。从输出结果可以看出，两个线程交叉执行。
+
+```java
+public static void main(String[] args) {
+    SynchronizedExample e1 = new SynchronizedExample();
+    SynchronizedExample e2 = new SynchronizedExample();
+    ExecutorService executorService = Executors.newCachedThreadPool();
+    executorService.execute(() -> e1.func1());
+    executorService.execute(() -> e2.func1());
+}
+```
+
+```
+0 0 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9
+```
+
+**2.同步一个方法**
+
+```java
+public synchronized void func () {
+    // ...
+}
+```
+它和同步代码块一样，作用于同一个对象。
+
+**3.同步一个类**
+
+```java
+public void func() {
+    synchronized (SynchronizedExample.class) {
+        // ...
+    }
+}
+```
+作用于整个类，也就是说两个线程调用同一个类的不同对象上的这种同步语句，也会进行同步。
+
+```java
+public class SynchronizedExample {
+
+    public void func2() {
+        synchronized (SynchronizedExample.class) {
+            for (int i = 0; i < 10; i++) {
+                System.out.print(i + " ");
+            }
+        }
+    }
+    public static void main(String[] args) {
+        SynchronizedExample e1 = new SynchronizedExample();
+        SynchronizedExample e2 = new SynchronizedExample();
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        executorService.execute(() -> e1.func2());
+        executorService.execute(() -> e2.func2());
+    }
+}
+```
+
+```
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
+```
+
+**4.同步一个静态方法**
+
+```java
+public synchronized static void fun() {
+    // ...
+}
+```
+作用于整个类。
+
+#### 4.2 Lock
+
+从Java 5开始，Java提供了一种功能更强大的线程同步机制——通过显示定义同步锁对象来实现同步，在这种机制下，同步锁由Lock对象充当。Lock提供了比synchronized方法和synchronized代码块更广泛的锁定操作，Lock允许实现更灵活的结构，可以具有差别很大的属性，并且支持多个相关的Condition对象。(具体参考另外一篇文章)
+
+在实现线程安全的控制中，比较常用的是ReentrantLock(可重入锁).使用该Lock对象可以显示地加锁、释放锁。重入锁是一种递归无阻塞的同步机制：
+
+```java
+public class LockExample {
+    private Lock lock = new ReentrantLock();
+
+    public void func() {
+        lock.lock();
+        try {
+            for (int i = 0; i < 10; i++) {
+                System.out.print(i + " ");
+            }
+        } finally {
+            lock.unlock(); // 确保释放锁，从而避免发生死锁。
+        }
+    }
+
+    public static void main(String[] args) {
+        LockExample lockExample = new LockExample();
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        executorService.execute(() -> lockExample.func());
+        executorService.execute(() -> lockExample.func());
+    }
+}
+```
+```
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
+```
+
+ReentrantLock 是 java.util.concurrent（J.U.C）包中的锁，相比于 synchronized，它多了以下高级功能：
+1. 等待可中断：当持有锁的线程长期不释放锁的时候，正在等待的线程可以选择放弃等待，改为处理其他事情。
+2. 可实现公平锁：公平锁是指多个线程在等待同一个锁时，必须按照申请锁的时间顺序来依次获得锁。synchronized 中的锁是非公平的，ReentrantLock 默认情况下也是非公平的，但可以通过带布尔值的构造函数要求使用公平锁。
+3. 锁绑定多个条件：一个 ReentrantLock 对象可以同时绑定多个 Condition 对象。
+
+#### 4.3 synchronized和ReentrantLock的比较
+
+- **锁的实现**：synchronized 是 JVM 实现的，而 ReentrantLock 是 JDK 实现的。
+- **性能**：新版本 Java 对 synchronized 进行了很多优化，例如自旋锁等。目前来看它和 ReentrantLock 的性能基本持平了，因此性能因素不再是选择 ReentrantLock 的理由。synchronized 有更大的性能优化空间，应该优先考虑 synchronized。
+- **功能**：ReentrantLock 多了一些高级功能。
+- **使用选择**：除非需要使用 ReentrantLock 的高级功能，否则优先使用 synchronized。这是因为 synchronized 是 JVM 实现的一种锁机制，JVM 原生地支持它，而 ReentrantLock 不是所有的 JDK 版本都支持。并且使用 synchronized 不用担心没有释放锁而导致死锁问题，因为 JVM 会确保锁的释放。
+

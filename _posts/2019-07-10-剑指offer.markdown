@@ -1564,7 +1564,7 @@ public class Solution {
 > 
 > 1.首先我们需要知道在什么时候来停止在number上加1。我们注意到只有对“9999...99”加1的时候，才会在第一个字符(下标为0)的基础上产生进位，而其他所有情况都不会在第一个字符上产生进位。因此，当我们发现在加1的时候第一个字符产生了进位，则已经是最大的n位情况了，可以退出循环了；
 > 
-> 2. 在打印字符的时候，我们前面提到当数字不够n位的时候，我们在数字的前面补0，打印的时候这些补位的0不应该打印出来。因此，在打印函数的时候，只有在碰到第一个非0的字符之后我们才开始打印，直到字符的末端。
+> 2.在打印字符的时候，我们前面提到当数字不够n位的时候，我们在数字的前面补0，打印的时候这些补位的0不应该打印出来。因此，在打印函数的时候，只有在碰到第一个非0的字符之后我们才开始打印，直到字符的末端。
 
 给出代码如下所示：
 
@@ -1627,7 +1627,7 @@ public class Solution {
     }
 ```
 
-> 解法2：递归解法，将问题变成数字排列的解法。我们可以换一种思路来思考这个问题，如果我们在数字前面补0，就会发现n位所有十进制数其实就是n个从0到9的全排列。也就是说，我们把数字的每一位都从0到9排列一遍，就得到了所有的十进制数。只是我么你在打印的时候，排在前面的0不打印出来而已。全排列用递归很容易表达，数字的每一位都可能是0~9中的一个数，然后设置下一位。递归结束的条件是我们已经设置了数字的最后一位。
+> 解法2：递归解法，将问题变成数字排列的解法。我们可以换一种思路来思考这个问题，如果我们在数字前面补0，就会发现n位所有十进制数其实就是n个从0到9的全排列。也就是说，我们把数字的每一位都从0到9排列一遍，就得到了所有的十进制数。只是我们在打印的时候，排在前面的0不打印出来而已。全排列用递归很容易表达，数字的每一位都可能是0~9中的一个数，然后设置下一位。递归结束的条件是我们已经设置了数字的最后一位。
 
 ```java
 private void print(StringBuilder sb){
@@ -1660,7 +1660,7 @@ private void print(StringBuilder sb){
 
     private void printRecur(StringBuilder sb, int len, int index){
         //递归结束条件
-        if(index == len){
+        if(index == len - 1){
             print(sb);
             return;
         }
@@ -1767,6 +1767,284 @@ public ListNode deleteDuplication(ListNode pHead)
        return pHead;
     }
 ```
+
+### 18. 正则表达式匹配
+
+**题目描述**
+
+请实现一个函数用来匹配包含'.'和' * '的正则表达式。模式中的字符'.'表示任意一个字符，而' * '表示它前面的字符可以出现任意次(包含0次)。在本题中，匹配是指字符串中的所有字符匹配整个模式。例如，字符串"aaa"与模式"a.a"和"ab\*ac\*a"匹配,但是与"aa.a"和"ab*a"均不匹配。
+
+**解题思路**
+
+每次从字符串中拿出一个字符去和模式串中的字符去匹配。先来分析如何匹配一个字符，如果模式中的字符ch是'.'，那么他可以匹配字符串中的任意字符。如果模式中的字符ch不是'.',而且字符串中的字符也是ch，那么它们相互匹配。当字符串中的字符和模式串中的字符相匹配时，接着匹配后面的字符。
+
+相对而言，当模式中的第二个字符不是'*'时，问题要简单的多。如果字符串中的第一个字符和模式中的第一个字符相匹配，那么在字符串和模式串上都向后移动一个字符，然后匹配剩余的字符串和模式。如果字符串中的第一个字符和模式中的第一个字符不相匹配，则直接返回false.
+
+当模式中的第二个字符是'\*'时，问题要复杂一些，因为可能有多种不同的匹配方式。一种是选择是在模式上向后移动两个字符。这相当于'\*'和它前面的字符被忽略了，因为'\*'可以匹配字符串中的0个字符。如果模式中的第一个字符和字符串中的第一个字符相匹配，则在字符串上向后移动一个字符，而在模式上有两种选择：可以在模式上向后移动两个字符，也可以保持模式不变。
+
+对于上面'\*'的说明也许不太清晰，我们给出图的形式来说明：
+
+![solution1-1.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7obghvri0j30y00soak7.jpg)
+
+![solution1-2.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7obgwhsw3j30zs0twwrh.jpg)
+
+![solution1-3.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7obi3tycjj310w0mcdnu.jpg)
+
+![solution1-4.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7obi9gvdmj312i0u6gy2.jpg)
+
+为此，根据上面图示的思路，我们可以直接给出代码的实现：
+
+```java
+    public boolean match(char[] str, char[] pattern)
+    {
+        if (pattern.length <= 0){
+            return str.length <= 0;
+        }
+        boolean match = (str.length > 0 && (str[0] == pattern[0] || pattern[0] == '.'));
+        if(pattern.length > 1 && pattern[1] == '*'){
+            return match(str,Arrays.copyOfRange(pattern,2,pattern.length)) || (match && match(Arrays.copyOfRange(str,1,str.length),pattern));
+        }else {
+            return match && match(Arrays.copyOfRange(str,1,str.length),Arrays.copyOfRange(pattern,1,pattern.length));
+        }
+    }
+```
+> 解法1：在经历过上面的分析过后，总结了别人的解法，为此先归纳出递归的两种解法。
+
+1. 先看'\*'再看匹配：
+
+```java
+    /**
+     * 思路1：先看*再看匹配
+     * 前提：当pattern遍历完，return取决于str是否遍历完，str恰好遍历完才返回true,再接下来讨论。
+     * 1. 若当前字符存在下一个字符，看下一个字符是否是'*'。如果是，则分为两种情况
+     * 一： 当前字符匹配
+     * 1.1 match(str,i+1,pattern,j) // 跳过str
+     * 1.2 match(str,i,pattern, j+2) // 跳过pattern
+     * 二： 当前不匹配
+     * match(str,i,pattern,j+2) // 跳过
+     * 2. 下一个字符不是'*'
+     * 当前匹配 return match(str, i+1, pattern, j+1)
+     */
+    private boolean match(char[] str,int i,char[] pattern, int j){
+        // pattern遍历完了
+        if(j == pattern.length){
+            // 如果str也完了，返回true，不然false
+            return str.length == i;
+        }
+        //注意数组越界问题,下一个字符是'*'时
+        if(j < pattern.length - 1 && pattern[j+1] == '*'){
+            //成功匹配
+            if (str.length != i && (str[i] == pattern[j] || pattern[j] == '.')){
+                return match(str,i,pattern,j+2) || match(str, i+1,pattern,j);
+            }else {
+                return match(str,i,pattern,j+2);
+            }
+        }
+        // 下一个不是'*'的时候，当前匹配
+        if(str.length != i && (str[i] == pattern[j] || pattern[j] == '.')){
+            return match(str,i+1,pattern,j+1);
+        }
+        return false;
+    }
+
+
+    public static boolean match(char[] str, char[] pattern)
+    {
+        if(str == null || pattern == null)
+            return false;
+        return match(str, 0, pattern, 0);
+    }
+```
+
+2. 先看匹配，再看'\*'(其实两种解法一样，都是基本情况的考虑)
+
+```java
+    /**
+     * 思路2：反过来，先看匹配，再看'*'
+     * 前提： 当pattern遍历完，return取决于str是否遍历完，再接下来讨论
+     * 1. 先看当前字符是否匹配，记录first_isMatch
+     * 2. 再看下一个字符是否为'*'
+     *  2.1 当前匹配 first_isMatch && match(str,i+1,pattern,j)
+     *  2.2 无论匹配与否,match(str,i,pattern,j+2)//跳过
+     * 3. 不匹配'*'，当前字符匹配的前提下，进入到下一个循环，first_Match && match(str,i+1,pattern,j+1)
+     */
+    private boolean match(char[] str,int i,char[] pattern, int j){
+        if(j == pattern.length){
+            return str.length == i;
+        }
+        boolean first_isMatch = (i != str.length) && (str[i] == pattern[j] || pattern[j] == '.');
+        if(j < pattern.length - 1 && pattern[j+1] == '*'){
+            return match(str,i,pattern,j+2) || (first_isMatch && match(str,i+1,pattern,j));
+        }else {
+            return first_isMatch && match(str,i+1,pattern,j+1);
+        }
+    }
+```
+
+> 解法2： 带备忘录的递归解法。
+
+我们先来考虑自顶向下的算法。为了方便起见，假定使用符号`s[i:]`表示字符串s中从第i个字符到最后一个字符组成的子串，`p[j:]`则表示模式串p中,从第j个字符到最后一个字符组成的子串，使用`match(i,j)`表示`s[i:]`与`p[j:]`的匹配情况，如果能成功匹配，则置为true，否则置为false。这就是各个子问题的状态。
+
+那么对于`match(i,j)`的值，取决于`p[j+1]`是否为'\*'。
+
+curMatch = i < s.length() && s[i] == p[j] || p[j] == '.';
+1. p[j+1] != '*', match(i,j) = curMatch && match(i+1,j+1)
+2. p[j+1] == '*', match(i,j) = match(i,j+2) || (curMatch && match(i+1, j))
+
+我们以`s = "aab"; p = "c*a*b"`为例子，先构建一个二维状态空间来存储中间计算得出的状态值。横向的值代表i，纵向的值代表j，match(0,0)的值即为问题的解，用 f 代表 false,t 代表 true.
+
+![solution2-1.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7oh92yayij30u60pe0zv.jpg)
+
+接下来描述一下后续的计算过程：
+
+```java
+1. 求match(0,0): i = 0; j = 0; curMatch = false;
+2. p[1] == '*' -> match(0,0) = match(0,2) || false && match(1,0)
+3. 转换为求解子问题match(0,2)
+4. 求match(0,2): i = 0; j = 2; curMatch = true;
+5. p[3] == '*' -> match(0,2) = match(0,4) || true && match(1,2)
+6. 求match(0,4): i = 0; j = 4; curMatch = false;
+7. j + 1 == 5 >= p.length() -> match(0,4) = curMatch = false;
+8. match(0,4) = fasle;
+9. 回溯到第5步，求match(1,2): i = 1, j = 2; curMatch = true;
+10. p[3] == '*' -> match(1,2) = match(1,4) || true && match(2,2)
+11. 求match(1,4): i = 1, j = 4; curMatch = false;
+12. j + 1 == 5 >= p.length() -> match(1,4) = curMatch = false;
+13. match(1,4) = false;
+14. 回溯到第10步，求match(2,2): i = 2, j = 2, curMatch = false;
+15. p[3] == '*' -> match(2,2) = match(2,4) || false && match(3,2) 
+16. 求match(2,4): i = 2, j = 4; curMatch = true;
+17. j + 1 == 5 >= p.length() -> match(2,4) = curMatch = true;
+18. match(2,4) = true;
+19. 回溯到第15步。
+20. match(2,2) = true;
+21. 回溯到第10步。
+22. match(1,2) = true;
+23. 回溯到第5步。
+24. match(0,2) = true;
+25. 回溯到第2步。
+26. match(0,0) = true;
+27. 问题解决。
+```
+
+![solution2-2.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7ohxnlxwaj30vk0nigsu.jpg)
+
+给出带备忘录的递归解法如下所示：
+
+```java
+public enum Result {
+    TRUE,FALSE
+}
+
+class Solution{
+    //存储状态的数组
+    Result[][] memo;
+
+    public boolean isMatch1(char[] str, char[] pattern){
+        memo = new Result[str.length + 1][pattern.length + 1];
+        return match(0,0,str,pattern);
+    }
+    public boolean match(int i, int j, char[] str, char[] pattern){
+        if(memo[i][j] != null){
+            return memo[i][j] == Result.TRUE;
+        }
+        boolean ans;
+        if(j == pattern.length){
+            ans = i == str.length;
+        }else {
+            boolean curMatch = (i < str.length && (pattern[j] == str[i] || pattern[j] == '.'));
+            if(j + 1 < pattern.length && pattern[j+1] == '*'){
+                ans = (match(i,j+2,str,pattern) || curMatch && match(i+1,j,str,pattern));
+            }else {
+                ans = curMatch && match(i+1,j+1,str,pattern);
+            }
+        }
+        memo[i][j] = ans ? Result.TRUE : Result.FALSE;
+        return ans;
+    }
+}
+```
+
+> 解法3：动态规划解法。这种方法的思路很简单粗暴，即从最后一个字符开始反向匹配，还是以刚才的例子，从i = 3, j = 5开始依次往左往上开始循环计算，match(3,5) = true。其中核心的逻辑并没有变，因为最边缘的值的匹配都是可以直接计算出来的，下面给出推算过程中的一部分：
+
+```java
+1. 求match(3,5) = true;
+2. 求match(3,4): i = 3, j = 4; curMatch = false;
+3. j + 1 == 5 >= p.length() -> match(3,4) = curMatch = false;
+4. match(3,4) = false;
+5. 求match(3,3): i = 3; j = 3; curMatch = false;
+6. p[4] == b -> match(3,3) = curMatch = false;
+...match(3，j)都为false
+17. match(3,0) = false;
+18. 求match(2,4): i = 2, j = 4; curMatch = true;
+19. j + 1 == 5 >= p.length() -> match(2,4) = curMatch = true;
+20. 求match(2,3): i = 2, j = 3; curMatch = false;
+21. p[4] == b -> match(2,3) = curMatch = false;
+22. 求match(2,2): i = 2, j = 2; curMatch = false;
+23. p[3] == * -> match(2,2) = match(2,4) || false && match(3,2)
+24. match(2,2) = true;
+25. 求match(2,1): i = 2, j = 1; curMatch = false;
+26. p[2] == a -> match(2,1) = curMatch = false;
+27. 求match(2,0): i = 2, j = 0; curMatch = false;
+28. p[1] == * -> match(2,0) = match(2,2) || false && match(3,0)
+29. match(2,0) = true;
+30. 求match(1,4): i = 1, j = 4; curMatch = false;
+31. j + 1 == 5 >= p.length() -> match(1,4) = curMatch = false;
+32. match(1,4) = false;
+33. 求match(1,3): i = 1, j = 3; curMatch = false;
+34. p[4] == b -> match(1,3) = curMatch = false;
+35. 求match(1,2): i = 1, j = 2; curMatch = true;
+36. p[3] == * -> match(1,2) = match(1,4) || true && match(2,2)
+37. match(1,2) = true;
+38. 求match(1,1): i = 1, j = 1; curMatch = false;
+39. p[2] == a -> match(1,1) = curMatch = false;
+40. 求match(1,0): i = 1, j = 0; curMatch = false;
+41. p[1] == * -> match(1,0) = match(1,2) || false && match(2,0)
+42. match(1,0) = true;
+43. 求match(0,4): i = 0, j = 4; curMatch = false;
+44. j + 1 == 5 >= p.length() -> match(0,4) = curMatch = false;
+45. 求match(0,3): i = 0, j = 3; curMatch = false;
+46. p[4] == b -> match(0,3) = curMatch = false;
+47. 求match(0,2): i = 0, j = 2; curMatch = true;
+48. p[3] == * -> match(0,2) = match(0,4) || true && match(1,2)
+49. match(0,2) = true;
+50. 求match(0,1): i = 0, j = 1; curMatch = false;
+51. p[2] == a -> match(0,1) = curMatch = false;
+52. 求match(0,0): i = 0, j = 0; curMatch = false;
+53. p[1] == * -> match(0,0) = match(0,2) || false && match(1,0)
+54. match(0,0) = true;
+55. 问题解决
+```
+
+给出动态规划的代码如下：
+
+```java
+    public boolean isMatch(char[] str, char[] pattern){
+        boolean[][] memo = new boolean[str.length+1][pattern.length+1];
+        memo[str.length][pattern.length] = true;
+
+        for (int i = str.length; i >= 0; i--){
+            for (int j = pattern.length - 1; j >= 0; j--){
+                boolean curMatch = (i < str.length && (str[i] == pattern[j] || pattern[j] == '.'));
+                if(j + 1 < pattern.length && pattern[j+1] == '*'){
+                    memo[i][j] = memo[i][j+2] || (curMatch && memo[i+1][j]);
+                }else {
+                    memo[i][j] = curMatch && memo[i+1][j+1];
+                }
+            }
+        }
+        return memo[0][0];
+    
+```
+
+### 19. 表示数值的字符串
+
+**题目描述**
+
+请实现一个函数用来判断字符串是否表示数值(包括整数和小数)。例如，字符串“+100”，“5e2”,“-123”，“3.1416”和“-1E-16”都表示数值。但是"12e","1a3.14","1.2.3","+-5"和"12e+4.3"都不是。
+
+**解题思路**
+
 
 
 ### 16. 调整数组顺序使得奇数位于偶数前面

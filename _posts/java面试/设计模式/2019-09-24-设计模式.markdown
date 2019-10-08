@@ -1,0 +1,257 @@
+---
+layout:     post
+title:      "设计模式总结"
+subtitle:   " \"设计模式\""
+date:       2019-09-24 22:13:07
+author:     "ming"
+catalog: true
+header-img: "img/post-bg-biglove.jpg"
+tags:
+    - 设计模式
+    - JAVA
+---
+
+> "A man is not old until regrets take the place of dreams."
+
+### 1. 策略模式
+
+定义：它定义了算法族，分别封装起来，让它们之间可以互相替换，此模式让算法的变化独立于使用算法的客户。
+
+我们用一个具体的案例来说明策略模式的使用。首先，用代码来模拟鸭子的行为，包括不同品种的鸭子(橡皮鸭、诱饵鸭等)、活鸭子都会游泳戏水，会呱呱叫，会飞，但是是诱饵鸭不会飞也不会叫，橡皮鸭不会飞但会叫，如果采用传统的继承方式实现程序，设计一个Duck类，在超类中加上fly()和quack()方法，让所有鸭子继承这个类，会导致所有的子类具备fly()和quack()，连那些不该具备的子类也无法幸免。
+
+为了解决这个问题，先用到第一个设计原则：**封装变化**。`即找出应用当中可能需要变化的地方，把它们独立出来，不要和那些不需要变化的代码混在一起。`这几乎是每个设计模式背后的精神所在。所有的模式都提供了一套方法让“系统中的某部分变化改变不会影响其他部分”。根据该原则，我们知道Duck类的fly()和quack()会随着鸭子的不同而改变。为了把这两个行为从Duck类中分开，我们将它们从Duck类中取出来，建立一组新类来代表每个行为。
+
+在设计鸭子的行为类时，我们用到了第二个设计原则：**针对接口编程，而不是针对实现编程**，这里针对接口编程真正的意思是**针对超类型编程**，超类型通常是一个接口或者抽象类。我们可以制造出FlyBehavior接口和QuackBehavior接口，再制造一组其他类专门实现FlyBehavior和QuackBehavior.
+
+```java
+public abstract class Duck {
+	FlyBehavior flyBehavior;
+	QuackBehavior quackBehavior;
+ 
+	public Duck() {
+	}
+ 
+	public void setFlyBehavior (FlyBehavior fb) {
+		flyBehavior = fb;
+	}
+ 
+	public void setQuackBehavior(QuackBehavior qb) {
+		quackBehavior = qb;
+	}
+ 
+	abstract void display();
+ 
+	public void performFly() {
+		flyBehavior.fly();
+	}
+ 
+	public void performQuack() {
+		quackBehavior.quack();
+	}
+ 
+	public void swim() {
+		System.out.println("All ducks float, even decoys!");
+	}
+}
+```
+```java
+public interface FlyBehavior {//定义算法族，分别封装起来，可以互相替换，让算法的变化独立于使用算法的客户
+	public void fly();
+}
+
+public interface QuackBehavior {
+	public void quack();
+}
+```
+
+在我们的代码设计中，每一个鸭子都有一个FlyBehavior和一个QuackBehavior，好将飞行和呱呱叫委托给它们代为处理。当你将两个类结合起来使用，这就是组合，鸭子的行为不是继承来的，而是和适当的行为对象“组合”来的。这里体现了第三个设计原则：**多用组合，少用继承。**
+
+策略模式的具体类图如下所示：
+
+![策略模式UML图](https://ws1.sinaimg.cn/large/005CDUpdgy1g7efwvz8uhj30qo0eadi9.jpg)
+
+代码实现：
+
+Strategy类，定义所有支持的算法的公共接口：
+
+```java
+abstract class Strategy{
+    //算法方法
+    public abstract void AlgorithmInterface();
+}
+```
+ConcreteStrategy,封装了具体的算法或行为:
+```java
+class ConcreteStrategyA extends Strategy{
+
+    @Override
+    public void AlgorithmInterface() {
+        System.out.println("算法A实现");
+    }
+}
+
+class ConcreteStrategyB extends Strategy{
+
+    @Override
+    public void AlgorithmInterface() {
+        System.out.println("算法B实现");
+    }
+}
+
+class ConcreteStrategyC extends Strategy{
+
+    @Override
+    public void AlgorithmInterface() {
+        System.out.println("算法C实现");
+    }
+}
+```
+Context,用一个ConcreteStrategy来配置，维护一个对Strategy对象的引用
+
+```java
+class Context{
+    Strategy strategy;
+    public Context(Strategy strategy){
+        this.strategy = strategy;
+    }
+
+    // 上下文接口
+    public void ContextInterface(){
+        strategy.AlgorithmInterface();
+    }
+}
+```
+
+### 2. 简单工厂模式
+
+通过一个单独的类来做创造实例的过程，这就是工厂。
+
+给出一个例子：用程序实现两个数和运算符号，得到结果。通过面向对象编程来简化代码，降低耦合度，同时又便于修改和复用。因此这里我们用简单工程模式来实现这个功能。
+
+给出UML图如下所示：
+
+![简单工厂模式](https://ws1.sinaimg.cn/large/005CDUpdgy1g7eg6wsq2gj30nz0f40uf.jpg)
+
+给出代码如下所示：
+
+运算类：
+
+```java
+public abstract class Operation {
+
+    private double numberA;
+    private double numberB;
+
+    public double getNumberA() {
+        return numberA;
+    }
+
+    public void setNumberA(double numberA) {
+        this.numberA = numberA;
+    }
+
+    public double getNumberB() {
+        return numberB;
+    }
+
+    public void setNumberB(double numberB) {
+        this.numberB = numberB;
+    }
+
+    public abstract double getResult();
+}
+```
+
+四则运算继承运算类：
+
+```java
+//加法类
+public class OperationAdd extends Operation {
+
+    @Override
+    public double getResult() {
+        double result = getNumberA() + getNumberB();
+        return result;
+    }
+}
+
+//减法类
+public class OperationSub extends Operation {
+
+    @Override
+    public double getResult() {
+        double result = getNumberA() - getNumberB();
+        return result;
+    }
+}
+
+//乘法类
+public class OperationMul extends Operation {
+
+    @Override
+    public double getResult() {
+        double result = getNumberA() * getNumberB();
+        return result;
+    }
+}
+
+//除法类
+public class OperationDiv extends Operation {
+
+    @Override
+    public double getResult(){
+        double result = 0;
+        try {
+            if (getNumberB() == 0){
+                throw new Exception("除数不能为0");
+            }else {
+                result = getNumberA() / getNumberB();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+}
+```
+简单运算工厂类：
+
+```java
+public class OperationFactory {
+    public static Operation createOperation(String operate){
+        Operation oper = null;
+        switch (operate){
+            case "+":
+                oper = new OperationAdd();
+                break;
+            case "-":
+                oper = new OperationSub();
+                break;
+            case "*":
+                oper = new OperationMul();
+                break;
+            case "/":
+                oper = new OperationDiv();
+                break;
+
+            default:
+                break;
+        }
+        return oper;
+    }
+}
+```
+客户端调用：
+
+```java
+public class Main {
+    public static void main(String[] args){
+
+        Operation oper = OperationFactory.createOperation("*");
+        oper.setNumberA(5);
+        oper.setNumberB(3);
+        double result = oper.getResult();
+        System.out.println(result);
+    }
+}
+```
