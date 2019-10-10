@@ -731,6 +731,49 @@ ABC
 
 ### 4.线程同步
 
+**为什么需要线程同步？**
+
+当使用多个线程同时访问一个变量或对象时，如果这些线程中既有读又有写操作时，就会导致变量值或对象的状态出现混乱，从而导致程序异常。不妨来看下面的代码例子：
+
+```java
+public class RunnableThread implements Runnable {
+
+    private int ticket = 30;
+
+    public RunnableThread(){}
+
+    @Override
+    public void run() {
+        Thread thd = Thread.currentThread();
+
+        while (ticket > 0){
+            if(thd.getName().equals("Thread-0")){
+                try {
+                    Thread.sleep(10);
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+            }
+            System.out.println(thd.getName() + " leftTcnt: " + ticket--);
+        }
+    }
+
+    public static void threadRunnable(){
+        RunnableThread rt = new RunnableThread();
+        new Thread(rt).start();
+        new Thread(rt).start();
+        new Thread(rt).start();
+    }
+
+    public static void main(String[] args) {
+        threadRunnable();
+    }
+}
+```
+
+> 运行结果：本来是100张票，但是结果是101次.这是由于程序中当线程名字是Thread-0时，线程休眠10ms，这时线程是阻塞的，且并没有将ticket减1；这时其他线程正常运行，就会导致线程同步问题.还有个经典的案例就是银行取钱。
+
+
 Java提供了两种锁机制来控制多个线程对共享资源的互斥访问，第一个是JVM实现的synchronized，而另一个是JDK实现的Lock。
 
 #### 4.1 synchronized

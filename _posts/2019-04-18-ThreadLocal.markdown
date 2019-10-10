@@ -275,7 +275,7 @@ Entry继承WeakReference,使用弱引用，可以将ThreadLocal对象的生命�
 
 ##### Hash冲突如何解决
 
-和HashMap的最大的不同在于，ThreadLocalMap结构非常简单，没有next引用，也就是ThreadLocalMap中解决Hash冲突的方式并非链表的方式，而是才采用开地址法且是线性探测的方式。(线性探测就是根据初始key的hashcode的值确定元素在table数组中的位置，如果发现这个位置上已经有其他key值的元素被占用，则利用固定的算法寻找一定步长的下个位置，依次判断，直至找到能够存放的位置。)
+和HashMap的最大的不同在于，ThreadLocalMap结构非常简单，没有next引用，也就是ThreadLocalMap中解决Hash冲突的方式并非链表的方式，而是才采用开地址法且是线性探测的方式。( 线性探测就是根据初始key的hashcode的值确定元素在table数组中的位置，如果发现这个位置上已经有其他key值的元素被占用，则利用固定的算法寻找一定步长的下个位置，依次判断，直至找到能够存放的位置。)
 
 先看一下ThreadLocalMap线性探测相关的代码，从中也可以看出来table实际是一个环：
 
