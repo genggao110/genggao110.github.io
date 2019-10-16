@@ -2927,6 +2927,60 @@ public class Book implements Serializable {
 
 [细说Java的深拷贝和浅拷贝](https://segmentfault.com/a/1190000010648514)
 
+### 4.12 序列化
+
+将java对象转换成IO流(字节序列)，用以存在磁盘上或在网络中传输。
+
+#### 1. 实现过程
+
+Java类实现Serializable接口，然后用java.io.ObjectOutputStream的writeObject(Object obj)方法对参数指定的obj对象进行序列化；用java.io.ObjectInputStream的readObject()方法进行反序列化。
+
+```java
+private static void serialize(String path, Object object)
+{
+    File file = new File(path);
+    try {
+        FileOutputStream outputStream = new FileOutputStream(file);
+        //将对象写到流中去
+        ObjectOutputStream oos = new ObjectOutputStream(outputStream);
+        oos.writeObject(object);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+private static Object unSerialize(String path){
+    File file = new File(path);
+    Object object = null;
+    try {
+        FileInputStream inputStream = new FileInputStream(file);
+        ObjectInputStream ois = new ObjectInputStream(inputStream);
+        object = ois.readObject();
+    } catch (IOException e) {
+        e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+    }
+    return object;
+}
+```
+
+#### 2. 应用场景
+
+序列化对象是以字节数组保存对象的“状态”，即它的成员变量，不会保存类的静态成员。
+
+其常用的应用场景是在持久化对象、RMI(远程方法调用)、在网络当中传递对象时，都要用到对象序列化。
+
+#### 3. 序列化ID的作用
+
+序列化ID决定着能否成功地进行反序列化，java反序列化机制通过在运行时判断类的serialVersionUID来验证版本一致性。在进行反序列化时，JVM会把传入的字节流中的serialVersionUID和实体类中的serialVersionUID进行比较，如果相同则认为一致，可以反序列化，否则报序列化版本不一致的异常。
+
+关于序列化ID的产生：
+
+当实体类中没有显式定义一个名为“private static final long serialVersionUID”的变量时，JAVA序列化机制会在编译时根据类信息自动生成一个serialVersionUID，这种情况下只有同一次编译生成的类才会有相同的serialVersionUID，才能反序列化。一旦重新编译，就不能再反序列化了。
+
+在这种机制下，如果以后扩展了实体类的字段或方法等，对类进行了重新编译，那以前序列化保存的那个持久化文件就不能再被反序列化了。解决方法是，用idea在类中显式定义一个“private static final long serialVersionUID”的变量。
+
 ## 5. 
 
 

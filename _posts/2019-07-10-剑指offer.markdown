@@ -2045,7 +2045,188 @@ class Solution{
 
 **解题思路**
 
+> 解法1：正则表达式的解法。
 
+```java
+    //正则表达式解法
+    public boolean isNumeric(char[] str) {
+        //构建正则表达式
+        if(str == null){
+            return false;
+        }
+        String regex = "[+-]?[0-9]*(\\.[0-9]*)?([eE][+-]?[0-9]+)?";
+        return new String(str).matches(regex);
+    }
+```
+下面解释一下正则表达式：
+
+```
+[+-]?     ->   正或负符号出现与否
+[0-9]*    ->   整数部分是否出现，如-.34 或 +3.34均符合
+(\\.[0-9]*)?    ->   如果出现小数点，那么小数点后面可以跟或者不跟数字，但是整个部分职能出现一次或不出现
+([eE][+-]?[0-9]+)?    ->   如果存在指数部分，那么e或E肯定出现，+或-可以不出现，紧挨着必须跟着整数；或者整个部分都不出现
+```
+
+> 解法2：表示数值的字符串遵循模式`A[.[B]][e|EC]`,其中A为数值的整数部分，B紧跟着小数点为数值的小数部分，C紧跟着'e'或者'E'为数值的指数部分。在小数里可能没有数值的整数部分，因此A不是必需的。且上述的A和C都有可能是以'+'或'-'开头的0~9的数位串；B也是0~9的数位串，但是前面不能有正负号。
+
+为此，判断一个字符串是否符合上述模式时，首先尽可能多地扫描0~9的数位(有可能在起始处有'+'或者'-')，也就是前面模式中表示数值整数的A部分。如果遇到小数点'.'，则开始扫描表示数值小数部分的B部分。如果遇到'e'或'E',则开始扫描表示数值指数的C部分。
+
+```java
+    //剑指offer解法
+    private int index = 0;
+    // 数字的格式可以用A[.[B]][e|EC]来表示，其中A和C都是整数(可以有正负号，也可以没有)，而B是一个无符号整数
+    public boolean isNumeric(char[] str){
+        if(str == null){
+            return false;
+        }
+        boolean flag = scanInteger(str);
+
+        //如果出现'.'，则接下来的是数字的小数部分
+        if(index < str.length && str[index] == '.'){
+            index++;
+            // 下面一行代码用||的原因：
+            // 1. 小数点可以没有整数部分，如.123等于0.123
+            // 2. 小数点后面可以没有数字，例如223.等于223.0
+            // 3. 当然，小数点前面和后面可以都有数字，如233.666
+            flag = scanUnsignedInteger(str) || flag;
+        }
+        // 如果出现'e'或'E',则接下来的是数字的指数部分
+        if (index < str.length && (str[index] == 'E' || str[index] == 'e')){
+            index++;
+            //下面一行代码用&&的原因：
+            // 1.当e或E前面没有数字时，整个字符串不能表示数字，如.e1,e1
+            // 2.当e或E后面没有整数时，整个字符串不能表示数字，如12e、12e+5.4
+            flag = flag && scanInteger(str);
+        }
+        return flag && index == str.length;
+    }
+    private boolean scanInteger(char[] str){
+        if(index < str.length && (str[index] == '+' || str[index] == '-')){
+            index++;
+        }
+        return scanUnsignedInteger(str);
+    }
+
+    private boolean scanUnsignedInteger(char[] str){
+        int start = index;
+        while (index < str.length && str[index] >= '0' && str[index] <= '9'){
+            index++;
+        }
+        //是否存在整数
+        return start < index;
+    }
+```
+
+> 解法3：暴力法。
+
+解题思路是：
+1. `12e`说明e的后面必须有数字，不能有两个e
+2. `+-5`说明符号位要么出现一次在首位，要么出现一次在e的后一位，其他地方都不能有
+3. `12e4.3`说明e的后面不能够有小数，`1.2.3`说明不能有两个小数点
+4. `1a3.14`说明不能有其他的非法字符，比如这里的a
+
+```java
+    public boolean isNumeric(char[] str){
+        //null或者空字符串不是数字
+        if(str == null || str.length == 0){
+            return false;
+        }
+        //长度为1，必须是0-9之间
+        if(str.length == 1){
+            return str[0] >= '0' && str[0] <= '9';
+        }
+        boolean hasDot = false;
+        boolean hasE = false;
+        boolean hasSign = false;
+
+        for (int i = 0; i < str.length; i++) {
+            if (str[i] == '+' || str[i] == '-') {
+                //第二次出现正负号,那么后面能出现符合的地方只有紧贴着e的后面一位，不是则不通过
+                if (hasSign && str[i-1] != 'e' && str[i-1] != 'E'){
+                    return false;
+                }
+                //第一次出现，如果不是出现在第一位，那么还是判断一下是不是出现在e的后面一位
+                if(!hasSign && i > 0 && str[i-1] != 'e' && str[i-1] != 'E'){
+                    return false;
+                }
+                hasSign = true;
+            }else if(str[i] == '.'){
+                // 只能出现一次'.'，e和E之后不可出现'.'
+                if(hasDot || hasE){
+                    return false;
+                }
+                hasDot = true;
+            }else if(str[i] == 'e' || str[i] == 'E'){
+                // e或E后面必须有数字
+                if( i == str.length - 1){
+                    return false;
+                }
+                //只能有一个e或者E
+                if(hasE){
+                    return false;
+                }
+                hasE = true;
+            }else if(str[i] < '0' || str[i] > '9'){
+                // 最后判断如果+-eE.之外的字符，不匹配
+                return false;
+            }
+        }
+        return true;
+    }
+```
+
+> 解法4：利用状态机，其是表示有限个状态以及在这些状态之间的转移和动作等行为的数学模式。
+
+[状态机思维](https://www.jianshu.com/p/20d7f7c37b03)
+
+[一目了然的状态机图](https://blog.csdn.net/xinghuanmeiying/article/details/81586954)
+
+给出本题状态机转移图如下所示：
+
+![状态转移图](https://ws1.sinaimg.cn/large/005CDUpdgy1g80c2cfap3j30ch04k0t5.jpg)
+
+```java
+ //状态机迁移解法
+    char[] arr = "+-n.ne+-n".toCharArray();
+    int[][] turn = {
+          // + - n . n e + - n
+            {1,1,1,0,0,0,0,0,0}, //# start
+            {0,0,1,1,0,0,0,0,0}, // +
+            {0,0,1,1,0,0,0,0,0}, // -
+            {0,0,1,1,0,1,0,0,0}, // n
+            {0,0,0,0,1,0,0,0,0}, // .
+            {0,0,0,0,1,1,0,0,0}, // n
+            {0,0,0,0,0,0,1,1,1}, // e
+            {0,0,0,0,0,0,0,0,1}, // +
+            {0,0,0,0,0,0,0,0,1}, // -
+            {0,0,0,0,0,0,0,0,1} // n
+    };
+
+    public boolean isNumberic(char[] str){
+        int cur = 0;
+        for (int j, i = 0; i < str.length; i++){
+            for (j = 0; j < 9;j++){
+                if(turn[cur][j] == 1){
+                    if( arr[j] == 'n' && (str[i] >= '0' && str[i] <= '9')
+                    || arr[j] == 'e' && (str[i] == 'E' || str[i] == 'e')
+                    || str[i] == arr[j]){
+                        cur = j + 1;
+                        break;
+                    }
+                }
+            }
+            if(j == 9){
+                return false;
+            }
+        }
+        if(cur == 3 || cur == 4 || cur == 5 || cur == 9){
+            return true;
+        }
+        return false;
+    }
+```
+
+### 20. 
 
 ### 16. 调整数组顺序使得奇数位于偶数前面
 

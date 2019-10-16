@@ -769,6 +769,8 @@ eg: GET index.html HTTP/1.1
 
 请求报头允许客户端向服务器传递请求的附加信息和客户端自身的信息。(客户端不一定特指浏览器，有时候也可使用Linux下的CURL命令以及HTTP客户端测试工具等。)
 
+一般有四种首部，分别是：通用首部、请求首部、响应首部和实体首部。
+
 常见的请求报头有：Accept,Accept-Charset,Accept-Encoding,Accept-Language,Content-Type,Authorization,Cookie,User-Agent等。
 
 ![http请求报头](https://ws1.sinaimg.cn/large/005CDUpdgy1g7dt2tzo74j31hb0mun3s.jpg)
