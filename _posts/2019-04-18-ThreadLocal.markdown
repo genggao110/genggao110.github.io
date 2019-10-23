@@ -171,6 +171,7 @@ static class Entry extends WeakReference<ThreadLocal<?>> {
 ```
 Entry继承WeakReference,使用弱引用，可以将ThreadLocal对象的生命周期和线程生命周期解绑，持有对ThreadLocal的弱引用，可以使得ThreadLocal在没有其他强引用的时候被回收，这样避免因为线程得不到销毁导致ThreadLocal对象无法被回收。
 
+
 ##### ThreadLocalMap的set()方法和Hash映射
 
 要了解ThreadLocalMap中Hash映射的方式，首先我们从ThreadLocal的set()方法入手，逐层深入。
