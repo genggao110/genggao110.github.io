@@ -254,6 +254,99 @@ Hotspot虚拟机的对象头主要包括两部分信息，第一部分用于存�
 
 ### 2. Java垃圾回收
 
+#### 2.1 JVM GC回收哪个区域的垃圾？
+
+[JVM垃圾回收算法](https://www.cnblogs.com/kaleidoscope/p/9476511.html?tdsourcetag=s_pctim_aiomsg)
+
+需要注意的是，JVM GC只回收堆区和方法区内的对象。而栈区的数据，在超出作用域后会被JVM自动释放掉，所以其不在JVM GC的管理范围内。
+
+Java方法区在Sun HotSpot虚拟机中被称为永久代，很多人认为该部分的内存是不用回收的，java虚拟机规范也没有对该部分内存的垃圾收集做规定，但是方法区中的废弃常量和无用的类还是需要回收以保证永久代不会发生内存溢出。
+
+判断废弃常量的方法：如果常量池中的某个常量没有被任何引用所引用，则该常量是废弃常量。
+
+判断无用的类：
+1. 该类的所有实例都已经被回收，即Java堆中不存在该类的实例对象；
+2. 加载该类的类加载器已经被回收；
+3. 该类所对应的java.lang.Class对象没有任何地方被引用，无法在任何地方通过`反射`机制访问该类的方法。
+
+#### 2.2 JVM GC怎样判断对象可以被回收了？
+
+1. 对象没有引用
+2. 作用域发生未捕获异常
+3. 程序在作用域正常执行完毕
+4. 程序执行发生了System.exit()
+5. 程序发生意外终止(被杀线程等)
+
+#### 2.3 JVM GC什么时候执行？
+
+eden区空间不够存放新对象的时候，执行Minro GC。升到老年代的对象大于老年代剩余空间的时候执行Full GC，或者小于的时候被HandlePromotionFailure 参数强制Full GC 。
+
+调优主要是减少 Full GC 的触发次数，可以通过 NewRatio 控制新生代转老年代的比例，通过MaxTenuringThreshold 设置对象进入老年代的年龄阀值（后面会介绍到）。
+
+```java
+java -Xmx3550m -Xms3550m -Xmn2g -Xss128k
+```
+- `-Xmx3550m：`设置JVM最大可用内存为3550m。
+- `-Xms3550m`: 设置JVM初始内存为3550m。此值可以设置与 -Xmx 相同，以避免每次垃圾回收完成后JVM重新分配内存。
+- `-Xmn2g`: 设置年轻代大小为2G。整个堆大小=年轻代大小+老年代大小+永久代大小。永久代一般固定大小为64m，所以增大年轻代后，将会减小老年代大小。此值对系统性能影响较大，Sun官方推荐配置为整个堆的3/8。
+- `-Xss128k`:设置每个线程的堆栈大小。JDK5.0以后每个线程堆栈大小为1M，以前每个线程堆栈大小为256k。根据应用的线程所需内存大小进行调整。在相同物理内存下，减小这个值能生成更多的线程。但是操作系统对一个进程内的线程数还是有限制的，不能无限生成，经验值在3000~5000左右。
+
+```java
+java -Xmx3550m -Xms3550m -Xss128k -XX:NewRatio=4 -XX:SurvivorRatio=4 -XX:MaxPermSize=16m -XX:MaxTenuringThreshold=0
+```
+- `-XX:NewRatio=4`：设置年轻代（包括Eden和两个Survivor区）与老年代的比值（除去永久代）。设置为4，则年轻代与老年代所占比值为1:4，年轻代占整个堆栈的1/5。
+- `-XX:SurvivorRatio=4：`设置年轻代中Eden区与Survivor区的大小比值。设置为4，则两个Survivor区与一个Eden区的比值为2:4，一个Survivor区占整个年轻代的1/6。
+- `-XX:MaxPermSize=16m：`设置永久代大小为16m。
+- `-XX:MaxTenuringThreshold=0`: 设置垃圾最大年龄。如果设置为0的话，则年轻代对象不经过Survivor区，直接进入老年代。对于老年代比较多的应用，可以提高效率。如果此值设置为一个较大值，则年轻代对象会在Survivor区进行多次复制，这样可以增加对象在年轻代的存活时间，增加在年轻代被回收的概率。MaxTenuringThreshold这个参数用于控制对象能经历多少次Minor GC才晋升到老年代，默认值是15。
+
+#### 2.4 按代的回收机制
+
+`新生代（Young generation）`：绝大多数最新被创建的对象都会被分配到这里，由于大部分在创建后很快变得不可达，很多对象被创建在新生代，然后“消失”。对象从这个区域“消失”的过程我们称之为：Minor GC 。
+
+`老年代（Old generation）：`对象没有变得不可达，并且从新生代周期中存活了下来，会被拷贝到这里。其区域分配的空间要比新生代多。也正由于其相对大的空间，发生在老年代的GC次数要比新生代少得多。对象从老年代中消失的过程，称之为：Major GC 或者 Full GC。
+
+持久代（Permanent generation）也称之为 方法区（Method area）：用于保存类常量以及字符串常量。注意，这个区域不是用于存储那些从老年代存活下来的对象，这个区域也可能发生GC。发生在这个区域的GC事件也被算为 Major GC 。只不过在这个区域发生GC的条件非常严苛，必须符合以下三种条件才会被回收：
+1. 所有实例被回收
+2. 加载该类的ClassLoader 被回收
+3. Class 对象无法通过任何途径访问（包括反射）。
+
+#### 2.5 如果老年代的对象需要引用新生代的对象，会发生什么呢？
+
+为了解决这个问题，老年代中存在一个 card table ，它是一个512byte大小的块。所有老年代的对象指向新生代对象的引用都会被记录在这个表中。当针对新生代执行GC的时候，只需要查询 card table 来决定是否可以被回收，而不用查询整个老年代。这个 card table 由一个write barrier 来管理。write barrier给GC带来了很大的性能提升，虽然由此可能带来一些开销，但完全是值得的。
+
+默认的新生代（Young generation）、老年代（Old generation）所占空间比例为 1 : 2。
+
+#### 2.6 新生代空间的构成与逻辑
+
+1. 一个伊甸园空间（Eden）
+2. 两个幸存者空间（From Survivor、To Survivor）
+
+默认新生代空间的分配：Eden : From : To = 8 : 1 : 1。
+
+> 刚创建的对象会被分配在Eden区，其中的大多数对象很快就会消亡。Eden区是连续的内存空间，因此在其上分配内存极快；最初一次，当Eden区满的时候，执行Minor GC，将消亡(不可达)的对象清理掉，并将剩余(存活)的对象复制到一个存活区Survivor0（此时，Survivor1是空白的，两个Survivor总有一个是空白的）；下次Eden区满了，再执行一次Minor GC，将消亡的对象清理掉，将存活的对象复制到Survivor1中，然后清空Eden区；将Survivor0中消亡的对象清理掉，将其中可以晋级的对象晋级到Old区，将存活的对象也复制到Survivor1区，然后清空Survivor0区；当两个存活区切换了几次（HotSpot虚拟机默认15次，用-XX:MaxTenuringThreshold控制，大于该值进入老年代，但这只是个最大值，并不代表一定是这个值）之后，仍然存活的对象（其实只有一小部分，比如，我们自己定义的对象），将被复制到老年代。
+
+![内存空间](https://ws1.sinaimg.cn/large/005CDUpdgy1g88j5t54zgj30w60cot9z.jpg)
+
+- 新生代：
+  - 大多数新生的对象在Eden区分配，当Eden区没有足够空间进行分配时，虚拟机就会进行一次MinorGC。
+  - 在方法中new一个对象，方法调用完毕，对象就无用，这就是典型的新生代对象。（新生对象在Eden区经历过一次MinorGC并且被Survivor容纳的话，对象年龄为1，并且每熬过一次MinorGC，年龄就会加1，直到15，就会晋升到老年代）。
+  - 注意动态对象的判定：Survivor空间中相同年龄的对象大小总和大于Survivor空间的一半，大于或者等于该年龄的对象就可以直接进入老年代。
+- 老年代：
+  - 在新生代中经历了N次垃圾回收后仍然存活的对象，就会被放到老年代中，而且大对象（占用大量连续内存空间的java对象如很长的字符串及数组）直接进入老年代。
+  - 当survivor空间不够用时，需要依赖老年代进行分配担保。
+- 永久代：
+  - 方法区
+  - 主要存放Class和Meta的信息，Class在被加载的时候被放入永久代。 它和存放对象的堆区域不同，GC(Garbage Collection)不会在主程序运行期对永久代进行清理，所以如果你的应用程序会加载很多Class的话,就很可能出现PermGen space错误。
+
+#### 2.7 GC分类
+
+1. MinorGC：是指清理新生代。
+2. MajorGC：是指清理老年代（很多MajorGC是由MinorGC触发的）。
+3. FullGC：是指清理整个堆空间包括年轻代和永久代。
+
+#### 2.8 JVM GC算法
+
+
 ### 3. Java内存模型
 
 在介绍java内存模型之前，我们先来了解一下几个基础概念：内存屏障(memory Barriers), 指令重排序，happens-before规则， as-if-serial语义。
@@ -381,17 +474,120 @@ Java内存模型是通过在变更修改后同步回主内存，在变量读取�
 
 除了volatile之外，还有两个关键字也可以保证可见性，它们是synchronized和final。
 
-synchronized的可见性是由“对一个变量执行unlock操作之前，必须先把此变量同步回主内存中，即执行store和write操作”这条规则获取的。
+synchronized的可见性是由“对一个变量执行unlock操作之前，必须先把此变量同步回主内存中，即执行store和write操作”这条规则获取的。这里，我们具体的讲述一下。一个线程在获取到监视器锁(Monitor)以后才能进入synchronized控制的代码块，一旦进入代码块，首先，该线程对于共享变量的缓存就会失效，因此synchronized代码块中对于共享变量的读取需要从主内存中重新获取，也就能获取到最新的值。其在退出代码块的时候，会将该线程写缓冲区中的数据刷新到主内存中，所以在synchronized代码块之前或synchronized代码块中对于共享变量的操作随着该线程退出synchronized块，会立即对其他线程可见(这句话的前提是其他读取共享变量的线程会从主内存读取最新值)。
 
-final的可见性是指被final修饰的字段在构造器中一旦被初始化完成，那么其它线程中就能看见这个final字段了。
+为此，我们可以总结一下：`线程a对于进入synchronized块之前或在synchronized中对于共享变量的操作，对于后续的持有同一个监视器锁的线程b可见。`注意一点，在进入synchronized的时候，并不会保证之前的写操作刷入到主内存中，synchronized主要是保证退出的时候能将本地内存的数据刷新到主内存。
+
+final的可见性是指被final修饰的字段在构造器中一旦被初始化完成，那么其它线程中就能看见这个final字段了。(`在对象的构造方法中设置 final 属性，同时在对象初始化完成前，不要将此对象的引用写入到其他线程可以访问到的地方（不要让引用在构造函数中逸出）。如果这个条件满足，当其他线程看到这个对象的时候，那个线程始终可以看到正确初始化后的对象的 final 属性。`)
 
 **有序性**
 
-ava程序中天然的有序性可以总结为一句话：如果在本线程中观察，所有的操作都是有序的；如果在另一个线程中观察，所有的操作都是无序的。
+Java程序中天然的有序性可以总结为一句话：如果在本线程中观察，所有的操作都是有序的；如果在另一个线程中观察，所有的操作都是无序的。
 
 前半句是指线程内表现为串行的语义，后半句是指“指令重排序”现象和“工作内存和主内存同步延迟”现象。Java中提供了volatile和synchronized两个关键字来保证有序性。volatile天然就具有有序性，因为其禁止重排序。
 
-synchronized的有序性是由“一个变量同一时刻只允许一条线程对其进行lock操作”这条规则获取的。
+我们来看看单例模式中的双重检查的一个具体的例子：
+
+```java
+public class Singleton {
+
+    private static Singleton instance = null;
+
+    private int v;
+    private Singleton() {
+        this.v = 3;
+    }
+
+    public static Singleton getInstance() {
+        if (instance == null) { // 1. 第一次检查
+            synchronized (Singleton.class) { // 2
+                if (instance == null) { // 3. 第二次检查
+                    instance = new Singleton(); // 4
+                }
+            }
+        }
+        return instance;
+    }
+}
+```
+
+很多人都知道上述的写法是不对的，但是可能会说不清楚到底为什么不对。我们假设有两个线程 a 和 b 调用 getInstance() 方法，假设 a 先走，一路走到 4 这一步，执行 instance = new Singleton() 这句代码。
+
+instance = new Singleton()这句代码首先会申请一段空间，然后将各个属性初始化为零值(0/null)，执行构造方法中的属性赋值[1]，将这个对象的引用赋值给 instance[2]。在这个过程中，[1] 和 [2] 可能会发生重排序。(具体细节可以看我的volatile关键字的分析)
+
+此时，线程 b 刚刚进来执行到 1（看上面的代码块），就有可能会看到 instance 不为 null，然后线程 b 也就不会等待监视器锁，而是直接返回 instance。问题是这个 instance 可能还没执行完构造方法（线程 a 此时还在 4 这一步），所以线程 b 拿到的 instance 是不完整的，它里面的属性值可能是初始化的零值(0/false/null)，而不是线程 a 在构造方法中指定的值。为此，就需要用volatile关键字修饰instance变量禁止重排序，来解决这个问题，即：
+
+```java
+public class Singleton {
+
+    private static volatile Singleton instance = null;
+
+    private int v;
+    private Singleton() {
+        this.v = 3;
+    }
+
+    public static Singleton getInstance() {
+        if (instance == null) { // 1. 第一次检查
+            synchronized (Singleton.class) { // 2
+                if (instance == null) { // 3. 第二次检查
+                    instance = new Singleton(); // 4
+                }
+            }
+        }
+        return instance;
+    }
+}
+```
+
+synchronized的有序性是由“一个变量同一时刻只允许一条线程对其进行lock操作”这条规则获取的。(这句话并不是表明synchronized代码块中的代码是不允许进行重排序的，它的有序性是指synchronized 保证了释放监视器锁之前的代码一定会在释放锁之前被执行)，不妨我们来给出这样一个例子：
+
+```java
+public static Singleton getInstance() {
+    if (instance == null) { //
+        Singleton temp;
+        synchronized (Singleton.class) { //
+            temp = instance;
+            if (temp == null) { //
+                synchronized (Singleton.class) { // 内嵌一个 synchronized 块
+                    temp = new Singleton();
+                }
+                instance = temp; //
+            }
+        }
+    }
+    return instance;
+}
+```
+
+上面这个代码很有趣，想利用 synchronized 的内存可见性语义来解决单例模式的问题，不过这个解决方案还是失败了，我们分析下：
+
+前面说了，`synchronized 在退出的时候，能保证 synchronized 块中对于共享变量的写入一定会刷入到主内存中`。也就是说，上述代码中，内嵌的 synchronized 结束的时候，temp 一定是完整构造出来的，然后再赋给 instance 的值一定是好的。
+
+可是，synchronized 保证了释放监视器锁之前的代码一定会在释放锁之前被执行（如 temp 的初始化一定会在释放锁之前执行完 ），但是没有任何规则规定了，释放锁之后的代码不可以在释放锁之前先执行。也就是说，代码中释放锁之后的行为 instance = temp 完全可以被提前到前面的 synchronized 代码块中执行，那么前面说的重排序问题就又出现了。
+
+```java
+public static Singleton getInstance() {
+    if (instance == null) {
+        Singleton temp;
+        synchronized (Singleton.class) {
+            temp = instance;
+            if (temp == null) {
+                synchronized (Singleton.class) {
+                    temp = new Singleton(); // 1
+                    instance = temp; // 2
+                }
+            }
+        }
+    }
+    return instance;
+}
+```
+很显然，又回到前面的问题，temp 在赋给 instance 的时候，temp 引用的对象本身还没初始化完成，其他线程看到 instance 不等于 null，可是这个对象其实是不靠谱的。
+
+关于这个问题的讨论，具体参考文章：
+
+[Java 并发基础之内存模型](https://javadoop.com/post/java-memory-model)
 
 ##### 3.5.3 先行发生原则
 
@@ -411,6 +607,15 @@ synchronized的有序性是由“一个变量同一时刻只允许一条线程�
 
 **这里说的“先行发生”与“时间上的先发生”没有必然的关系。**
 
+##### 3.5.6 Synchronization Order
 
+java语言规范对于同步定义了一系列的规则：[17.4.4. Synchronization Order](https://docs.oracle.com/javase/specs/jls/se8/html/jls-17.html#jls-17.4.4),包括了如下同步关系：
 
+- 对于监视器m的解锁与所有后续操作对于m的加锁同步；
+- 对于volatile变量v的写入，与所有其他线程操作后续对v的读同步；
+- 启动线程的操作与线程中的第一个操作同步。
+- 对于每个属性写入默认值(0,false,null)与每个线程对其进行的操作同步。(尽管在创建对象完成之前对对象属性写入默认值有点奇怪，但是从概念上来说，每个对象都是在程序启动时用默认值初始化来创建的。)
+- 线程T1的最后操作与线程T2发现线程T1已经结束同步。(线程T2可以通过T1.isAlive()或T1.join()方法来判断T1是否已经终结)
+- 如果线程T1中断了T2,那么线程T1的中断操作与其他所有线程发现T2被中断了同步(通过抛出InterruptedException异常，或者调用Thread.interrupted或Thread.isInterrupted)
 
+##### 

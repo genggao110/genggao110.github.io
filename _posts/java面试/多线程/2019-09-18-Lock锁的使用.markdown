@@ -434,7 +434,7 @@ ReentrantLock reentrantLock = new ReentrantLock(true);
     protected final boolean tryAcquire(int acquires) {
         //当前线程
         final Thread current = Thread.currentThread();
-        //查看当前变量的值
+        //查看当前变量的值+
         int c = getState();
         // 如果状态为0，说明还没有人占有锁
         if (c == 0) {
@@ -920,7 +920,7 @@ public class ReentrantLockTest {
             }
         }).start();
 
-        //这里睡1000ms是为了让上面的线程先获取到锁
+        //这里睡1000ms是为了让下面的线程先获取到锁
         Thread.sleep(1000);
         lock.lock(); // 4
         try{
@@ -1240,7 +1240,7 @@ ReentrantReadWriteLock中的类分成了三个部分：
     // 同步器
     final Sync sync;
 ```
-q=其维护了读锁、写锁和同步器。
+维护了读锁、写锁和同步器。
 
 #### 6.2 构造方法
 

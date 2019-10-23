@@ -699,7 +699,7 @@ instance = memory;      //3：设置instance指向刚分配的内存地址
 ```java
 memory = allocate();    //1：分配对象的内存空间
 instance = memory;      //3：设置instance指向刚分配的内存地址（此时对象还未初始化）
-ctorInstance(memory);   //2：初始化对象
+initInstance(memory);   //2：初始化对象
 ```
 可以看到指令重排之后，操作 3 排在了操作 2 之前，即引用instance指向内存memory时，这段崭新的内存还没有初始化——即，引用instance指向了一个"被部分初始化的对象"。此时，如果另一个线程调用getInstance方法，由于instance已经指向了一块内存空间，从而if条件判为false，方法返回instance引用，用户得到了没有完成初始化的“半个”单例。
 
@@ -728,6 +728,8 @@ private static volatile Singleton instance;
 [面试题:volatile关键字的作用、原理](https://www.cnblogs.com/shan1393/p/8999683.html)
 
 [jdk源码剖析二: 对象内存布局、synchronized终极原理](https://www.cnblogs.com/dennyzhangdd/p/6734638.html)
+
+[java 轻量级同步volatile关键字简介与可见性有序性与synchronized区别 多线程中篇（十二）](https://www.cnblogs.com/noteless/p/10410368.html)
 
 
 ### 3.4 static 关键字
