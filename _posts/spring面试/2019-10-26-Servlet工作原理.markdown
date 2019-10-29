@@ -1,0 +1,19 @@
+---
+layout:     post
+title:      "Servlet工作原理"
+subtitle:   " \"Servlet原理解析\""
+date:       2019-10-26 14:16:07
+author:     "ming"
+catalog: true
+header-img: "img/post-bg-happiness.jpg"
+tags:
+    - Servelt
+    - JavaWeb
+---
+
+> "To choose time is to save time."
+
+## 1. 原理分析
+
+[Servlet 工作原理解析](https://www.cnblogs.com/kaleidoscope/p/9525478.html)
+

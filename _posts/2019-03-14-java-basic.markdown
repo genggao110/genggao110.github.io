@@ -910,6 +910,105 @@ private static class IntegerCache {
 
 [理解Java中的弱引用](https://droidyue.com/blog/2014/10/12/understanding-weakreference-in-java/)
 
+[如何有效的避免OOM，温故Java中的引用](https://www.jianshu.com/p/7200da8b043f)
+
+##### 1.10.1 虚引用
+
+虚引用（Phantom Reference），和之前两种引用的最大不同是：它的get方法一直返回null。
+
+很奇怪，一个返回null的引用有什么用？
+
+虚引用的使用场景很窄，在JDK中，目前只知道在申请堆外内存时有它的身影。申请堆外内存时，在JVM堆中会创建一个对应的Cleaner对象，这个Cleaner类继承了PhantomReference,当DirectByteBuffer对象被回收时，可以执行对应的Cleaner对象的clean方法，做一些后续工作，这里是释放之前申请的堆外内存。
+
+由于虚引用的get方法无法拿到真实对象，所以当你不想让真实对象被访问时，可以选择使用虚引用，它唯一能做的是在对象被GC时，收到通知，并执行一些后续工作。
+
+看到有些文章说虚引用可以清理已经执行finalize方法，但是还没被回收的对象，这简直就是误导人嘛，与finalize方法有关的引用是FinalReference，这个引用就是之前说的其它两种中的一个。
+
+##### 1.10.2 软引用
+
+先来看一下SoftReference的实现：
+
+```java
+public class SoftReference<T> extends Reference<T> {
+
+    //Timestamp clock, updated by the garbage collector
+    static private long clock; 
+
+    private long timestamp;
+
+    public SoftReference(T referent) {
+        super(referent);
+        this.timestamp = clock;
+    }
+    
+    public SoftReference(T referent, ReferenceQueue<? super T> q) {
+        super(referent, q);
+        this.timestamp = clock;
+    }
+
+    public T get() {
+        T o = super.get();
+        if (o != null && this.timestamp != clock)
+            this.timestamp = clock;
+        return o;
+    }
+}
+```
+
+和其它引用不同的是，在软引用实现中，有两个特殊的变量：clock 和 timestamp。在JVM初始化时，会对变量clock进行初始化，hotspot的实现如下：
+
+![clock初始化](https://ws1.sinaimg.cn/large/005CDUpdgy1g8fdc9er52j30x60e8djl.jpg)
+
+同时，在JVM发生GC时，也会更新clock的值，意味着clock会记录上次GC发生的时间点。不过，这个时间记录下来有什么用？
+
+另一个变量timestamp，在软引用初始化时，会被初始化成clock，同时在get方法被调用时，也会更新timestamp的值。如果一个软引用对象在初始化后，长时间没有执行get方法，而且最近发生过GC，那么它的timestamp的值可能会远远小于clock，所以，这两个值又有什么用？
+
+要理解这个，我们需要看看GC过程，对引用的处理逻辑，先来看一段HotSpot的代码，之前一直看的1.7版本，如果有出入也不要紧张。
+
+![GC过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g8fdexsswoj314y0omag1.jpg)
+
+代码中，有两个比较重要的部分：
+1. `iter.is_referent_alive()` 这个判断软引用中的对象（referent）是否还活着，即还有没有被GC Roots可达，如果不可达，说明这个对象已经死了。
+2. 如果对象（referent）都死了，那么就要尝试对引用对象进行回收了，这里的尝试动作就是调用引用回收策略的`should_clear_reference`方法。
+
+对于软引用的回收有几种策略，不过都差不多，我们看看其中一种：LRUCurrentHeapPolicy，它的should_clear_reference方法实现如下：
+
+```c++
+// The oop passed in is the SoftReference object, and not 
+// the object the SoftReference points to. 
+bool LRUCurrentHeapPolicy::should_clear_reference(oop p, jlong timestamp_clock) { 
+    jlong interval = timestamp_clock - java_lang_ref_SoftReference::timestamp(p); 
+    assert(interval >= 0, "Sanity check"); 
+    // The interval will be zero if the ref was accessed since the last scavenge/gc. 
+    if(interval <= _max_interval) 
+    { 
+        return false; 
+    } 
+    return true; 
+}
+    
+```
+这里的`timestamp_clock`参数，就是SoftReference中clock变量的值，即上次GC的时间点。
+
+`java_lang_ref_SoftReference::timestamp(p)`可以拿到该引用对象上次执行get方法的时间点，如果没有执行过get方法，就是初始化的时间点。
+
+两者之差，就是这个软引用对象距离上次GC时一直没被使用的时间，如果这个时间大于`_max_interval`，说明这个软引用已经被废弃足够长时间了，被认为可以被回收了。
+
+那么这个`_max_interval`临界值是多大，软引用被废弃多长时间可以被回收？
+
+`_max_interval`的计算逻辑：
+
+```c++
+// Capture state (of-the-VM) information needed to evaluate the policy 
+void LRUCurrentHeapPolicy::setup() { 
+    _max_interval = (Universe::get_heap_free_at_last_gc() / M) * SoftRefLRUPolicyMSPerMB; 
+    assert(_max_interval >= 0,"Sanity check"); 
+}
+```
+其中`SoftRefLRUPolicyMSPerMB`默认1000，看来这个值和上次GC之后的剩余堆空间大小有关，可用空间越大，_max_interval就越大。
+
+如果GC之后，堆的可用空间还很大的话，SoftReference对象可以长时间的在堆中而不被回收。反之，如果GC之后，只剩下10M可用，那么SoftReference对象可被废弃的时间也是可以算出来的。
+
 #### 1.11 java二进制按位运算符、移位运算符、原码、反码、补码
 
 首先，来讲述一下计算机原码、反码、补码的关系。

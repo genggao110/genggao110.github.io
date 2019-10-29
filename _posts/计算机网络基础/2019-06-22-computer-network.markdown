@@ -444,7 +444,7 @@ TCP是面向连接的，无论哪一方向向另一方向发送数据之前，�
 
 **为什么建立连接协议是三次握手，而关闭连接需要四次挥手？**
 
-这是因为服务端的LISTEN状态下的SOCKET当收到SYN报文的建连请求后，它可以把ACK和SYN（ACK起应答作用，而SYN起同步作用）放在一个报文里来发送。但关闭连接时，当收到对方的FIN报文通知时，它仅仅表示对方没有数据发送给你了；但未必你所有的数据都全部发送给对方了，所以你可能未必会马上会关闭SOCKET,也即你可能还需要发送一些数据给对方之后，再发送FIN报文给对方来表示你同意现在可以关闭连接了，所以它这里的ACK报文和FIN报文多数情况下都是分开发送的。
+这是因为服务端的LISTEN状态下的SOCKET当收到SYN报文的建立请求后，它可以把ACK和SYN（ACK起应答作用，而SYN起同步作用）放在一个报文里来发送。但关闭连接时，当收到对方的FIN报文通知时，它仅仅表示对方没有数据发送给你了；但未必你所有的数据都全部发送给对方了，所以你可能未必会马上会关闭SOCKET,也即你可能还需要发送一些数据给对方之后，再发送FIN报文给对方来表示你同意现在可以关闭连接了，所以它这里的ACK报文和FIN报文多数情况下都是分开发送的。
 
 **为什么TIME_WAIT状态需要经过2MSL(最大报文段生存时间)才能返回到CLOSE状态?**
 
@@ -588,6 +588,21 @@ TCP的拥塞控制采用了四种算法，即慢启动、拥塞避免、快速�
 
 ![快速恢复算法](https://ws1.sinaimg.cn/large/005CDUpdgy1g7d7vz43edj30ou0833z6.jpg)
 
+#### 3.7.4 TCP Nagle算法
+
+百度百科：TCP/IP协议中，无论发送多少数据，总是要在数据前面加上协议头，同时，对方接收到数据，也需要发送ACK表示确认。为了尽可能的利用网络带宽，TCP总是希望尽可能的发送足够大的数据。（一个连接会设置MSS参数，因此，TCP/IP希望每次都能够以MSS尺寸的数据块来发送数据）。Nagle算法就是为了尽可能发送大块数据，避免网络中充斥着许多小数据块。（减少大量小包的发送）
+
+> Nagle算法的基本定义是任意时刻，最多只能有一个未被确认的小段。所谓“小段”，指的是小于MSS尺寸的数据块，所谓“未被确认”，是指一个数据块发送出去后，没有收到对方发送的ACK确认该数据已收到。
+
+Nagle算法的规则（可参考tcp_output.c文件里tcp_nagle_check函数注释）：
+- 如果包长度达到MSS，则允许发送；
+- 如果该包含有FIN，则允许发送；
+- 设置了TCP_NODELAY选项，则允许发送；
+- 未设置TCP_CORK选项时，若所有发出去的小数据包（包长度小于MSS）均被确认，则允许发送；
+- 上述条件都未满足，但发生了超时（一般为200ms），则立即发送。
+
+Nagle算法只允许一个未被ACK的包存在于网络，它并不管包的大小，因此它事实上就是一个扩展的停-等协议（停止等待ARQ协议），只不过它是基于包停-等的，而不是基于字节停-等的。Nagle算法完全由TCP协议的ACK机制决定，这会带来一些问题，比如如果对端ACK回复很快的话，Nagle事实上不会拼接太多的数据包，虽然避免了网络拥塞，网络总体的利用率依然很低.
+
 **参考文章**：
 
 [Java面试系列（一）--- TCP协议精准剖析](https://juejin.im/post/5d103a76f265da1ba431f8a2#heading-9)
@@ -599,6 +614,8 @@ TCP的拥塞控制采用了四种算法，即慢启动、拥塞避免、快速�
 [面试官问到TCP/IP怎么回答才过关](https://juejin.im/post/5b189ca0f265da6e1e1adcbf)
 
 [面试时，你被问到过TCP/IP协议吗](https://blog.csdn.net/zhang669154/article/details/79434150)
+
+[TCP Nagle算法&&延迟确认机制](https://blog.csdn.net/asklw/article/details/79246959)
 
 #### 3.8 TCP连接建立之后怎样检测连接没断？
 
@@ -1057,15 +1074,17 @@ Session的客户端保存方法一般有以下三种：
 
 **session什么时候被创建？**
 
-一个常见的错误是以为 session 在有客户端访问时就被创建,然而事实是直到某 server 端程序(如 Servlet)调用 HttpServletRequest.getSession(true)这样的语句时才会被创建。
+一个常见的错误是以为 session 在有客户端访问时就被创建,然而事实是直到某 server 端程序(如 Servlet)调用 HttpServletRequest.getSession(true)这样的语句时才会被创建。注意如果JSP没有显示的使用`<%@page session="false"%>`关闭session，则JSP文件在编译成Servlet的时候将会自动加上这样一条语句HttpSession session = HttpServletRequest.getSession(true);这也是JSP中隐含的session对象的来历。
+
+由于session会消耗内存资源，因此，如果不打算使用session,应该在所有的JSP中关闭它。
 
 **session何时被删除**
 
 - 程序调用 HttpSession.invalidate()
 - 距离上一次收到客户端发送的 session id 时间间隔超过了 session 的最大有效时间 
-- .服务器进程被停止。
+- 服务器进程被停止。
 
-注意：关闭浏览器只会使存储在客户端浏览器内存中的 session cookie 失效,不会 使服务器端的 session 对象失效。
+注意：关闭浏览器只会使存储在客户端浏览器内存中的 session cookie 失效,不会使服务器端的 session 对象失效。
 
 #### 5.9 Cookie的机制
 

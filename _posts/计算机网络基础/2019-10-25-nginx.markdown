@@ -1,0 +1,13 @@
+---
+layout:     post
+title:      "Nginx学习"
+subtitle:   " \"Nginx内容介绍\""
+date:       2019-10-25 21:25:20
+author:     "ming"
+catalog: true
+header-img: "img/post-bg-mylove.jpg"
+tags:
+    - Nginx
+---
+
+> ""

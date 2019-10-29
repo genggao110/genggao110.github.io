@@ -1,0 +1,785 @@
+---
+layout:     post
+title:      "Tomcat工作原理"
+subtitle:   " \"Tomcat原理解析\""
+date:       2019-10-26 19:16:07
+author:     "ming"
+catalog: true
+header-img: "img/host-bg-mylove.jpg"
+tags:
+    - Tomcat
+    - Servlet容器
+---
+
+## 1. Tomcat总体架构分析
+
+Tomcat的结构很复杂，但是Tomcat也非常的模块化，找到了Tomcat最核心的模块，也就抓住了 Tomcat 的“七寸”。下面是 Tomcat 的总体结构图：
+
+![Tomcat整体结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g8bybjth2hg30es09w3yk.gif)
+
+从上图中可以看出Tomcat的心脏是两个组件：Connector和Container，关于这两个组件将在后面详细介绍。Connector组件是可以被替换，这样可以提供给服务器设计者更多的选择，因为这个组件是如此的重要，不仅跟服务器的设计的本身，而且和不同的应用场景也十分相关，所以一个Container可以选择对应多个Connector。
+
+> 1. Connector用于处理连接相关的事情，并提供Socket与Request和Response相关的转化
+> 2. Container用于封装和管理Servlet，以及具体处理Request请求。
+
+一个Tomact中只有一个Server,一个Server可以包含多个Service，一个Service只有一个Container，但是可以有多个Connector，这是因为一个服务可以有多个连接，如同时提供Http和Https链接，也可以提供向相同协议不同端口的连接，示意图如下所示：(Engine、Host、Context下边会说到)
+
+![容器连接示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g8dqimjlfqj30c608kaba.jpg)、
+
+多个Connector和一个Container形成了一个Service，Service的概念就很熟悉了，有了Service就可以对外提供服务了，但是Service还要一个生存的环境，必须要有人能够给她生命、掌握其生死大权，那就非Server莫属了。所以整个Tomact的生命周期由Server控制。
+
+另外，上述的包含关系或者说是父子关系，都可以在tomcat的conf目录下的server.xml配置文件中看出，下图是删除了注释内容之后的一个完整的`server.xml`配置文件（Tomcat版本为8.0）
+
+![示例XML文件](https://ws1.sinaimg.cn/large/005CDUpdgy1g8dqm0xik5j310o0q1n0e.jpg)
+
+上面的配置文件，可以通过下边的一张结构图更清楚地理解：
+
+![xml文件图解](https://ws1.sinaimg.cn/large/005CDUpdgy1g8dqost4m8j30lz0a40so.jpg)
+
+Server标签设置的端口号为8005，shutdown= "SHUTDOWN",表示在8005端口监听“SHUTDOWN”命令，如果接收到了就会关闭Tomact。一个Server有一个Service,当然还可以进行配置，一个Service有多个，Service左边的内容都属于Container的，而Service下边的是Connector。
+
+### 1.1 顶层架构的总结
+
+1. Tomcat中只有一个Server，一个Server可以有多个Service，一个Service可以有多个Connector和一个Container；
+2. Server掌管着整个Tomcat的生死大权；
+3. Service 是对外提供服务的；
+4. Connector用于接受请求并将请求封装成Request和Response来具体处理；
+5. Container用于封装和管理Servlet，以及具体处理request请求。
+
+知道了整个Tomcat顶层的分层架构和各个组件之间的关系以及作用，对于绝大多数的开发人员来说Server和Service对我们来说确实很远，而我们开发中绝大部分进行配置的内容是属于Connector和Container的，所以接下来介绍一下Connector和Container。
+
+### 1.2 Connector与Container之间的关系
+
+由上述内容我们大致可以知道一个请求发送到Tomcat之后，首先经过Service然后会交给我们的Connector，Connector用于接收请求并将接收的请求封装为Request和Response来具体处理，Request和Response封装完之后再交由Container进行处理，Container处理完请求之后再返回给Connector，最后在由Connector通过Socket将处理的结果返回给客户端，这样整个请求的就处理完了！
+
+Connector最底层使用的是Socket来进行连接的，Request和Response是按照HTTP协议来封装的，所以Connector同时需要实现TCP/IP协议和HTTP协议！
+
+Tomcat既然处理请求，那么肯定需要先接收到这个请求，接收请求这个东西我们首先就需要看一下Connector！
+
+### 1.3 Connector架构分析
+
+Connector用于接受请求并将请求封装成Request和Response，然后交给Container进行处理，Container处理完之后在交给Connector返回给客户端。因此，我们可以将Connector分为四个方面进行理解：
+- Connector如何接受请求的？
+- 如何将请求封装成Request和Response的？
+- 封装完之后的Request和Response如何交给Container进行处理的？
+- Container处理完之后如何交给Connector并返回给客户端的？
+
+首先，我们来看一下Connector的结构图，如下所示：
+
+![Connector结构图](https://ws1.sinaimg.cn/large/005CDUpdgy1g8dr13awn8j30lz0aj0sp.jpg)
+
+Connector就是使用ProtocolHandler来处理请求的，不同的ProtocolHandler代表不同的连接类型，比如：Http11Protocol使用的是普通的Socket来连接的，Http11NioProtocol使用的是NioSocket来连接的。
+
+其中，ProtocolHandler包含了三个部件：Endpoint、Processor、Adapter：
+1. Endpoint用来处理底层的Socket的网络连接，Processor用于将Endpoint接收到的Socket封装成Request，Adapter用于将Request交给Container进行具体的处理；
+2. Endpoint由于是处理底层的Socket网络连接，因此Endpoint是用来实现TCP/IP协议的，而Processor是用来实现HTTP协议的，Adapter是将请求适配到Servlet容器进行具体的处理。
+3. Endpoint的抽象实现AbstractEndPoint里面定义的Acceptor和AsyncTimeout两个内部类和一个Handler接口。Acceptor用于监听请求，AsyncTimeout用于检查异步Request的超时，Handler用于处理接收到的Socket，在内部调用Processor进行处理。
+
+下面，我们来看一下Container是如何进行处理的以及处理完之后是如何将处理完的结果返回给Connector的？
+
+### 1.4 Container架构分析
+
+Container用于封装和管理Servlet，以及具体处理Request请求，在Connector内部包含了4个子容器，结构图如下所示：
+
+![Container架构分析](https://ws1.sinaimg.cn/large/005CDUpdgy1g8drfd0udtj30nj0ei0th.jpg)
+
+4个子容器的作用分别为：
+1. Engine: 引擎，用来管理多个站点，一个Service最多只能有一个Engine;
+2. Host: 代表一个站点，也可以叫虚拟主机，通过配置Host就可以添加站点；
+3. Context: 代表一个应用程序，对应着平时开发的一套程序，或者一个WEB-INF目录及其下面的web.xml文件；
+4. Wrapper: 每一个Wrapper封装着一个Servlet。
+
+下面我们找一个Tomcat的文件目录对照一下，如下图所示：
+
+![Tomcat文件目录](https://ws1.sinaimg.cn/large/005CDUpdgy1g8drlbm4flj309w0acwed.jpg)
+
+Context和Host的区别是Context表示一个应用，我们的Tomcat中默认的配置下webapps下的每一个文件夹目录都是一个Context，其中ROOT目录中存放着主应用，其他目录存放着子应用，而整个webapps就是一个Host站点。
+
+我们访问应用Context的时候，如果是ROOT下的则直接使用域名就可以访问，例如：www.ledouit.com,如果是Host（webapps）下的其他应用，则可以使用www.ledouit.com/docs进行访问，当然默认指定的根应用（ROOT）是可以进行设定的，只不过Host站点下默认的主营用是ROOT目录下的。
+
+### 1.5 Container是如何处理请求的？
+
+Container处理请求是使用Pipeline-Value管道来进行处理的。Pipeline-Value是责任链模式，责任链模式是指在一个请求处理的过程中有很多处理者依次对请求进行处理，每个处理者负责做自己相应的处理，处理之后将处理后的请求返回，再让下一个处理者继续处理。
+
+![责任链模式](https://ws1.sinaimg.cn/large/005CDUpdgy1g8ds2mckgvj30m1083q3z.jpg)
+
+但是，Pipeline-Valve使用的责任链模式和普通的责任链模式有些不同！区别主要有以下两点：
+- 每个Pipeline都有特定的Valve，而且是在管道的最后一个执行，这个Valve叫做BaseValve，BaseValve是不可删除的；
+- 在上层容器的管道的BaseValve中会调用下层容器的管道。
+
+我们知道Container包含四个子容器，而这四个子容器对应的BaseValve分别在：StandardEngineValve、StandardHostValve、StandardContextValve、StandardWrapperValve。Pipeline的处理流程如下所示：
+
+![Pipeline处理流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g8ds4gn347j30ly0fv0tc.jpg)
+
+1. Connector在接收到请求后会首先调用最顶层容器的Pipeline来处理，这里的最顶层容器的Pipeline就是EnginePipeline（Engine的管道）；
+2. 在Engine的管道中依次会执行EngineValve1、EngineValve2等等，最后会执行StandardEngineValve，在StandardEngineValve中会调用Host管道，然后再依次执行Host的HostValve1、HostValve2等，最后在执行StandardHostValve，然后再依次调用Context的管道和Wrapper的管道，最后执行到StandardWrapperValve。
+3. 当执行到StandardWrapperValue的时候，会在StandardWrapperValue中创建FilterChain,并调用其doFilter方法来处理请求，这个FilterChain包含着我们配置的与请求相匹配的，其中doFilter方法会依次调用所有的Filter的doFilter方法和Servlet的service方法，这样请求就得到了处理。
+4. 当所有的Pipeline-Value都执行完之后，并且处理完了具体的请求，这个时候就可以将返回的结果交给Connector了，Connector再通过Socket的方法将结果返回给客户端。
+
+**参考文章**：
+
+[四张图带你了解Tomcat系统架构--让面试官颤抖的Tomcat回答系列！](https://blog.csdn.net/xlgen157387/article/details/79006434)
+
+[Tomcat系统架构(上)](https://www.jianshu.com/p/ce6d6012af63)
+
+[Tomcat系统架构(下)-容器](https://www.jianshu.com/p/74cb43c927fb)
+
+[Tomcat 架构概述](https://www.jianshu.com/p/4707baff2415)
+
+[Tomcat架构中各个组件及组件间关系](https://www.jianshu.com/p/d9387cd8287d)
+
+## 2. Tomcat类加载体系结构
+
+首先，我们给出Tomcat整体类加载体系结构图如下所示：
+
+![Tomcat整体类加载体系结构图](https://ws1.sinaimg.cn/large/005CDUpdgy1g8dy0xatu9j310b0jkta8.jpg)
+
+Tomcat本身也是一个Java项目，因此其也需要被JDK的类加载机制加载，也就必然存在引导类加载器、扩展类加载器和应用(系统)类加载器。Tomcat自身定义的类加载器主要由图中下半部分组成，`Common ClassLoader`作为`Catalina ClassLoader`和`Shared ClassLoader`的parent，而`Shared ClassLoader`又可能存在着多个children类加载器`WebApp ClassLoader`，一个`WebApp ClassLoader`实际上对应着一个Web应用，那Web应用就有可能存在Jsp页面，这些Jsp页面最终会转成class类被加载，因此也需要一个Jsp的类加载器，就是图中的JasperLoder。
+
+- commonLoader：Tomcat最基本的类加载器，加载路径中的class可以被Tomcat容器本身以及各个Webapp访问；
+- catalinaLoader：Tomcat容器私有的类加载器，加载路径中的class对于Webapp不可见；
+- sharedLoader：各个Webapp共享的类加载器，加载路径中的class对于所有Webapp可见，但是对于Tomcat容器不可见；
+- WebappClassLoader：各个Webapp私有的类加载器，加载路径中的class只对当前Webapp可见；
+
+需要注意的是，在代码层面`Catalina ClassLoader`、`Shared ClassLoader`、`Common ClassLoader`对应的实体类实际上都是`URLClassLoader`或者`SecureClassLoader`，一般我们只是根据加载内容的不同和加载父子顺序的关系，在逻辑上划分这三个类加载器；而`WebApp ClassLoader`和`JasperLoader`都是存在对应的类加载器类的。
+
+下面从源码设计的角度验证图中类加载器的设计。(以Tomcat 7为例)
+
+###  源码分析Tomact类加载机制
+
+Tomcat的启动入口在BootStrap.class中：
+
+```java
+    public static void main(String args[]) {
+
+        synchronized (daemonLock) {
+            //创建一个Bootstrap实例
+            if (daemon == null) {
+                // Don't set daemon until init() has completed
+                Bootstrap bootstrap = new Bootstrap();
+                try {
+                    // 初始化ClassLoader，并用ClassLoader创建了Catalina实例，赋给了CatalinaDaemon变量
+                    bootstrap.init();
+                } catch (Throwable t) {
+                    handleThrowable(t);
+                    t.printStackTrace();
+                    return;
+                }
+                daemon = bootstrap;
+            } else {
+                // When running as a service the call to stop will be on a new
+                // thread so make sure the correct class loader is used to
+                // prevent a range of class not found exceptions.
+                Thread.currentThread().setContextClassLoader(daemon.catalinaLoader);
+            }
+        }
+
+        // 启动相关的代码，后续分析
+        try {
+            String command = "start";
+            if (args.length > 0) {
+                command = args[args.length - 1];
+            }
+
+            if (command.equals("startd")) {
+                args[args.length - 1] = "start";
+                daemon.load(args);
+                daemon.start();
+            } else if (command.equals("stopd")) {
+                args[args.length - 1] = "stop";
+                daemon.stop();
+            } else if (command.equals("start")) {
+                daemon.setAwait(true);
+                daemon.load(args);
+                daemon.start();
+                if (null == daemon.getServer()) {
+                    System.exit(1);
+                }
+            } else if (command.equals("stop")) {
+                daemon.stopServer(args);
+            } else if (command.equals("configtest")) {
+                daemon.load(args);
+                if (null == daemon.getServer()) {
+                    System.exit(1);
+                }
+                System.exit(0);
+            } else {
+                log.warn("Bootstrap: command \"" + command + "\" does not exist.");
+            }
+        } catch (Throwable t) {
+            // Unwrap the Exception for clearer error reporting
+            if (t instanceof InvocationTargetException &&
+                    t.getCause() != null) {
+                t = t.getCause();
+            }
+            handleThrowable(t);
+            t.printStackTrace();
+            System.exit(1);
+        }
+    }
+```
+其中初始化类加载器的流程在`bootstrap.init();`中，如下所示：
+
+```java
+public void init()
+        throws Exception
+    {
+
+        // Set Catalina path
+        setCatalinaHome();
+        setCatalinaBase();
+
+        // (1)   初始化 classLoader
+        initClassLoaders();
+        Thread.currentThread().setContextClassLoader(catalinaLoader);
+
+        SecurityClassLoad.securityClassLoad(catalinaLoader);
+
+        // Load our startup class and call its process() method
+        if (log.isDebugEnabled())
+            log.debug("Loading startup class");
+
+        //加载 org.apache.catalina.startup.Catalina class
+        Class<?> startupClass =
+            catalinaLoader.loadClass
+            ("org.apache.catalina.startup.Catalina");
+
+        // (2)  实例化 Catalina 实例
+        Object startupInstance = startupClass.newInstance();
+
+        // Set the shared extensions class loader
+        if (log.isDebugEnabled())
+            log.debug("Setting startup class properties");
+
+        String methodName = "setParentClassLoader";
+        Class<?> paramTypes[] = new Class[1];
+        paramTypes[0] = Class.forName("java.lang.ClassLoader");
+        Object paramValues[] = new Object[1];
+        paramValues[0] = sharedLoader;
+        Method method =
+            startupInstance.getClass().getMethod(methodName, paramTypes);
+        method.invoke(startupInstance, paramValues);
+
+        catalinaDaemon = startupInstance;
+
+    }
+```
+(1)处注释的代码主要进行类加载的初始化以及形成类加载器的关系初始化，继续跟进
+
+```java
+    private void initClassLoaders() {
+        try {
+            commonLoader = createClassLoader("common", null);
+            if (commonLoader == null) {
+                // no config file, default to this loader - we might be in a 'single' env.
+                commonLoader = this.getClass().getClassLoader();
+            }
+            catalinaLoader = createClassLoader("server", commonLoader);
+            sharedLoader = createClassLoader("shared", commonLoader);
+        } catch (Throwable t) {
+            handleThrowable(t);
+            log.error("Class loader creation threw exception", t);
+            System.exit(1);
+        }
+    }
+```
+从上面代码可以看到try代码块里创建了三个ClassLoader对象，其名称和Tomcat类加载关系图中的类加载器高度一致，那么我们可以猜测`createClassLoader(String,ClassLoader)`方法可能就是创建Tomcat自定义类加载器的方法之一。继续来分析代码：
+
+```java
+private ClassLoader createClassLoader(String name, ClassLoader parent)
+        throws Exception {
+        // (1) 根据名称查找特定的配置
+        String value = CatalinaProperties.getProperty(name + ".loader");
+        if ((value == null) || (value.equals("")))
+            return parent;
+
+        value = replace(value);
+
+        List<Repository> repositories = new ArrayList<Repository>();
+
+        StringTokenizer tokenizer = new StringTokenizer(value, ",");
+        while (tokenizer.hasMoreElements()) {
+            String repository = tokenizer.nextToken().trim();
+            if (repository.length() == 0) {
+                continue;
+            }
+
+            // Check for a JAR URL repository
+            try {
+                @SuppressWarnings("unused")
+                URL url = new URL(repository);
+                repositories.add(
+                        new Repository(repository, RepositoryType.URL));
+                continue;
+            } catch (MalformedURLException e) {
+                // Ignore
+            }
+
+            // Local repository
+            if (repository.endsWith("*.jar")) {
+                repository = repository.substring
+                    (0, repository.length() - "*.jar".length());
+                repositories.add(
+                        new Repository(repository, RepositoryType.GLOB));
+            } else if (repository.endsWith(".jar")) {
+                repositories.add(
+                        new Repository(repository, RepositoryType.JAR));
+            } else {
+                repositories.add(
+                        new Repository(repository, RepositoryType.DIR));
+            }
+        }
+        // (2) 类加载器工厂创建特定类加载器
+        return ClassLoaderFactory.createClassLoader(repositories, parent);
+    }
+```
+代码清单中(1)处注释是根据上图中传递的“名称”加上后缀`.loader`去某个配置文件加载文件，为了突出重点，这里直接给出结论，其加载的内容为`/org/apache/catalina/startup/catalina.properties`，比如要加载`common.loader`对应的value，其在文件中的值为`${catalina.base}/lib,${catalina.base}/lib/*.jar,${catalina.home}/lib,${catalina.home}/lib/*.jar`，也就是说说Common ClassLoader要加载的路径是这些，是Tomcat运行要使用的公共组件，比如`servlet-api.jar、catalina.jar`等；而我们发现当要加载`server.loader`和`shared.loader`时，其key在配置文件中的value为空，也就是说默认情况下Catalina ClassLoader和Shared ClassLoader(Tomcat整体类加载体系结构图中红色虚线内)都不存在，只有Common ClassLoader。
+
+方法中的第二个参数表示创建类加载器的父类加载器是哪一个，再看`initClassLoaders()`方法中代码，在创建`catalinaLoader`和`sharedLoader`时，父类加载器传入的实际上就是`commonLoader`，由此可以验证之前`Tomcat整体类加载体系结构图`中`Catalina ClassLoader`、`Shared ClassLoader`的父子关系。而`Common ClassLoader`的父类加载器参数传递的是null，为什么null就会导致该类加载器的父类加载器为`System ClassLoader`呢？我们需要进入到代码清单(2)中看注释(2)处标识的代码：
+
+```java
+    public static ClassLoader createClassLoader(List<Repository> repositories,
+                                                final ClassLoader parent)
+        throws Exception {
+
+        if (log.isDebugEnabled())
+            log.debug("Creating new class loader");
+
+        // Construct the "class path" for this class loader
+        Set<URL> set = new LinkedHashSet<URL>();
+        // 加载指定路径下的资源对象
+        if (repositories != null) {
+            for (Repository repository : repositories)  {
+                if (repository.getType() == RepositoryType.URL) {
+                    URL url = buildClassLoaderUrl(repository.getLocation());
+                    if (log.isDebugEnabled())
+                        log.debug("  Including URL " + url);
+                    set.add(url);
+                } else if (repository.getType() == RepositoryType.DIR) {
+                    File directory = new File(repository.getLocation());
+                    directory = directory.getCanonicalFile();
+                    if (!validateFile(directory, RepositoryType.DIR)) {
+                        continue;
+                    }
+                    URL url = buildClassLoaderUrl(directory);
+                    if (log.isDebugEnabled())
+                        log.debug("  Including directory " + url);
+                    set.add(url);
+                } else if (repository.getType() == RepositoryType.JAR) {
+                    File file=new File(repository.getLocation());
+                    file = file.getCanonicalFile();
+                    if (!validateFile(file, RepositoryType.JAR)) {
+                        continue;
+                    }
+                    URL url = buildClassLoaderUrl(file);
+                    if (log.isDebugEnabled())
+                        log.debug("  Including jar file " + url);
+                    set.add(url);
+                } else if (repository.getType() == RepositoryType.GLOB) {
+                    File directory=new File(repository.getLocation());
+                    directory = directory.getCanonicalFile();
+                    if (!validateFile(directory, RepositoryType.GLOB)) {
+                        continue;
+                    }
+                    if (log.isDebugEnabled())
+                        log.debug("  Including directory glob "
+                            + directory.getAbsolutePath());
+                    String filenames[] = directory.list();
+                    if (filenames == null) {
+                        continue;
+                    }
+                    for (int j = 0; j < filenames.length; j++) {
+                        String filename = filenames[j].toLowerCase(Locale.ENGLISH);
+                        if (!filename.endsWith(".jar"))
+                            continue;
+                        File file = new File(directory, filenames[j]);
+                        file = file.getCanonicalFile();
+                        if (!validateFile(file, RepositoryType.JAR)) {
+                            continue;
+                        }
+                        if (log.isDebugEnabled())
+                            log.debug("    Including glob jar file "
+                                + file.getAbsolutePath());
+                        URL url = buildClassLoaderUrl(file);
+                        set.add(url);
+                    }
+                }
+            }
+        }
+
+        // Construct the class loader itself
+        final URL[] array = set.toArray(new URL[set.size()]);
+        if (log.isDebugEnabled())
+            for (int i = 0; i < array.length; i++) {
+                log.debug("  location " + i + " is " + array[i]);
+            }
+        //  返回创建的类加载器
+        return AccessController.doPrivileged(
+                new PrivilegedAction<URLClassLoader>() {
+                    @Override
+                    public URLClassLoader run() {
+                        if (parent == null)
+                            return new URLClassLoader(array);
+                        else
+                            return new URLClassLoader(array, parent);
+                    }
+                });
+    }
+```
+大块中的if代码实际上是对资源进行转化加载的过程，而return部分才是返回类加载器的部分，代码根据是否有parent调用了`URLClassLoader`不同的构造器，`Commom ClassLoader`调用的是没有parent的构造器。查看`URLClassLoader`的构造函数方法，我们跟踪到`ClassLoader`中，如下图所示：
+
+![ClassLoader.getSystemClassLoader()](https://ws1.sinaimg.cn/large/005CDUpdgy1g8e09110o8j30mt0ns76q.jpg)
+
+按红线所画·Common ClassLoader·的parent实际上是JDK中sun.misc.Launcher.class类的loader成员变量，其实该loader的值就是应用类加载器（系统类加载器）`System ClassLoader`。至此Tomcat中类加载机制和JDK的类加载机制也建立上了联系。
+
+现在Tomcat的类加载机制已经完成了一大半，剩下的用于加载每个Web应用的类加载器`WebAppClassLoader`的分析，这个时候需要重新回到`init()方法`中注释(2)下面的部分。
+
+```java
+public void init()
+        throws Exception
+    {
+
+        // Set Catalina path
+        setCatalinaHome();
+        setCatalinaBase();
+
+        // (1)   初始化 classLoader
+        initClassLoaders();
+        Thread.currentThread().setContextClassLoader(catalinaLoader);
+
+        SecurityClassLoad.securityClassLoad(catalinaLoader);
+
+        // Load our startup class and call its process() method
+        if (log.isDebugEnabled())
+            log.debug("Loading startup class");
+
+        //加载 org.apache.catalina.startup.Catalina class
+        Class<?> startupClass =
+            catalinaLoader.loadClass
+            ("org.apache.catalina.startup.Catalina");
+
+        // (2)  实例化 Catalina 实例
+        Object startupInstance = startupClass.newInstance();
+
+        // Set the shared extensions class loader
+        if (log.isDebugEnabled())
+            log.debug("Setting startup class properties");
+
+        String methodName = "setParentClassLoader";
+        Class<?> paramTypes[] = new Class[1];
+        paramTypes[0] = Class.forName("java.lang.ClassLoader");
+        Object paramValues[] = new Object[1];
+        paramValues[0] = sharedLoader;
+        Method method =
+            startupInstance.getClass().getMethod(methodName, paramTypes);
+        method.invoke(startupInstance, paramValues);
+
+        catalinaDaemon = startupInstance;
+
+    }
+```
+主要的事情就是通过反射创建了`org.apache.catalina.startup.Catalina`类的实例，然后调用了签名为`void setParentClassLoader(ClassLoader parentClassLoader)`的方法，并传入`shared ClassLoader`，上面我们说过默认情况下Shared ClassLoader就是Common ClassLoader，因此其传入的参数实际上是Common ClassLoader.
+
+我们思考既然有保存parent的方法，必定使用时会调用获得parent方法，那么我们需要查看Catalina类中`ClassLoader getParentClassLoader()`方法的调用栈，最终定位到StandardContext中的`synchronized void startInternal() throws LifecycleException`方法，下面给出其中核心逻辑的`startInternal()`方法代码：
+
+```java
+    protected synchronized void startInternal() throws LifecycleException {
+        // 其他逻辑略......
+
+        // Add missing components as necessary
+        if (webappResources == null) {   // (1) Required by Loader
+            if (log.isDebugEnabled())
+                log.debug("Configuring default Resources");
+            try {
+                String docBase = getDocBase();
+                if (docBase == null) {
+                    setResources(new EmptyDirContext());
+                } else if (docBase.endsWith(".war")
+                        && !(new File(getBasePath())).isDirectory()) {
+                    setResources(new WARDirContext());
+                } else {
+                    setResources(new FileDirContext());
+                }
+            } catch (IllegalArgumentException e) {
+                log.error(sm.getString("standardContext.resourcesInit"), e);
+                ok = false;
+            }
+        }
+        if (ok) {
+            if (!resourcesStart()) {
+                throw new LifecycleException("Error in resourceStart()");
+            }
+        }
+
+        // (1)  为每一个web应用创建一个WebappLoader
+        if (getLoader() == null) {
+            WebappLoader webappLoader = new WebappLoader(getParentClassLoader());
+            webappLoader.setDelegate(getDelegate());
+            setLoader(webappLoader);
+        }
+
+      // 其他逻辑略......
+
+        try {
+
+            if (ok) {
+                // (2)  调用WebappLoader的start
+                // Start our subordinate components, if any
+                if ((loader != null) && (loader instanceof Lifecycle))
+                    ((Lifecycle) loader).start();
+                }
+
+        // 其他逻辑省略......
+
+        } finally {
+            // Unbinding thread
+            unbindThread(oldCCL);
+        }
+    }
+```
+
+(1)处注释下的代码逻辑就是为每一个web应用创建一个类加载器，该类加载器的父类加载器就是通过`getParentClassLoader()`得到的`Shared ClassLoader(Common ClassLoader)`，(2)处代码调用了`WebappLoader`的start方法，继续跟进:
+
+```java
+    protected void startInternal() throws LifecycleException {
+        // 其他逻辑省略.....
+        try {
+            //创建类加载器关键方法
+            classLoader = createClassLoader();
+            classLoader.setResources(container.getResources());
+            classLoader.setDelegate(this.delegate);
+            classLoader.setSearchExternalFirst(searchExternalFirst);
+            if (container instanceof StandardContext) {
+                classLoader.setAntiJARLocking(
+                        ((StandardContext) container).getAntiJARLocking());
+                classLoader.setClearReferencesRmiTargets(
+                        ((StandardContext) container).getClearReferencesRmiTargets());
+                classLoader.setClearReferencesStatic(
+                        ((StandardContext) container).getClearReferencesStatic());
+                classLoader.setClearReferencesStopThreads(
+                        ((StandardContext) container).getClearReferencesStopThreads());
+                classLoader.setClearReferencesStopTimerThreads(
+                        ((StandardContext) container).getClearReferencesStopTimerThreads());
+                classLoader.setClearReferencesHttpClientKeepAliveThread(
+                        ((StandardContext) container).getClearReferencesHttpClientKeepAliveThread());
+            }
+
+        // 其他逻辑省略.....
+    }
+```
+由于Tomcat的设计，WebappLoader的start方法实际上调用的是父类的模板，而模板中的`startinternal`方法由各个子类具体实现，其中最关键的方法为createClassLoader():
+
+![createClassLoader()](https://ws1.sinaimg.cn/large/005CDUpdgy1g8e0mbkpawj30kw0aa0tj.jpg)
+
+上图中的loadClass成员变量的值为org.apache.catalina.loader.WebappClassLoader，所以，实际上该类为每一个web应用创建了一个WebappClassLoader的实例，该实例的parent就是Shared ClassLoader或者Common ClassLoader，至此WebApp ClassLoader在之前类加载架构图中的位置也得以验证。
+
+从理论上分析来看，由于类加载的“双亲委派”机制，一个类加载器只能加载本加载器指定的目录以及使用有“继承”关系的父类加载器加载过的类，而Tomcat为每一个Web应用创建了一个WebappClassLoader，不同的WebappClassLoader是同级关系，不会存在交叉访问的问题，从而达到web应用相互隔离的目的。
+
+那Tomcat是否没有"破坏"双亲委派机制呢？我们通过查看`WebappClassLoader`及其父类`WebappClassLoaderBase`的`loadClass()和findClass()`分析一下Tomcat加载web应用相关类的策略:
+
+```java
+public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+
+        synchronized (getClassLoadingLockInternal(name)) {
+            if (log.isDebugEnabled())
+                log.debug("loadClass(" + name + ", " + resolve + ")");
+            Class<?> clazz = null;
+
+            // Log access to stopped classloader
+            if (!started) {
+                try {
+                    throw new IllegalStateException();
+                } catch (IllegalStateException e) {
+                    log.info(sm.getString("webappClassLoader.stopped", name), e);
+                }
+            }
+            //                (1)          
+            // Check our previously loaded local class cache
+            clazz = findLoadedClass0(name);
+            if (clazz != null) {
+                if (log.isDebugEnabled())
+                    log.debug("  Returning class from cache");
+                if (resolve)
+                    resolveClass(clazz);
+                return (clazz);
+            }
+
+            //              (2)
+            //  Check our previously loaded class cache
+            clazz = findLoadedClass(name);
+            if (clazz != null) {
+                if (log.isDebugEnabled())
+                    log.debug("  Returning class from cache");
+                if (resolve)
+                    resolveClass(clazz);
+                return (clazz);
+            }
+
+            //                (3)
+            //  Try loading the class with the system class loader, to prevent
+            //       the webapp from overriding J2SE classes
+            try {
+                clazz = j2seClassLoader.loadClass(name);
+                if (clazz != null) {
+                    if (resolve)
+                        resolveClass(clazz);
+                    return (clazz);
+                }
+            } catch (ClassNotFoundException e) {
+                // Ignore
+            }
+
+            //  Permission to access this class when using a SecurityManager
+            if (securityManager != null) {
+                int i = name.lastIndexOf('.');
+                if (i >= 0) {
+                    try {
+                        securityManager.checkPackageAccess(name.substring(0,i));
+                    } catch (SecurityException se) {
+                        String error = "Security Violation, attempt to use " +
+                            "Restricted Class: " + name;
+                        if (name.endsWith("BeanInfo")) {
+                            // BZ 57906: suppress logging for calls from
+                            // java.beans.Introspector.findExplicitBeanInfo()
+                            log.debug(error, se);
+                        } else {
+                            log.info(error, se);
+                        }
+                        throw new ClassNotFoundException(error, se);
+                    }
+                }
+            }
+
+            //              (4)
+            boolean delegateLoad = delegate || filter(name);
+
+            //              (5)
+            //  Delegate to our parent if requested
+            if (delegateLoad) {
+                if (log.isDebugEnabled())
+                    log.debug("  Delegating to parent classloader1 " + parent);
+                try {
+                    clazz = Class.forName(name, false, parent);
+                    if (clazz != null) {
+                        if (log.isDebugEnabled())
+                            log.debug("  Loading class from parent");
+                        if (resolve)
+                            resolveClass(clazz);
+                        return (clazz);
+                    }
+                } catch (ClassNotFoundException e) {
+                    // Ignore
+                }
+            }
+
+            //            (6)
+            //  Search local repositories
+            if (log.isDebugEnabled())
+                log.debug("  Searching local repositories");
+            try {
+                clazz = findClass(name);
+                if (clazz != null) {
+                    if (log.isDebugEnabled())
+                        log.debug("  Loading class from local repository");
+                    if (resolve)
+                        resolveClass(clazz);
+                    return (clazz);
+                }
+            } catch (ClassNotFoundException e) {
+                // Ignore
+            }
+
+            // Delegate to parent unconditionally
+            if (!delegateLoad) {
+                if (log.isDebugEnabled())
+                    log.debug("  Delegating to parent classloader at end: " + parent);
+                try {
+                    clazz = Class.forName(name, false, parent);
+                    if (clazz != null) {
+                        if (log.isDebugEnabled())
+                            log.debug("  Loading class from parent");
+                        if (resolve)
+                            resolveClass(clazz);
+                        return (clazz);
+                    }
+                } catch (ClassNotFoundException e) {
+                    // Ignore
+                }
+            }
+        }
+
+        throw new ClassNotFoundException(name);
+    }
+```
+我们首先定位到WebappClassLoaderBase的loadClass方法，(1)处首先看name对应的类是否存在缓存中，缓存是一个ConcurrentHashMap<String, ResourceEntry>的集合，如果没有缓存执行(2)处逻辑，从JVM中查找是否曾今加载过该类，(3)中的代码保证自定义类不会覆盖java基础类库中的类，(4)的逻辑就是是否进行双亲委派的分叉口，其中delegate默认为false，那么就要看filter(String)方法，该方法的内部实际上将待加载类的全路径名称和一个成员变量protected static final String[] packageTriggers中的类名进行比较，如果待加载的类名和packageTriggers数组中的内容前缀匹配，则需要委派父类加载，即执行(5)处代码，否则执行(6)，调用重写的findClass(String)方法加载该类。
+
+```java
+public Class<?> findClass(String name) throws ClassNotFoundException {
+        // 其他代码略去.....
+       
+        // Ask our superclass to locate this class, if possible
+        // (throws ClassNotFoundException if it is not found)
+        Class<?> clazz = null;
+        try {
+            if (log.isTraceEnabled())
+                log.trace("      findClassInternal(" + name + ")");
+            //        (1)
+            if (hasExternalRepositories && searchExternalFirst) {
+                try {
+                    clazz = super.findClass(name);
+                } catch(ClassNotFoundException cnfe) {
+                    // Ignore - will search internal repositories next
+                } catch(AccessControlException ace) {
+                    log.warn("WebappClassLoaderBase.findClassInternal(" + name
+                            + ") security exception: " + ace.getMessage(), ace);
+                    throw new ClassNotFoundException(name, ace);
+                } catch (RuntimeException e) {
+                    if (log.isTraceEnabled())
+                        log.trace("      -->RuntimeException Rethrown", e);
+                    throw e;
+                }
+            }
+            //            (2)
+            if ((clazz == null)) {
+                try {
+                    clazz = findClassInternal(name);
+                } catch(ClassNotFoundException cnfe) {
+                    if (!hasExternalRepositories || searchExternalFirst) {
+                        throw cnfe;
+                    }
+                } catch(AccessControlException ace) {
+                    log.warn("WebappClassLoaderBase.findClassInternal(" + name
+                            + ") security exception: " + ace.getMessage(), ace);
+                    throw new ClassNotFoundException(name, ace);
+                } catch (RuntimeException e) {
+                    if (log.isTraceEnabled())
+                        log.trace("      -->RuntimeException Rethrown", e);
+                    throw e;
+                }
+            }
+            
+      //其他代码略去........
+        return (clazz);
+
+    }
+
+```
+(1)处由于hasExternalRepositories和searchExternalFirst默认为false，因此执行(2)处逻辑，调用findClassInternal(String)方法,其主要的思想是根据待加载类的全路径读取该类的二进制数据，进而进行类的预定义、class source的解析等，将该类加载到JVM中。
+
+WebappClassLoader内部重写了loadClass和findClass方法，实现了绕过“双亲委派”直接加载web应用内部的资源，当然可以通过在Context.xml文件中加上<Loader delegate = "true">开启正统的“双亲委派”加载机制。
+
+**文章参考**：
+
+[违反ClassLoader双亲委派机制三部曲第二部——Tomcat类加载机制](https://www.jianshu.com/p/a18aecaecc89)
+
+[深入理解 Tomcat（四）Tomcat 类加载器之为何违背双亲委派模型](https://www.jianshu.com/p/abf6fd4531e7)
+
+[ClassLoader双亲委派机制源码分析](https://www.jianshu.com/p/6c2bc351b75f)
+
+## 3. Tomcat源码分析
+
+[Tomcat系统架构](https://www.cnblogs.com/kaleidoscope/p/9525467.html)
+
+
+
+
