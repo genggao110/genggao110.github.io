@@ -456,3 +456,103 @@ else {
        }
 }
 ```
+
+## Spring MVC详解
+
+### 1. 什么是SpringMVC
+
+springMVC是一个MVC的开源框架，springMVC=struts2+spring，springMVC就相当于是Struts2加上spring的整合，但是这里有一个疑惑就是，springMVC和spring是什么样的关系呢？这个在百度百科上有一个很好的解释：意思是说，springMVC是spring的一个后续产品，其实就是spring在原有基础上，又提供了web应用的MVC模块，可以简单的把springMVC理解为是spring的一个模块（类似AOP，IOC这样的模块），网络上经常会说springMVC和spring无缝集成，其实springMVC就是spring的一个子模块，所以根本不需要同spring进行整合。
+
+### 2. 什么是MVC模式
+
+MVC的原理图如下：
+
+![MVC原理图](https://ws1.sinaimg.cn/large/005CDUpdgy1g8g0lhaccgj30mc0a90t8.jpg)
+
+- M-Model(模型)：完成业务逻辑，由javaBean构成，service + dao + entity
+- V-View(视图)： 界面展示jsp,html，...
+- C-Controller(控制器)： 接收请求-调用模型-根据结果派发页面。
+
+### 3. SpringMVC 工作原理
+
+给出网上比较清晰明了的几个工作流程图：
+
+![SpringMVC](https://ws1.sinaimg.cn/large/005CDUpdgy1g8g0tfsz5hj30rf0s6tf6.jpg)
+
+![SpringMVC](https://ws1.sinaimg.cn/large/005CDUpdgy1g8g0u30y47j30ue0lptam.jpg)
+
+#### 3.1 SpringMvc工作流程
+
+根据上图给出一个简易的请求流程如下所示：
+
+1. 用户发起请求到前端控制器(DispatcherServlet)
+2. 前端控制器请求处理映射器(HandlerMapping)去查找处理器(handler)，通过xml配置或者注解进行查找
+3. 找到以后处理映射器(HandlerMapping)向前端控制器返回执行链(HandlerExecutionChain)
+4. 前端控制器(DispatcherServlet)调用处理器适配器(HandlerAdapter)去执行处理器(Handler)
+5. 处理器适配器执行Handler
+6. Handler执行完之后给处理器适配器返回ModelAndView
+7. 处理器适配器向前端控制器返回ModelAndView
+8. 前端控制器请求视图解析器(ViewResolver)去进行视图解析
+9. 视图解析器向前端控制器返回View
+10. 前端控制器对视图进行渲染
+11. 前端控制器向用户响应结果。
+
+下面来分析一下各个组件的作用：
+
+**1. DispatcherServlet**
+
+作为前端控制器，整个流程控制的中心，控制其他组件的执行，统一调度，降低了组件之间的耦合性，提高每个组件的扩展性。用户请求到达前端控制器，它就相当于mvc模式中的c，dispatcherServlet是整个流程控制的中心，由它调用其它组件处理用户的请求，dispatcherServlet的存在降低了组件之间的耦合性。
+
+**2. HandlerMapping**
+
+处理器映射器，其作用是根据url查找Handler。HandlerMapping负责据用户请求找到Handler即处理器，springmvc提供了不同的映射器实现不同的映射方式，例如：配置文件方式，实现接口方式，注解方式等。
+
+**3. HandlerAdapter**
+
+处理器适配器，其作用是按照特定规则(HandlerAdater要求的规则)去执行Handler。通过HandlerAdapter对处理器进行执行，这是适配器模式的应用，通过扩展适配器可以对更多类型的处理器进行执行。
+
+**4. Handler**
+
+编写Handler时按照HandlerAdapter的要求去做，这样适配器才可以去正确执行Handler。Handler 是继DispatcherServlet前端控制器的后端控制器，在DispatcherServlet的控制下Handler对具体的用户请求进行处理。由于Handler涉及到具体的用户业务请求，所以一般情况需要程序员根据业务需求开发Handler。
+
+**5. ViewResolver**
+
+视图解析器，进行视图解析，根据逻辑视图名解析成真正的视图(view)。View Resolver负责将处理结果生成View视图，View Resolver首先根据逻辑视图名解析成物理视图名即具体的页面地址，再生成View视图对象，最后对View进行渲染将处理结果通过页面展示给用户。 springmvc框架提供了很多的View视图类型，包括：jstlView、freemarkerView、pdfView等。
+
+一般情况下需要通过页面标签或页面模版技术将模型数据通过页面展示给用户，需要由工程师根据业务需求开发具体的页面。
+
+**6. View**
+
+视图是一个接口，实现类支持不同的View类型（jsp、freemarker、pdf...）。
+
+#### 3.1 SpringMvc具体流程
+
+1. 首先用户发送请求——>DispatcherServlet，前端控制器收到请求后自己不进行处理，而是委托给其他的解析器进行处理，作为统一访问点，进行全局的流程控制；
+2. DispatcherServlet——>HandlerMapping， HandlerMapping 将会把请求映射为HandlerExecutionChain 对象（包含一个Handler 处理器（页面控制器）对象、多个HandlerInterceptor 拦截器）对象，通过这种策略模式，很容易添加新的映射策略；
+3. DispatcherServlet——>HandlerAdapter，HandlerAdapter 将会把处理器包装为适配器，从而支持多种类型的处理器，即适配器设计模式的应用，从而很容易支持很多类型的处理器；
+4. HandlerAdapter——>处理器功能处理方法的调用，HandlerAdapter 将会根据适配的结果调用真正的处理器的功能处理方法，完成功能处理；并返回一个ModelAndView 对象（包含模型数据、逻辑视图名）
+5. ModelAndView的逻辑视图名——> ViewResolver， ViewResolver 将把逻辑视图名解析为具体的View，通过这种策略模式，很容易更换其他视图技术；
+6. View——>渲染，View会根据传进来的Model模型数据进行渲染，此处的Model实际是一个Map数据结构，因此很容易支持其他视图技术；
+7. 返回控制权给DispatcherServlet，由DispatcherServlet返回响应给用户，到此一个流程结束。
+
+## Spring及SpringBoot模块架构
+
+![Spring模块架构](https://ws1.sinaimg.cn/large/005CDUpdgy1g8g1xanww2j30fp08fad0.jpg)
+
+1. Spring Core: 主要组件就是BeanFactory,创建JavaBean的工厂，使用控制反转(IOC)模式。将应用程序的配置和依赖性规范与实际的应用程序代码分开。
+2. Spring Aop: 集成了面向切面的编程功能。（AOP把一个业务流程分成几个部分，例如权限检查、业务处理、日志记录，每个部分单独处理，然后把它们组装成完整的业务流程，每个部分被称为切面）可以将声明型事务管理集成到应用程序。
+3. Spring Context: 一个核心配置文件，为Spring框架提供上下文信息。
+4. Spring Dao: Spring操作数据库的模块。
+5. Spring ORM：Spring集成了各种orm（object relationship mapping 对象关系映射）框架的模块，集成mybatis
+6. Spring web：集成各种优秀的web层框架的模块（Struts、Springmvc）
+7. Spring web mvc：Spring web层框架
+
+SpringBoot中主要的各个模块及功能：
+1. spring-boot-starter: 核心SpringBoot starter,包括自动配置支持，日志和YAML
+2. spring-boot-starter-actuator: 生产准备的特性，用于帮你监控和管理应用
+3. spring-boot-starter-web: 对全栈web开发的支持，包括Tomact和spring-webmvc
+4. spring-boot-starter-aop: 对面向切面编程的支持，包括spring-aop和AspectJ
+5. spring-boot-starter-data-jpa: 对JAVA持久化API的支持，包括spring-data-jpa,spring-orm和Hibernate
+6. spring-boot-starter-jdbc: 对JDBC数据库的支持
+7. spring-boot-starter-security: 对spring-security的支持。
+
