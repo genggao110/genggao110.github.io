@@ -1,0 +1,131 @@
+---
+layout:     post
+title:      "Nodejs总结"
+subtitle:   " \"Nodejs演化\""
+date:       2019-11-25 15:07:20
+author:     "ming"
+catalog: true
+header-img: "img/home-bg-nebula.jpg"
+tags:
+    - Nodejs
+    - JavaScript
+---
+
+> "Confidence is contagious. So is a lack of confidence."
+
+### 1. Nodejs异步处理的演进
+
+使用Nodejs作为后台服务器语言时候，常常需要处理大量I/O操作。例如当我们想要向mongodb更改一条数据的时候，我们在最开始使用chunk函数来实现异步I/O操作。
+
+#### 1.1 Chunk函数实现异步操作
+
+```js
+//存储一条留言信息
+Comment.prototype.save = function(callback) {
+  var name = this.name,
+      comment = this.comment;
+  //打开数据库
+  mongodb.open(function (err, db) {
+    if (err) {
+      return callback(err);
+    }
+    //读取 posts 集合
+    db.collection('posts', function (err, collection) {
+      if (err) {
+        mongodb.close();
+        return callback(err);
+      }
+      //通过用户名、时间及标题查找文档，并把一条留言对象添加到该文档的 comments 数组里
+      collection.update({
+        "name": name,
+      }, {
+        $push: {"comments": comment}
+      } , function (err) {
+          mongodb.close();
+          if (err) {
+            return callback(err);
+          }
+          callback(null);
+      });   
+    });
+  });
+};
+```
+这就是我们所说的回调地狱(callback hell)，不易阅读和维护。
+
+#### 1.2 Promise函数实现异步操作
+
+Promise函数依靠链式操作的特性和catch exception的函数，可以很好地避免Chunk函数的callback hell。但是我们还是需要把各个逻辑分别封装在不同的then()函数中，每一个函数都有自己独特的作用域。如果我们要共用某个常量或是变量还要把他定义在函数外，Generator函数最早实现了一步函数同步化的功能。
+
+```js
+var name = this.name,
+    comment = this.comment;
+mongoDb
+    .open()
+    .then(function(db){
+      return db.collection("posts");
+    })
+    .then(function(collection){
+      return collection.update({
+            "name": name,
+        }, {
+            $push: {"comments": comment}
+        });
+    })
+    .then(){
+      mongodb.close();
+    })
+    .catch(function(e){
+      throw new Error(e);
+    })
+```
+
+#### 1.3 Generator函数实现异步操作
+
+借用ES6的Generator迭代器，TJ大神写出了co库最早实现异步编程同步化的功能。我们通过`co(function *(){})`可以使函数内部通过迭代器来控制。而co在这里则是充当了启动器的角色。
+
+```js
+var co = require("co");
+var name = this.name,
+    comment = this.comment;
+
+co(function *(){
+    var db, collection; 
+    try{
+        db = yield mongodb.open();
+        collection = yield db.collection("posts");
+        yield collection.update({
+            "name": name,
+        }, {
+            $push: {"comments": comment}
+        });
+    }catch(e){
+        console.log(e);
+    }
+     mongodb.close();
+});
+```
+
+#### 1.4 async/await函数实现异步操作
+
+ES7的`async/await`的出现为实现异步函数操作提供了另一种方式，await关键字的作用于generator函数的yield作用相类似。
+
+```js
+var db, collection, result; 
+async function UpateDB () {
+    var name = this.name,
+    comment = this.comment;
+    try{
+        db = await mongodb.open();
+        collection = await db.collection("users");
+        await collection.update({
+                "name": name,
+            }, {
+                $push: {"comments": comment}
+        });
+    }catch(e){
+        console.log(e);
+    }
+    mongodb.close();
+}
+```

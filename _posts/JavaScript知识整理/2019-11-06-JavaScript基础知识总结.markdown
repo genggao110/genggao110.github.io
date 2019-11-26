@@ -143,6 +143,7 @@ inc() // 7
 
 `闭包的另一个用处，是封装对象的私有属性和私有方法。`
 
+
 ```java
 function Person(name) {
   var _age;
@@ -410,7 +411,7 @@ o.f1()
 // Object
 // Window
 ```
-上面代码包含两层`this`，结果运行后，第一层指向对象`o`，第二层指向全局对象，因为实际执行的是下面的代码。
+上面代码包含两层`this`，结果运行后，第一层指向对象`o`，第二层指向全局对象，因为实际执行的是下面的代码。(**因为对象字面量形式来创建函数是在全局代码中定义的。**)
 
 ```js
 var temp = function(){
@@ -893,7 +894,7 @@ timer = setTimeout(func, 0);
 
 此外，另一个使用这种技巧的例子是代码高亮的处理。如果代码块很大，一次性处理，可能会对性能造成很大的压力，那么将其分成一个个小块，一次处理一块，比如写成`setTimeout(highlightNext, 50)`的样子，性能压力就会减轻。
 
-#### 8. 寄生组合式继承
+#### 10. 寄生组合式继承
 
 所谓寄生组合式继承，即通过借用构造函数来继承属性，通过原型链的混成形式来继承方法。其背后的基本思路是：**不必为了指定子类型的原型而调用超类型的构造函数，我们所需要的无非就是超类型原型的一个副本而已。本质上，就是使用寄生式继承来继承超类型的原型，然后再将结果指定给子类型的原型。**基本模式如下所示：
 
@@ -935,3 +936,247 @@ SubType.prototype.sayName = function(){
 }
 ```
 这种方式的高效性体现在它只是调用了一次`SuperType`的构造函数，并且因此避免了在`SubType.prototype`上面创建不必要、多余的属性。与此同时，原型链还能保持不变，因此能够正常地使用`instanceof()`和`isPrototypeof()`。
+
+### 1.7 JavaScript的变量类型
+
+在JavaScript中，我们可以通过3个关键字来定义变量：var、let和const。这3个关键字有两点不同：可变性，与词法环境的关系。
+
+#### 1.7.1 变量可变性
+
+如果通过变量的可变性来进行分类，那么可以将const放在一组，var和let放在一组。通过const定义的变量都不可变，也就是说通过const声明的变量的值只能够设置一次。通过var和let声明的变量的值可以变更任意次数。
+
+`const`变量只能在声明的时候被初始化一次，之后再也不允许将全新的值赋值给const变量即可。但是，我们仍然可以修改const变量已经存在的值，只是不能够重新const变量而已。
+
+#### 1.7.2 定义变量的关键字与词法环境
+
+定义变量的3个关键字，还可以通过与词法环境的关系将其进行分类(换句话说，按照作用域分类)：可以将var分为一组，let和const分为一组。
+
+**使用关键字var**
+
+当使用关键字var时，该变量是在距离最近的函数内部或是在全局词法环境中定义的。(`注意：忽略块级作用域`)一个很形象的例子就是：即在for循环内部定义的变量，之后在for循环外部仍然能够访问for循环中定义的变量。
+
+
+**使用let和const定义具有块级作用域的变量**
+
+var是在距离最近的函数或者全局词法环境中定义变量，与var不同的是，let和const更加直接。let和const直接在最近的词法环境中定义变量(可以是在块级作用域、循环内、函数内或者全局环境内)。我们可以使用let和const定义块级别、函数级别、全局级别的变量。
+
+#### 1.7.3 TODO
+
+### 1.8 SetTimeout与setInterval
+
+#### 1. 初识
+
+- setTimeout延迟一段时间执行一次(Only one)
+
+```js
+setTimeout(function, milliseconds, param1, param2, ...)
+clearTimeout() // 阻止定时器运行
+
+setTimeout(function(){ alert("Hello"); }, 3000); // 3s后弹出
+```
+
+- setInterval每隔一段时间执行一次(Many times)
+
+```js
+setInterval(function, milliseconds, param1, param2, ...)
+
+e.g.
+setInterval(function(){ alert("Hello"); }, 3000); // 每隔3s弹出
+```
+
+setTimeout和setInterval的延时最小间隔是4ms（W3C在HTML标准中规定）；在JavaScript中没有任何代码是立刻执行的，但一旦进程空闲就尽快执行。这意味着无论是setTimeout还是setInterval，所设置的时间都只是n毫秒被添加到队列中，而不是过n毫秒后立即执行。
+
+#### 2. setTimeout(function, 0) 
+
+`setTimeout`的作用是将代码推迟到指定时间执行，如果执行时间为0，即`setTimeout(f,0)`，就是为了将function里的任务异步执行，0不代表立即执行，而是将任务推到消息队列的最后，再由主线程的事件循环去调用执行。
+
+`setTimeout(f, 0)`有几个非常重要的用途。它的一大应用是，可以调整事件的发生顺序。比如，网页开发中，某个事件先发生在子元素，然后冒泡到父元素，即子元素的事件回调函数，会早于父元素的事件回调函数。如果，想让父元素的事件回调函数先发生，就要用到`setTimeout(f,0)`。
+
+```js
+// HTML 代码如下
+// <input type="button" id="myButton" value="click">
+
+var input = document.getElementById('myButton');
+
+input.onclick = function A() {
+  setTimeout(function B() {
+    input.value +=' input';
+  }, 0)
+};
+
+document.body.onclick = function C() {
+  input.value += ' body'
+};
+```
+上面代码在点击按钮后，先触发回调函数A，然后触发函数C。函数A中，setTimeout将函数B推迟到下一轮事件循环执行，这样就起到了，先触发父元素的回调函数C的目的了。
+
+另一个应用是，用户自定义的回调函数，通常在浏览器的默认动作之前触发。比如，用户在输入框输入文本，keypress事件会在浏览器接收文本之前触发。因此，下面的回调函数是达不到目的的。
+
+```js
+// HTML 代码如下
+// <input type="text" id="input-box">
+
+document.getElementById('input-box').onkeypress = function (event) {
+  this.value = this.value.toUpperCase();
+}
+```
+上面代码想在用户每次输入文本后，立即将字符转为大写。但是实际上，它只能将本次输入前的字符转为大写，因为浏览器此时还没接收到新的文本，所以this.value取不到最新输入的那个字符。只有用setTimeout改写，上面的代码才能发挥作用。
+
+```js
+document.getElementById('input-box').onkeypress = function() {
+  var self = this;
+  setTimeout(function() {
+    self.value = self.value.toUpperCase();
+  }, 0);
+}
+```
+
+#### 3. setInterval()
+
+`setInterval()`函数的用法与`setTimeout()`完全一致，区别仅仅在于`setInterval`指定某个任务每隔一段时间就会执行一次，也就是无限次的定时执行。
+
+```js
+var i = 1
+var timer = setInterval(function() {
+  console.log(2);
+}, 1000)
+```
+
+上面代码中，每隔1000毫秒就输出一个2，会无限运行下去，直到关闭当前窗口。setInterval的一个常见用途是实现轮询。下面是一个轮询 URL 的 Hash 值是否发生变化的例子。
+
+```js
+var hash = window.location.hash;
+var hashWatcher = setInterval(function() {
+  if (window.location.hash != hash) {
+    updatePage();
+  }
+}, 1000);
+```
+
+`setInterval`指定的是“开始执行”之间的间隔，并不考虑每次任务执行本身所消耗的时间。因此实际上，两次执行之间的间隔会小于指定的时间。比如，`setInterval`指定每 100ms 执行一次，每次执行需要 5ms，那么第一次执行结束后95毫秒，第二次执行就会开始。如果某次执行耗时特别长，比如需要105毫秒，那么它结束后，下一次执行就会立即开始。
+
+为了确保两次执行之间有固定的间隔，可以不用setInterval，而是每次执行结束后，使用setTimeout指定下一次执行的具体时间。
+
+```js
+var i = 1;
+var timer = setTimeout(function f() {
+  // ...
+  timer = setTimeout(f, 2000);
+}, 2000);
+```
+上面代码可以确保，下一次执行总是在本次执行结束之后的2000毫秒开始。
+
+**参考文章**
+
+[从setTimeout-setInterval看JS线程](https://segmentfault.com/a/1190000013702430#item-1)
+
+## 2. JS引擎运行机制
+
+首先，在介绍JS引擎执行机制之前，我们都知道JavaScript这门语言的核心特征就是单线程(是指在JS引擎中负责解释和执行JavaScript代码的线程只有一个)。这和JavaScript最初设计是作为一门GUI编程语言相关，最初用于浏览器端，单一线程控制GUI是很普遍的做法。但是这里特别要画个重点，虽然JavaScript是单线程，但是`浏览器是多线程的！！`例如Webkit或是Gecko引擎，可能有javaScript引擎线程、界面渲染线程、浏览器事件触发线程、Http请求线程，读写文件的线程(例如在NodeJs中)。(**HTML5提出Web Worker标准，允许JavaScript脚本创建多个线程，但是子线程完全受主线程控制，且不得操作DOM。所以，这个新标准并没有改变JavaScript单线程的本质。**)
+
+### 2.1 异步构成要素与通信机制
+
+> 一个异步过程通常是这样的：主线程发起一个异步请求，相应的工作线程(比如浏览器的其他线程)接收请求并告知主线程已经收到(异步函数返回)；主线程可以继续执行后面的代码，同时工作线程执行异步任务；工作线程完成工作后，通知主线程；主线程收到通知后，执行一定的动作(调用回调函数)。
+
+- 发起(注册)函数--发起异步过程
+- 回调函数--处理结果
+
+```js
+e.g.
+setTimeout(fn, 1000);
+// setTimeout就是异步过程的发起函数，fn是回调函数
+```
+
+异步过程的通信机制：工作线程将消息放到消息队列，主线程通过事件循环过程去取消息。
+
+事件循环(Event Loop): 主线程只会做一件事，就是从消息队列里面取消息、执行消息，再取消息，再执行。消息队列为空时，就会等待直到消息队列变成非空。只有当前的消息执行结束，才会去取下一个消息。这种机制就叫做事件循环机制`Event Loop`，取一个消息并执行的过程叫做一次循环。
+
+![JS事件循环原理](https://ws1.sinaimg.cn/large/005CDUpdgy1g9beh50gg4j30m80goabe.jpg)
+
+> 工作线程是生产者，主线程是消费者。工作线程执行异步任务，执行完之后把对应的回调函数封装成一条消息放到消息队列中；主线程不断地从消息队列中取消息并执行，当消息队列空时主线程阻塞，直到消息队列再次非空。
+
+### 2.2 浏览器进程介绍
+
+浏览器是多进程的，主要包含以下进程：
+1. Browser进程：浏览器的主进程(负责协调、主控),只有一个。
+   - 负责浏览器界面显示，与用户交互。比如，前进，后退等
+   - 负责各个页面的管理，创建和销毁其他进程。
+   - 将Renderer进程得到的内存中的Bitmap，绘制到用户界面上。
+   - 网络资源的管理、下载等。
+2. NPAPI插件进程和Pepper插件进程：每种类型的插件对应一个进程，仅当使用该插件时才创建，只会被创建一次，可被共享。
+3. GPU进程：最多只有一个，并且仅当GPU硬件加速打开的视乎才会被创建，主要用于对3D图形加速调用的实现。
+4. 浏览器渲染进程(浏览器内核)(`Renderer进程是多线程的`)：默认每个Tab页面一个进程，互不影响。主要作用是为页面渲染，脚本执行，事件处理等。blink/webkit的渲染工作主要是在这个进程完成，可能有多个，具体个数允许用户配置。
+5. 其他类型的进程：包括Linux下的Zygote进程，render进程就是由它创建；Sandbox进程，用于安全进制中。
+
+其主要有以下特征：
+- Browser进程和页面的渲染是分开的，保证了页面的渲染导致的崩溃不会导致浏览器主界面的崩溃；
+- 每个网页是独立的进程，保证了页面之间相互不影响；
+- 插件进程也是独立的，插件本身的问题不会影响浏览器主界面和网页；
+- GPU硬件加速进程也是独立的。
+
+### 2.3 Browser进程和浏览器内核（Renderer进程）的通信过程
+
+- Browser进程收到用户请求，首先需要获取页面内容（譬如通过网络下载资源），随后将该任务通过RendererHost接口传递给Render进程
+- Renderer进程的Renderer接口收到消息，简单解释后，交给渲染线程，然后开始渲染
+- 渲染线程接收请求，加载网页并渲染网页，这其中可能需要Browser进程获取资源和需要GPU进程来帮助渲染
+- 当然可能会有JS线程操作DOM（这样可能会造成回流并重绘）
+- 最后Render进程将结果传递给Browser进程
+- Browser进程接收到结果并将结果绘制出来
+
+### 2.4 浏览器内核
+
+浏览器内核是多线程，在内核控制下各线程相互配合以保持同步，一个浏览器通常由以下常驻线程组成：GUI渲染线程、JavaScript引擎线程、定时触发器线程、事件触发线程、异步http请求线程。
+
+1. GUI渲染线程
+
+负责渲染浏览器界面，解析HTML,CSS,构建DOM树和RenderObject树，布局和绘制等；当界面需要重绘(Repaint)或由于某种操作引发回流(reflow)时，该线程执行。Chrome／Safari／Opera用的是Webkit引擎，IE用的是Trident引擎，FireFox用的是Gecko引擎。
+
+2. JavaScript引擎线程(单线程)
+
+也称为JS内核，负责处理JavaScript脚本程序(例如V8引擎)；负责解析JavaScript脚本，运行代码；如果JS执行的时间过长，这样就会造成页面渲染不连贯，导致页面渲染加载阻塞。(当浏览器在执行JavaScript程序的时候，GUI渲染线程会被保存在一个队列中，直到JS程序执行完成，才会接着执行。也就是GUI线程与 JavaScript引擎线程是交替运行的)。
+
+3. 事件触发线程
+
+当事件被触发时，该线程会把事件添加到待处理队列的队尾，等待JS引擎的处理；这些事件可以是当前执行的代码块如定时任务、也可以来自浏览器内核的其他线程如鼠标点击、AJAX异步请求等(JS是单线程，这些事件得等待JS引擎处理)。
+
+4. 定时触发器线程
+
+W3C在HTML标准中规定，规定要求setTimeout中低于4ms的时间间隔算为4ms；浏览器定时计数器并不是由JavaScript引擎计数的,（JavaScript引擎是单线程, 如果处于阻塞线程状态就会影响记计时的准确）
+
+5. 异步http请求线程
+
+在XMLHttpRequest连接后通过浏览器新开的一个线程请求。
+
+![浏览器内核](https://ws1.sinaimg.cn/large/005CDUpdgy1g9biyveox2j30830hl763.jpg)
+
+### 2.5 任务划分
+
+把任务可以分为两种，一种是同步任务，另外一种是异步任务。同步任务指的是，在主线程上排队执行的任务，只有前一个任务执行完毕，才能执行后一个任务；异步任务指的是，不进入主线程、而进入"任务队列"（task queue）的任务，只有"任务队列"通知主线程，某个异步任务可以执行了，该任务才会进入主线程执行。
+
+而任务队列类型具体又可以分为两种：microtask queue(微任务队列)， macrotask queue(宏任务队列)。
+
+**microtask queue:**唯一，整个事件循环中，仅存在一个；执行为同步，同一个事件循环中的microtask会按队列顺序，串行执行完毕。Promise，process.nextTick（在node环境下，process.nextTick的优先级高于Promise）
+
+**macrotask queue:** 不唯一，存在着一定的优先级(用户I/O部分优先级更高);异步执行，同一个事件循环中，只执行一个。包括整体代码script，setTimeout，setInterval ，setImmediate,I/O,各种事件的回调函数（UI rendering）
+
+![任务执行](https://ws1.sinaimg.cn/large/005CDUpdgy1g9bjhjpfk4j31f40rw7cz.jpg)
+
+### 2.6 JS执行机制
+
+执行整体代码这个宏任务，执行的过程发现宏任务或微任务，将其放入对应的任务队列。当整体代码这个宏任务执行完之后，查看是否有可执行的微任务，有则执行，没有则执行下一个宏任务。(`微任务的特殊性，例如Promise的回调函数就是微任务。它与正常的异步任务区别在于正常的任务是追加到下一轮事件循环，而微任务是追加到本轮事件循环。这意味着，微任务的执行时间一定早于正常任务。`)
+
+![JS执行机制](https://ws1.sinaimg.cn/large/005CDUpdgy1g9bjrhwxrkj30ip0hrn1d.jpg)
+
+不妨给出下面一个例子：
+
+![案例代码](https://ws1.sinaimg.cn/large/005CDUpdgy1g9bjsl6ad7j30ha0ktdik.jpg)
+
+执行结果：
+
+![执行结果](https://ws1.sinaimg.cn/large/005CDUpdgy1g9bjt4glv2j308s07i755.jpg)
+
+**参考文章**
+
+[JS引擎运行机制(事件循环)](https://blog.csdn.net/PUIWAH/article/details/88584007)
+
+## 3. 
