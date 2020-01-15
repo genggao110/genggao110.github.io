@@ -902,7 +902,7 @@ timer = setTimeout(func, 0);
 //或者不用Object.create()方法，采用这种
 
 function object(o){
-  function F(){}'
+  function F(){}
   F.prototype = o;
   return new F();
 }
@@ -936,6 +936,32 @@ SubType.prototype.sayName = function(){
 }
 ```
 这种方式的高效性体现在它只是调用了一次`SuperType`的构造函数，并且因此避免了在`SubType.prototype`上面创建不必要、多余的属性。与此同时，原型链还能保持不变，因此能够正常地使用`instanceof()`和`isPrototypeof()`。
+
+对比一下另外一种继承方式：
+
+```js
+function SuperType(name){
+  this.name = name;
+  this.colors = ['red', 'blue', 'green'];
+}
+
+SuperType.prototype.sayName = function(){
+  alert(this.name);
+};
+
+function SubType(name, age){
+  SuperType.call(this, name);
+  this.age = age;
+}
+
+SubType.prototype = new SuperType();
+
+Object.defineProperty(SubType.prototype, "constructor",{
+  enumerable: false,
+  value: SubType,
+  writable: true
+});
+```
 
 ### 1.7 JavaScript的变量类型
 
