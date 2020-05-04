@@ -70,7 +70,7 @@ SSL/TLS协议的基本思路是采用公钥加密法，也就是说，客户端�
 
 ### 3.握手阶段的详细流程
 
-![handshake阶段](https://ws1.sinaimg.cn/large/005CDUpdgy1g7e54944rfj30g40erwem.jpg)
+![handshake阶段](https://tva2.sinaimg.com/large/005CDUpdgy1g7e54944rfj30g40erwem.jpg)
 
 "握手阶段"涉及四次通信，我们一个个来看。需要注意的是，"握手阶段"的所有通信都是明文的。
 
@@ -125,7 +125,7 @@ SSL/TLS协议的基本思路是采用公钥加密法，也就是说，客户端�
 
 至此，整个握手阶段全部结束。接下来，客户端与服务器进入加密通信，就完全是使用普通的HTTP协议，只不过用"会话密钥"加密内容。
 
-![整个流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7e5bngrovj30tv0m3tig.jpg)
+![整个流程](https://tva2.sinaimg.com/large/005CDUpdgy1g7e5bngrovj30tv0m3tig.jpg)
 
 **参考文章**
 

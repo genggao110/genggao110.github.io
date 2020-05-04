@@ -19,9 +19,9 @@ tags:
 
 OSI参考模型将实际的分组通信协议整理并分成了易于理解的7个分层。
 
-![OSI参考模型与TCP/IP模型](https://ws1.sinaimg.cn/large/005CDUpdgy1g7c3slvmdlj309707ugoc.jpg)
+![OSI参考模型与TCP/IP模型](https://tva2.sinaimg.com/large/005CDUpdgy1g7c3slvmdlj309707ugoc.jpg)
 
-![各层数据传输单元](https://ws1.sinaimg.cn/large/005CDUpdgy1g7c3t1h88jj30hz0b6wie.jpg)
+![各层数据传输单元](https://tva2.sinaimg.com/large/005CDUpdgy1g7c3t1h88jj30hz0b6wie.jpg)
 
 分层名称 | 功能 | 详细概述
 --- | --- | ---
@@ -44,7 +44,7 @@ OSI参考模型将实际的分组通信协议整理并分成了易于理解的7�
 
 物理层负责0、1比特流与物理设备电压高低、光的闪灭之间的互换。 数据链路层负责将0、1序列划分为数据帧从一个节点传输到临近的另一个节点,这些节点是通过MAC来唯一标识的(MAC,物理地址，一个主机会有一个MAC地址)。
 
-![数据链路层过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7c5tgzwp9j30jo03zwep.jpg)
+![数据链路层过程](https://tva2.sinaimg.com/large/005CDUpdgy1g7c5tgzwp9j30jo03zwep.jpg)
 
 - 封装成帧：把网络层数据报加头和尾，封装成帧,帧头中包括源MAC地址和目的MAC地址。
 - 透明传输：零比特填充、转义字符。
@@ -91,17 +91,17 @@ TCP/IP协议模型（Transmission Control Protocol/Internet Protocol），包含
 
 基于TCP/IP的参考模型将协议分成四个层次，它们分别是链路层、网络层、传输层和应用层。下图表示TCP/IP模型与OSI模型各层的对照关系。
 
-![TCP/IP与OSI的对应图](https://ws1.sinaimg.cn/large/005CDUpdgy1g7c5mq4azuj30c509fab1.jpg)
+![TCP/IP与OSI的对应图](https://tva2.sinaimg.com/large/005CDUpdgy1g7c5mq4azuj30c509fab1.jpg)
 
 TCP/IP协议族按照层次由上到下，层层包装。最上面的是应用层，这里面有http，ftp,等等我们熟悉的协议。而第二层则是传输层，著名的TCP和UDP协议就在这个层次。第三层是网络层，IP协议就在这里，它负责对数据加上IP地址和其他的数据以确定传输的目标。第四层是数据链路层，这个层次为待传送的数据加入一个以太网协议头，并进行CRC编码，为最后的数据传输做准备。
 
-![数据进入协议栈时的封装过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7c5ow17mkj30l10fbwer.jpg)
+![数据进入协议栈时的封装过程](https://tva2.sinaimg.com/large/005CDUpdgy1g7c5ow17mkj30l10fbwer.jpg)
 
 上图清楚地表示了TCP/IP协议中每个层的作用，而TCP/IP协议通信的过程其实就对应着数据入栈与出栈的过程。入栈的过程，数据发送方每层不断地封装首部与尾部，添加一些传输的信息，确保能传输到目的地。出栈的过程，数据接收方每层不断地拆除首部与尾部，得到最终传输的数据。
 
 给出一个Http协议的具体案例：
 
-![http协议案例](https://ws1.sinaimg.cn/large/005CDUpdgy1g7c5rk2ea1j30in0hw74q.jpg)
+![http协议案例](https://tva2.sinaimg.com/large/005CDUpdgy1g7c5rk2ea1j30in0hw74q.jpg)
 
 ## 2. 计算机网络基础
 
@@ -109,7 +109,7 @@ TCP/IP协议族按照层次由上到下，层层包装。最上面的是应用�
 
 学习计算机网络时我们一般采用折中的办法，也就是中和 OSI 和 TCP/IP 的优点，采用一种只有五层协议的体系结构，这样既简洁又能将概念阐述清楚。
 
-![网络体系结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g7c1cqkn2ej30hl09kq74.jpg)
+![网络体系结构](https://tva2.sinaimg.com/large/005CDUpdgy1g7c1cqkn2ej30hl09kq74.jpg)
 
 下面简要地阐述一下各层的作用：
 
@@ -147,11 +147,11 @@ TCP/IP协议族按照层次由上到下，层层包装。最上面的是应用�
 
 给出互联网上一张非常经典的计算机网络七层体系结构图：
 
-![计算机网络七层体系结构图](https://ws1.sinaimg.cn/large/005CDUpdgy1g7c3mxtwhbg30v41830yk.jpg)
+![计算机网络七层体系结构图](https://tva2.sinaimg.com/large/005CDUpdgy1g7c3mxtwhbg30v41830yk.jpg)
 
 每层的协议主要如下所示：
 
-![每层的协议](https://ws1.sinaimg.cn/large/005CDUpdgy1g7c5d999gnj30fw06gmxw.jpg)
+![每层的协议](https://tva2.sinaimg.com/large/005CDUpdgy1g7c5d999gnj30fw06gmxw.jpg)
 
 - 物理层:RJ45、CLOCK、IEEE802.3
 - 数据链路:PPP、FR、HDLC、VLAN、MAC
@@ -193,7 +193,7 @@ IP协议是TCP/IP协议的核心，所有的TCP.UDP,IMCP的数据都以IP数据�
 
 那么转化为十进制（四段）的话，我们就能以第一段中的十进制数来区分 IP 地址到底是哪类地址了。
 
-![IP地址分类规则](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cpfrcqoej30m009gwee.jpg)
+![IP地址分类规则](https://tva2.sinaimg.com/large/005CDUpdgy1g7cpfrcqoej30m009gwee.jpg)
 
 **Attention:**
 - 十进制第一段大于223的属于D类和E类地址，这两类比较特殊也不常见，不做介绍
@@ -208,7 +208,7 @@ IP协议是TCP/IP协议的核心，所有的TCP.UDP,IMCP的数据都以IP数据�
 
 **2. IP协议报文结构**
 
-![IP协议报文结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cptn72p5j30hs0bhglp.jpg)
+![IP协议报文结构](https://tva2.sinaimg.com/large/005CDUpdgy1g7cptn72p5j30hs0bhglp.jpg)
 
 主要介绍其中几个重要的字段如下：
 
@@ -226,11 +226,11 @@ IP协议是TCP/IP协议的核心，所有的TCP.UDP,IMCP的数据都以IP数据�
 
 我们先回顾一下之前如何区分主机IP和网络IP的。以A类地址 99.10.10.10 为例，前8位是网络IP ，后24位是主机IP 。（如下图）
 
-![主机IP](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cq2elyh9j30x90633yc.jpg)
+![主机IP](https://tva2.sinaimg.com/large/005CDUpdgy1g7cq2elyh9j30x90633yc.jpg)
 
 子网掩码也是一个32位的二进制数，也可以用4个十进制数来分段。他的每一位对应着IP地址的对应位置，数值为1时代表的是非主机位，数值为0时代表的是主机位。
 
-![子网掩码](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cq487z2pj315c08q74f.jpg)
+![子网掩码](https://tva2.sinaimg.com/large/005CDUpdgy1g7cq487z2pj315c08q74f.jpg)
 
 由表格可以很清晰的看出，网络IP仍是由之前的分类来决定到底是多少位，主机IP则是由子网掩码值为 0 的位数来决定，剩下的则是子网IP。
 
@@ -256,7 +256,7 @@ ping可以说是ICMP的最著名的应用，是TCP/IP协议的一部分。利用
 
 例如，当我们某一个网站上不去的时候。通常会ping一下这个网站。ping会回显出一些有用的信息。一般的信息如下:
 
-![ping信息](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cqpbb23lj30yg0egt9b.jpg)
+![ping信息](https://tva2.sinaimg.com/large/005CDUpdgy1g7cqpbb23lj30yg0egt9b.jpg)
 
 ping这个单词源自声纳定位，而这个程序的作用也确实如此，它利用ICMP协议包来侦测另一个主机是否可达。原理是利用类型码为0的ICMP发请求，收到请求的主机则用类型码为8的ICMP回应。
 
@@ -268,7 +268,7 @@ Traceroute是用来侦测主机到目的主机之间所经路由情况的重要�
 
 它的原理很有意思，它收到目的主机的IP后，首先给目标主机发送一个TTL=1的UDP数据包，而经过的第一个路由收到这个数据包以后就自动把TTL减1，而TTL变为0以后，路由器就把这个包给抛弃了，并同时产生一个产生 一个主机不可达的ICMP数据报给主机。主机收到这个数据报以后再发一个TTL=2的UDP数据报给目的主机，然后刺激第二个路由器给主机发ICMP数据 报。如此往复直到到达目的主机。这样，traceroute就拿到了所有的路由器IP。
 
-![traceroute应用](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cqxqrhwxj30dq08faa5.jpg)
+![traceroute应用](https://tva2.sinaimg.com/large/005CDUpdgy1g7cqxqrhwxj30dq08faa5.jpg)
 
 ### 3. TCP/UDP
 
@@ -288,13 +288,13 @@ TCP/UDP都是传输层协议，但是两者具有不同的特性，同时也具�
 传输速度 | 慢 | 快
 应用场景 | 对效率要求低，对准确性要求高或者要求有连接的场景 | 对效率要求高，对准确性要求低
 
-![TCP/UDP区别](https://ws1.sinaimg.cn/large/005CDUpdgy1g7crpsywq7j30nw064749.jpg)
+![TCP/UDP区别](https://tva2.sinaimg.com/large/005CDUpdgy1g7crpsywq7j30nw064749.jpg)
 
 UDP 在传送数据之前不需要先建立连接，远程主机在收到 UDP 报文后，不需要给出任何确认。虽然 UDP 不提供可靠传输，但在某些情况下 UDP 确是一种最有效的工作方式（一般用于即时通信），比如： QQ 语音、 QQ 视频 、直播等等。
 
 TCP 提供面向连接的服务。在传送数据之前必须先建立连接，数据传送结束后要释放连接。 TCP 不提供广播或多播服务。由于 TCP 要提供可靠的，面向连接的传输服务（TCP的可靠体现在TCP在传递数据之前，会有三次握手来建立连接，而且在数据传递时，有确认、窗口、重传、拥塞控制机制，在数据传完后，还会断开连接用来节约系统资源），这一难以避免增加了许多开销，如确认，流量控制，计时器以及连接管理等。这不仅使协议数据单元的首部增大很多，还要占用许多处理机资源。TCP 一般用于文件传输、发送和接收邮件、远程登录等场景。
 
-![协议应用](https://ws1.sinaimg.cn/large/005CDUpdgy1g7csipz71fj30u80niab4.jpg)
+![协议应用](https://tva2.sinaimg.com/large/005CDUpdgy1g7csipz71fj30u80niab4.jpg)
 
 **1.面向报文**
 
@@ -312,7 +312,7 @@ TCP 提供面向连接的服务。在传送数据之前必须先建立连接，�
 
 从程序实现的角度来看：
 
-![面向连接与无连接的区别](https://ws1.sinaimg.cn/large/005CDUpdgy1g7csav8aoqj30ko0dv3zs.jpg)
+![面向连接与无连接的区别](https://tva2.sinaimg.com/large/005CDUpdgy1g7csav8aoqj30ko0dv3zs.jpg)
 
 从上图我们可以看出，TCP通信需要服务器端侦听listen、接收客户端连接请求accept，等待客户端connect建立连接后才能进行数据包的收发(recv/send)工作。而UDP则服务器和客户端的概念不明显，服务器端即接收端需要绑定端口，等待客户端的数据的到来。后续便可以进行数据的收发（recvfrom/sendto）工作。
 
@@ -333,9 +333,9 @@ TCP无边界，造成对采用TCP协议发送的数据进行接收比较麻烦�
 
 我们先来看一下TCP的数据报文的格式：
 
-![TCP数据报文](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cvse1yc3j30fo0beabb.jpg)
+![TCP数据报文](https://tva2.sinaimg.com/large/005CDUpdgy1g7cvse1yc3j30fo0beabb.jpg)
 
-![TCP数据报文](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cvul6co3j30bd08z748.jpg)
+![TCP数据报文](https://tva2.sinaimg.com/large/005CDUpdgy1g7cvul6co3j30bd08z748.jpg)
 
 TCP协议通过使用端口来标识源端口和目标端口的应用进程。我们来分析一下几个重要的字段：
 1. 序号：Seq(Sequence Number)序号占32位，用来标识从计算机A发送到计算机B的数据包的序号，计算机发送数据时对此进行标记。
@@ -350,13 +350,13 @@ TCP协议通过使用端口来标识源端口和目标端口的应用进程。�
 
 下面来看一下UDP的数据报文结构：
 
-![UDP数据报文](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cw7v4n74j30e9033mxl.jpg)
+![UDP数据报文](https://tva2.sinaimg.com/large/005CDUpdgy1g7cw7v4n74j30e9033mxl.jpg)
 
 #### 3.3 TCP三次握手
 
 TCP是面向连接的，无论哪一方向向另一方向发送数据之前，都必须先在双方之间建立一条连接。在TCP/IP协议中，TCP协议提供可靠的连接服务，连接是通过三次握手进行初始化的。三次握手的目的是同步连接双方的序列号和确认号并交换TCP窗口大小信息。
 
-![tcp三次握手](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cwjfl5lrj30ji0aqaap.jpg)
+![tcp三次握手](https://tva2.sinaimg.com/large/005CDUpdgy1g7cwjfl5lrj30ji0aqaap.jpg)
 
 **第一次握手**：建立连接。主机A发送标志位SYN = 1，随机产生序号seq = x的数据包到服务器，主机B由SYN=1知道，A要求建立连接；此时主机A状态位SYN_SENT,B为LISTEN。
 
@@ -366,7 +366,7 @@ TCP是面向连接的，无论哪一方向向另一方向发送数据之前，�
 
 还有一种比较容易理解的三次握手如下所示：
 
-![三次握手](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cx32hazoj30ts0dlwji.jpg)
+![三次握手](https://tva4.sinaimg.com/large/005CDUpdgy1g7cx32hazoj30ts0dlwji.jpg)
 
 - 为了方便描述我们将主动发起请求的172.16.50.72:65076 主机称为客户端，将返回数据的主机172.16.17.94:8080称为服务器。
 - 第一次握手: 建立连接。客户端发送连接请求，发送SYN报文，将seq设置为0。然后，客户端进入SYN_SEND状态，等待服务器的确认。
@@ -394,7 +394,7 @@ TCP是面向连接的，无论哪一方向向另一方向发送数据之前，�
 
 建立连接1后，两台主机就可以相互传输数据了。如下图所示：
 
-![数据传输](https://ws1.sinaimg.cn/large/005CDUpdgy1g7czr0gmawj30dp0ewdfv.jpg)
+![数据传输](https://tva2.sinaimg.com/large/005CDUpdgy1g7czr0gmawj30dp0ewdfv.jpg)
 
 上图给出了主机A分2次(分2个数据包)向主机B传递200字节的过程：
 1. 首先，主机A通过1个数据包发送100个字节的数据，数据包的Seq号设置为1200.
@@ -406,7 +406,7 @@ TCP是面向连接的，无论哪一方向向另一方向发送数据之前，�
 
 下面分析传输过程中数据包丢失的情况，如下图所示：
 
-![传输数据包丢失](https://ws1.sinaimg.cn/large/005CDUpdgy1g7czx0sdk7j30dp0gzglp.jpg)
+![传输数据包丢失](https://tva2.sinaimg.com/large/005CDUpdgy1g7czx0sdk7j30dp0gzglp.jpg)
 
 上图表示通过 Seq 1300 数据包向主机B传递100字节的数据，但中间发生了错误，主机B未收到。经过一段时间后，主机A仍未收到对于 Seq 1300 的ACK确认，因此尝试重传数据。为了完成数据包的重传，`TCP套接字每次发送数据包时都会启动定时器`，如果在一定时间内没有收到目标机器传回的 ACK 包，那么定时器超时，数据包会重传。
 
@@ -414,7 +414,7 @@ TCP是面向连接的，无论哪一方向向另一方向发送数据之前，�
 
 当客户端和服务器通过三次握手建立了TCP连接以后，当数据传送完毕，肯定是要断开TCP连接的啊。那对于TCP的断开连接，这里就有了神秘的“四次分手”。`由于TCP连接是全双工的，因此每个方向都必须单独进行关闭。这原则是当一方完成它的数据发送任务后就能发送一个FIN来终止这个方向的连接。`收到一个FIN只意味着这一方向上没有数据流动，一个TCP连接收到一个FIN后仍能发送数据。首先进行关闭的一方将主动执行关闭，而另一方执行被动关闭。
 
-![四次挥手](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cxlc37awj30ix0b1mxy.jpg)
+![四次挥手](https://tva4.sinaimg.com/large/005CDUpdgy1g7cxlc37awj30ix0b1mxy.jpg)
 
 **第一次挥手**：A的应用程序先向其TCP发出连接释放报文段(FIN=1, 序号seq = u)，并停止再发送数据，主动关闭TCP连接，进入FIN_WAIT_1(终止等待1)状态，等待B的确认；
 
@@ -426,7 +426,7 @@ TCP是面向连接的，无论哪一方向向另一方向发送数据之前，�
 
 还有一种比较容易理解的四次挥手如下所示：
 
-![四次挥手](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cxysgxctj30r00fnt92.jpg)
+![四次挥手](https://tva2.sinaimg.com/large/005CDUpdgy1g7cxysgxctj30r00fnt92.jpg)
 
 - 第一次挥手：客户端向服务器发送一个FIN报文段，将设置seq为160和ack为112，;此时，客户端进入 FIN_WAIT_1状态,这表示客户端没有数据要发送服务器了，请求关闭连接;
 - 第二次挥手：服务器收到了客户端发送的FIN报文段，向客户端回一个ACK报文段，ack设置为1，seq设置为112;服务器进入了CLOSE_WAIT状态，客户端收到服务器返回的ACK报文后，进入FIN_WAIT_2状态;
@@ -473,7 +473,7 @@ TCP是面向连接的，无论哪一方向向另一方向发送数据之前，�
 
 #### 3.6 TCP状态转换图
 
-![TCP状态转换图](https://ws1.sinaimg.cn/large/005CDUpdgy1g7cz5chabmj30lv0ssjwy.jpg)
+![TCP状态转换图](https://tva2.sinaimg.com/large/005CDUpdgy1g7cz5chabmj30lv0ssjwy.jpg)
 
 #### 3.7 TCP协议如何保证可靠传输
 
@@ -515,7 +515,7 @@ TCP通过让发送方维护一个称为`接收窗口(receivewindow)`的变量(TC
 
 设A向B发送数据。在连接建立时，B告诉了A：“我的接收窗口是 rwnd = 400 ”(这里的 rwnd 表示 receiver window) 。因此，发送方的发送窗口不能超过接收方给出的接收窗口的数值。请注意，TCP的窗口单位是字节，不是报文段。假设每一个报文段为100字节长，而数据报文段序号的初始值设为1。大写ACK表示首部中的确认位ACK，小写ack表示确认字段的值ack。
 
-![流量控制](https://ws1.sinaimg.cn/large/005CDUpdgy1g7d6lyclh2j30yg0hx0tv.jpg)
+![流量控制](https://tva2.sinaimg.com/large/005CDUpdgy1g7d6lyclh2j30yg0hx0tv.jpg)
 
 从图中可以看出，B进行了三次流量控制。第一次把窗口减少到 rwnd = 300 ，第二次又减到了 rwnd = 100 ，最后减到 rwnd = 0 ，即不允许发送方再发送数据了。这种使发送方暂停发送的状态将持续到主机B重新发出一个新的窗口值为止。B向A发送的三个报文段都设置了 ACK = 1 ，只有在ACK=1时确认号字段才有意义。
 
@@ -545,7 +545,7 @@ TCP的拥塞控制采用了四种算法，即慢启动、拥塞避免、快速�
 
 通常在刚刚开始发送报文段时，先把拥塞窗口 cwnd 设置为一个最大报文段MSS的数值。而在每收到一个对新的报文段的确认后，把拥塞窗口增加至多一个MSS的数值。用这样的方法逐步增大发送方的拥塞窗口 cwnd ，可以使分组注入到网络的速率更加合理。
 
-![慢启动算法](https://ws1.sinaimg.cn/large/005CDUpdgy1g7d7evox4gj30j809241t.jpg)
+![慢启动算法](https://tva2.sinaimg.com/large/005CDUpdgy1g7d7evox4gj30j809241t.jpg)
 
 每经过一个传输轮次，拥塞窗口 cwnd 就加倍。一个传输轮次所经历的时间其实就是往返时间RTT。不过“传输轮次”更加强调：把拥塞窗口cwnd所允许发送的报文段都连续发送出去，并收到了对已发送的最后一个字节的确认。
 
@@ -558,13 +558,13 @@ TCP的拥塞控制采用了四种算法，即慢启动、拥塞避免、快速�
 
 让拥塞窗口cwnd缓慢地增大，即每经过一个往返时间RTT就把发送方的拥塞窗口cwnd加1，而不是加倍。这样拥塞窗口cwnd按线性规律缓慢增长，比慢开始算法的拥塞窗口增长速率缓慢得多。
 
-![拥塞避免算法](https://ws1.sinaimg.cn/large/005CDUpdgy1g7d7i0ea65j30ii08q41j.jpg)
+![拥塞避免算法](https://tva2.sinaimg.com/large/005CDUpdgy1g7d7i0ea65j30ii08q41j.jpg)
 
 无论在慢开始阶段还是在拥塞避免阶段，只要发送方判断网络出现拥塞（其根据就是没有收到确认），就要把慢开始门限ssthresh设置为出现拥塞时的发送 方窗口值的一半（但不能小于2）。然后把拥塞窗口cwnd重新设置为1，执行慢开始算法。
 
 这样做的目的就是要迅速减少主机发送到网络中的分组数，使得发生 拥塞的路由器有足够时间把队列中积压的分组处理完毕。如下图，用具体数值说明了上述拥塞控制的过程。现在发送窗口的大小和拥塞窗口一样大。
 
-![拥塞控制的过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7d7kabwc2j30j90akacp.jpg)
+![拥塞控制的过程](https://tva2.sinaimg.com/large/005CDUpdgy1g7d7kabwc2j30j90akacp.jpg)
 
 慢启动算法主要呈指数增长，粗犷型，速度快（“慢”是相对于一步到位而言的）；而拥塞避免算法主要呈线性增长，精细型，速度慢，但更容易在不导致拥塞的情况下，找到网络环境的cwnd最优值。
 
@@ -572,7 +572,7 @@ TCP的拥塞控制采用了四种算法，即慢启动、拥塞避免、快速�
 
 由于TCP采用的是累计确认机制，即当接收端收到比期望序号大的报文段时，便会重复发送最近一次确认的报文段的确认信号，我们称之为冗余ACK（duplicate ACK）。快重传算法首先要求接收方每收到一个失序的报文段后就立即发出重复确认（为的是使发送方及早知道有报文段没有到达对方）而不要等到自己发送数据时才进行捎带确认。
 
-![快速重传算法](https://ws1.sinaimg.cn/large/005CDUpdgy1g7d7q60zr9j30dm08oq67.jpg)
+![快速重传算法](https://tva2.sinaimg.com/large/005CDUpdgy1g7d7q60zr9j30dm08oq67.jpg)
 
 接收方收到了M1和M2后都分别发出了确认。现在假定接收方没有收到M3但接着收到了M4。显然，接收方不能确认M4，因为M4是收到的失序报文段。根据可靠传输原理，接收方可以什么都不做，也可以在适当时机发送一次对M2的确认。
 
@@ -586,7 +586,7 @@ TCP的拥塞控制采用了四种算法，即慢启动、拥塞避免、快速�
 - 当发送方连续收到三个重复确认，就执行“乘法减小”算法，把慢开始门限ssthresh减半。
 - 与慢开始不同之处是现在不执行慢开始算法（即拥塞窗口cwnd现在不设置为1），而是把cwnd值设置为 慢开始门限ssthresh减半后的数值，然后开始执行拥塞避免算法（“加法增大”），使拥塞窗口缓慢地线性增大。
 
-![快速恢复算法](https://ws1.sinaimg.cn/large/005CDUpdgy1g7d7vz43edj30ou0833z6.jpg)
+![快速恢复算法](https://tva2.sinaimg.com/large/005CDUpdgy1g7d7vz43edj30ou0833z6.jpg)
 
 #### 3.7.4 TCP Nagle算法
 
@@ -644,7 +644,7 @@ SYN Flood 是 DDoS 攻击的方式之一,这是一种利用 TCP 协议缺陷,发
 
 DDOS 是英文 Distributed Denial of Service 的缩写,意即“分布式拒绝服务”。
 
-![DDOS攻击](https://ws1.sinaimg.cn/large/005CDUpdgy1g7d8lr0imlj30o909kajd.jpg)
+![DDOS攻击](https://tva2.sinaimg.com/large/005CDUpdgy1g7d8lr0imlj30o909kajd.jpg)
 
 当前主要有2种流行的DDOS攻击：
 1.  SYN Flood 攻击:这种攻击方法是经典最有效的 DDOS 方法。
@@ -667,17 +667,17 @@ LAND 攻击利用了 TCP 连接建立的三次握手过程,通过向一个目标
 
 #### 3.10  在三次握手和四次挥手协议中,客户端和服务器端各用到什么函数?
 
-![全流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7dahnc7iwj30nv0j6ahr.jpg)
+![全流程](https://tva2.sinaimg.com/large/005CDUpdgy1g7dahnc7iwj30nv0j6ahr.jpg)
 
 下面给出Socket三次握手连接图：
 
-![Socket三次握手](https://ws1.sinaimg.cn/large/005CDUpdgy1g7daimti4qj30jb0a2djh.jpg)
+![Socket三次握手](https://tva2.sinaimg.com/large/005CDUpdgy1g7daimti4qj30jb0a2djh.jpg)
 
 从图中可以看出,当客户端调用 connect()函数时,触发了连接请求,向服务器发送了 SYN J 包,这时 connect 进入阻塞状态(先调用 connect()函数,然后发送 SYN 包); 服务器监听到连接请求,即收到 SYN J 包,调用 accept()函数接收请求(先收到 SYN 包, 然后调用 accept()函数),向客户端发送 SYN K ,ACK J+1,这时 accept 进入阻塞状态; 客户端收到服务器的 SYN K ,ACK J+1 之后,这时 connect 返回,并对 SYN K 进行确认; 服务器收到 ACK K+1 时,accept 返回,至此三次握手完毕,连接建立。 总结:客户端的 connect()函数在三次握手的第二次之后返回,而服务器端的 accept ()在三次握手的第三次之后返回。
 
 Socket四次分手连接图：
 
-![Socket四次分手](https://ws1.sinaimg.cn/large/005CDUpdgy1g7dak27of9j30gj0a5ad1.jpg)
+![Socket四次分手](https://tva2.sinaimg.com/large/005CDUpdgy1g7dak27of9j30gj0a5ad1.jpg)
 
 socket的主要函数包括：
 - socket()：创建套接字,它会创建一个结构体及收发缓冲区。此时并不指定该套接字在哪个IP和PORT端口上。
@@ -690,13 +690,13 @@ socket的主要函数包括：
 
 listen 的函数为侦听端口创建两个队列:未完成队列(SYN_RCV 状态)和已完成队列。 如果不调用 listen,则客户端过来的 SYN 请求无法入队接受进一步的处理。因此,listen 是服务器的必须过程。(如下图三次握手的队列所示)
 
-![listen()的真正目的](https://ws1.sinaimg.cn/large/005CDUpdgy1g7daopvo3aj30g20caq7h.jpg)
+![listen()的真正目的](https://tva2.sinaimg.com/large/005CDUpdgy1g7daopvo3aj30g20caq7h.jpg)
 
 ### 4. 在浏览器中输入URL地址发生了什么？
 
 #### 4.1 从协议角度层面回答
 
-![url发生过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7davsqeusj30g40csaad.jpg)
+![url发生过程](https://tva2.sinaimg.com/large/005CDUpdgy1g7davsqeusj30g40csaad.jpg)
 
 整体而言可以分为以下几个过程：
 1. DNS解析
@@ -716,7 +716,7 @@ listen 的函数为侦听端口创建两个队列:未完成队列(SYN_RCV 状态
 
 《图解HTTP》中一幅插画生动形象地阐述了这个过程：
 
-![HTTP协议与其他协议的过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7du40l013j30nd0x57kj.jpg)
+![HTTP协议与其他协议的过程](https://tva2.sinaimg.com/large/005CDUpdgy1g7du40l013j30nd0x57kj.jpg)
 
 #### 4.2 前端的角度
 
@@ -730,7 +730,7 @@ DNS解析的过程就是寻找哪台机器上有你需要资源的过程。当�
 
 DNS解析是一个递归查询的过程。
 
-![DNS解析](https://ws1.sinaimg.cn/large/005CDUpdgy1g7dbbutpcnj30m80ee0x6.jpg)
+![DNS解析](https://tva2.sinaimg.com/large/005CDUpdgy1g7dbbutpcnj30m80ee0x6.jpg)
 
 上述图片是查找www.google.com的IP地址过程。首先在本地域名服务器中查询IP地址，如果没有找到的情况下，本地域名服务器会向根域名服务器发送一个请求，如果根域名服务器也不存在该域名时，本地域名会向com顶级域名服务器发送一个请求，依次类推下去。直到最后本地域名服务器得到google的IP地址并把它缓存到本地，供下次查询使用。从上述过程中，可以看出网址的解析是一个从右向左的过程: com -> google.com -> www.google.com。但是你是否发现少了点什么，根域名服务器的解析过程呢？事实上，真正的网址是www.google.com.，并不是我多打了一个.，这个.对应的就是根域名服务器，默认情况下所有的网址的最后一位都是.，既然是默认情况下，为了方便用户，通常都会省略，浏览器在请求DNS的时候会自动加上，所有网址真正的解析过程为: . -> .com -> google.com. -> www.google.com.。
 
@@ -790,7 +790,7 @@ eg: GET index.html HTTP/1.1
 
 常见的请求报头有：Accept,Accept-Charset,Accept-Encoding,Accept-Language,Content-Type,Authorization,Cookie,User-Agent等。
 
-![http请求报头](https://ws1.sinaimg.cn/large/005CDUpdgy1g7dt2tzo74j31hb0mun3s.jpg)
+![http请求报头](https://tva2.sinaimg.com/large/005CDUpdgy1g7dt2tzo74j31hb0mun3s.jpg)
 
 上图是使用Chrome开发者工具截取的对百度的HTTP请求以及响应报文，从图中可以看出，请求报头中使用了Accept, Accept-Encoding, Accept-Language, Cache-Control, Connection, Cookie等字段。Accept用于指定客户端用于接受哪些类型的信息，Accept-Encoding与Accept类似，它用于指定接受的编码方式。Connection设置为Keep-alive用于告诉客户端本次HTTP请求结束之后并不需要关闭TCP连接，这样可以使下次HTTP请求使用相同的TCP通道，节省TCP连接建立的时间。
 
@@ -806,7 +806,7 @@ eg: GET index.html HTTP/1.1
 
 完成处理过程的代码框架，大部分是按照MVC设计模式搭建的，实际处理过程如下图：
 
-![MVC处理流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7dt68e8tnj30m80krmzc.jpg)
+![MVC处理流程](https://tva2.sinaimg.com/large/005CDUpdgy1g7dt68e8tnj30m80krmzc.jpg)
 
 MVC的处理过程是这样的：每个用户输入的请求，首先被控制器(C)接收，控制器决定用哪个模型(M)来处理，然后模型用业务逻辑来处理用户的请求，再然后控制器决定用哪个视图模型(V)来接收模型处理后的数据，最后由该视图模型对应的视图格式化模型来返回HTML字符串给浏览器。
 
@@ -845,11 +845,11 @@ HTTP响应报文也是由三部分组成：**状态码，响应报头和响应�
 
 浏览器在收到HTML,CSS,JS文件后，它是如何把页面呈现到屏幕上的？下图对应的就是WebKit渲染的过程。
 
-![Webkit渲染流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7dtg0prayj30ja09gdhw.jpg)
+![Webkit渲染流程](https://tva2.sinaimg.com/large/005CDUpdgy1g7dtg0prayj30ja09gdhw.jpg)
 
 浏览器是一个边解析边渲染的过程。首先浏览器解析HTML文件构建DOM树，然后解析CSS文件构建渲染树，等到渲染树构建完成后，浏览器开始布局渲染树并将其绘制到屏幕上。这个过程比较复杂，涉及到两个概念: reflow(回流)和repain(重绘)。DOM节点中的各个元素都是以盒模型的形式存在，这些都需要浏览器去计算其位置和大小等，这个过程称为reflow;当盒模型的位置,大小以及其他属性，如颜色,字体,等确定下来之后，浏览器便开始绘制内容，这个过程称为repain。页面在首次加载时必然会经历reflow和repain。reflow和repain过程是非常消耗性能的，尤其是在移动设备上，它会破坏用户体验，有时会造成页面卡顿。所以我们应该尽可能少的减少reflow和repain。
 
-![JS解析流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7dthtihkgj30ke0j574q.jpg)
+![JS解析流程](https://tva2.sinaimg.com/large/005CDUpdgy1g7dthtihkgj30ke0j574q.jpg)
 
 JS的解析是由浏览器中的JS解析引擎完成的。JS是单线程运行，也就是说，在同一个时间内只能做一件事，所有的任务都需要排队，前一个任务结束，后一个任务才能开始。但是又存在某些任务比较耗时，如IO读写等，所以需要一种机制可以先执行排在后面的任务，这就是：同步任务(synchronous)和异步任务(asynchronous)。JS的执行机制就可以看做是一个主线程加上一个任务队列(task queue)。同步任务就是放在主线程上执行的任务，异步任务是放在任务队列中的任务。所有的同步任务在主线程上执行，形成一个执行栈;异步任务有了运行结果就会在任务队列中放置一个事件；脚本运行时先依次运行执行栈，然后会从任务队列里提取事件，运行任务队列中的任务，这个过程是不断重复的，所以又叫做事件循环(Event loop)。
 
@@ -871,12 +871,12 @@ Http协议是Hyper Text Transfer Protocol(超文本传输协议)的缩写。HTTP
 
 **HTTP请求报文主要由请求行、请求头、空行、请求正文(Get请求没有请求正文)4部分组成。**
 
-![HTTP请求报文](https://ws1.sinaimg.cn/large/005CDUpdgy1g7dwhee4y5j30gr063abo.jpg)
+![HTTP请求报文](https://tva2.sinaimg.com/large/005CDUpdgy1g7dwhee4y5j30gr063abo.jpg)
 
 1. `请求行`：由三部分组成，分别为请求方法、URL以及协议版本，之间由空格分隔；请求方法包括GET,HEAD,PUT,POST,TRACE,OPTIONS,DELETE以及扩展方法，当然并不是所有的服务器都实现了所有的方法，部分方法即便支持，出于安全考虑也是不可用的。协议版本的格式为：HTTP/主版本号.次版本号，常用的有HTTP/1.0和HTTP/1.1。
 2. `请求头`: 请求头部为请求报文添加了一些附加信息，由“名/值”对组成，每行一对，名和值之间使用冒号分隔。其常见的请求头如下图所示：
 
-![02_1_2.png](https://ws1.sinaimg.cn/large/005CDUpdly1g7e1hbbpsaj30kd0dwgpw.jpg)
+![02_1_2.png](https://tva2.sinaimg.com/large/005CDUpdly1g7e1hbbpsaj30kd0dwgpw.jpg)
 
 给出了比较全面的请求头如下表：
 
@@ -920,12 +920,12 @@ Warning | 一个一般性的警告，表示在实体内容体中可能存在错�
 
 **HTTP响应报文主要由状态行、响应头、空行、响应正文4部分组成。**
 
-![响应报文](https://ws1.sinaimg.cn/large/005CDUpdgy1g7e2f5f3iaj30h6066406.jpg)
+![响应报文](https://tva2.sinaimg.com/large/005CDUpdgy1g7e2f5f3iaj30h6066406.jpg)
 
 1. 状态行：由 3 部分组成,分别为:协议版本,状态码,状态码描述,之间由空格分隔;
 2. 响应头：与请求头类似,为响应报文添加了一些附加信息。常见响应头如下图所示：
 
-![响应头内容](https://ws1.sinaimg.cn/large/005CDUpdgy1g7e2nk1pgyj30jg0d9adn.jpg)
+![响应头内容](https://tva2.sinaimg.com/large/005CDUpdgy1g7e2nk1pgyj30jg0d9adn.jpg)
 
 给出了比较全面的响应头如下表：
 
@@ -972,7 +972,7 @@ WWW-Authenticate | 表示在请求获取这个实体时应当使用的认证模�
 3. 空行
 4. 响应正文
 
-![响应实例](https://ws1.sinaimg.cn/large/005CDUpdgy1g7e373al35j30kt0apmzv.jpg)
+![响应实例](https://tva2.sinaimg.com/large/005CDUpdgy1g7e373al35j30kt0apmzv.jpg)
 
 #### 5.2 Http状态码
 
@@ -1021,7 +1021,7 @@ HTTP2.0和HTTP1.X相比的新特性如下：
 
 #### 5.5 常用的HTTP方法有哪些？
 
-![HTTP请求方法](https://ws1.sinaimg.cn/large/005CDUpdgy1g7e41lliqkj30k508f781.jpg)
+![HTTP请求方法](https://tva2.sinaimg.com/large/005CDUpdgy1g7e41lliqkj30k508f781.jpg)
 
 注意：只有 POST 和 PUT 方法才有请求内容。
 ```
@@ -1052,7 +1052,7 @@ OPTIONS:查询相应 URL 支持的 HTTP 方法。
 
 #### 5.7 HTTPS的安全性是怎样实现的？
 
-![HTTPS安全加密](https://ws1.sinaimg.cn/large/005CDUpdgy1g7e5oju1vzj30he03aaca.jpg)
+![HTTPS安全加密](https://tva2.sinaimg.com/large/005CDUpdgy1g7e5oju1vzj30he03aaca.jpg)
 
 1. 客户使用https的URL访问Web服务器，要求与Web服务器建立SSL连接。
 2. Web服务器收到客户端请求后，会将网站的证书信息（证书中包含公钥）传送一份给客户端。
@@ -1061,7 +1061,7 @@ OPTIONS:查询相应 URL 支持的 HTTP 方法。
 5. Web服务器利用自己的私钥解密出会话密钥。
 6. Web服务器利用会话密钥加密与客户端之间的通信。
 
-![流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7e5ux4equj30g40g0t94.jpg)
+![流程](https://tva2.sinaimg.com/large/005CDUpdgy1g7e5ux4equj30g40g0t94.jpg)
 
 #### 5.8 Session原理
 
@@ -1130,7 +1130,7 @@ Cookie 的域和路径属性一起构成 cookie 的作用范围。domain 属性�
 
 客户第一次发送请求给服务器,此时服务器产生一个唯一的 sessionID,并返回给客户 端(通过 cookie),此时的 cookie 并没有 setMaxAge();只是保存于客户端的内存中,并与一 个浏览器窗口对应着,由于 HTTP 协议的特性,这一次连接就断开了。以后此客户端再发送 请求给服务器的时候,就会在请求 request 中携带 cookie,由于 cookie 中有 sessionID,所以 服务器就知道这是刚才那个客户,从而区分不同的人,购物车就是这样实现的：
 
-![Session流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7e71f5dsvj30jg0f179p.jpg)
+![Session流程](https://tva2.sinaimg.com/large/005CDUpdgy1g7e71f5dsvj30jg0f179p.jpg)
 
 两者的区别：
 

@@ -45,7 +45,7 @@ tags:
 
 RPC(Remote Procedure Call Protocol)远程过程调用协议，它是一种通过网络从远程计算机程序上请求服务，而不需要了解底层网络技术的协议。简而言之，RPC使得程序能够像访问本地系统资源一样，其访问远端系统资源。比较关键的一些方面包括：通讯协议、序列化、资源(接口)描述、服务框架、性能、语言支持等。
 
-![RPC简单框架](https://ws1.sinaimg.cn/large/005CDUpdgy1g8fel1d8pfj30bm05qglm.jpg)
+![RPC简单框架](https://tva2.sinaimg.com/large/005CDUpdgy1g8fel1d8pfj30bm05qglm.jpg)
 
 简单的说，RPC就是从一台机器(客户端)上通过参数传递的方式去调用另外一台机器(服务器)上的一个函数或方法(可以统称为服务)并得到返回的结果。
 
@@ -57,7 +57,7 @@ RPC(Remote Procedure Call Protocol)远程过程调用协议，它是一种通过
 - 服务器端存根(Server Stub): 接收客户端发送过来的请求信息并进行解包，然后再调用本地服务进行处理。
 - 服务端(Server): 服务的真正提供者。
 
-![RPC调用过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g8fete67wnj30fa0b4dfx.jpg)
+![RPC调用过程](https://tva2.sinaimg.com/large/005CDUpdgy1g8fete67wnj30fa0b4dfx.jpg)
 
 具体的调用过程如下：
 1. 服务消费者(client客户端)通过调用本地服务的方式调用需要消费的服务；
@@ -132,9 +132,9 @@ SOA是一种粗粒度、松耦合服务架构，服务之间通过简单、精�
 
 ## 8. RPC的实现原理架构图
 
-![RPC原理架构](https://ws1.sinaimg.cn/large/005CDUpdgy1g8ff8qa46kj30dl08kdg9.jpg)
+![RPC原理架构](https://tva2.sinaimg.com/large/005CDUpdgy1g8ff8qa46kj30dl08kdg9.jpg)
 
-![RPC调用过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g8ff93m7b5j30fa0b4wf5.jpg)
+![RPC调用过程](https://tva3.sinaimg.com/large/005CDUpdgy1g8ff93m7b5j30fa0b4wf5.jpg)
 
 也就是说两台服务器A，B，一个应用部署在A服务器上，想要调用B服务器上应用提供的函数/方法，由于不在一个内存空间，不能直接调用，需要通过网络来表达调用的语义和传达调用的数据。
 

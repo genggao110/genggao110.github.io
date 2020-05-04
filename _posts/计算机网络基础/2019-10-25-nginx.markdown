@@ -28,7 +28,7 @@ Nginx在不依赖第三方模块的情况下只要能做些什么呢？
 
 下面贴上一段简单的实现反向代理的代码：
 
-![反向代理案例](https://ws1.sinaimg.cn/large/005CDUpdgy1g8hn5wcc62j30cb05sq4g.jpg)
+![反向代理案例](https://tva2.sinaimg.com/large/005CDUpdgy1g8hn5wcc62j30cb05sq4g.jpg)
 
 保存配置文件后启动Nginx，这样当我们访问localhost的时候，就相当于访问localhost:8080
 
@@ -42,7 +42,7 @@ Nginx在不依赖第三方模块的情况下只要能做些什么呢？
 
 简单配置如下：
 
-![RR规则](https://ws1.sinaimg.cn/large/005CDUpdgy1g8hnbure9fj30b607g766.jpg)
+![RR规则](https://tva2.sinaimg.com/large/005CDUpdgy1g8hnbure9fj30b607g766.jpg)
 
 其核心代码为：
 
