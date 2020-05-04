@@ -25,7 +25,7 @@ tags:
 
 当一个并发任务提交给线程池，线程池分配线程去执行任务的过程如下图所示：
 
-![线程池工作原理](https://ws1.sinaimg.cn/large/005CDUpdgy1g83uc3xol7j30yg0o8ta1.jpg)
+![线程池工作原理](https://tva2.sinaimg.com/large/005CDUpdgy1g83uc3xol7j30yg0o8ta1.jpg)
 
 从图中我们可以看出，线程池执行所提交的任务过程主要有这样几个阶段：
 1. 先判断线程池中`核心线程池`所有的线程是否都在执行任务。如果不是，则创建一个新的工作线程来执行任务。否则，如果核心线程池里的线程都在执行任务，则进入下一个流程。
@@ -110,7 +110,7 @@ tags:
 ```
 下图给出了ThreadPoolExecutor的execute方法的执行示意图：
 
-![ThreadPoolExecutor执行示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g83vvaufc5j30yg0obdhh.jpg)
+![ThreadPoolExecutor执行示意图](https://tva2.sinaimg.com/large/005CDUpdgy1g83vvaufc5j30yg0obdhh.jpg)
 
 execute方法执行逻辑有这样几种情况：
 1. 如果当前运行的线程少于corePoolSize，则会创建新的线程来执行新的任务；
@@ -151,7 +151,7 @@ execute方法执行逻辑有这样几种情况：
 
 我们首先来看一下线程池的类图：
 
-![线程池类图](https://ws1.sinaimg.cn/large/005CDUpdgy1g84n580300j30ke0damy5.jpg)
+![线程池类图](https://tva2.sinaimg.com/large/005CDUpdgy1g84n580300j30ke0damy5.jpg)
 
 ### 6.1 Executor框架接口
 
@@ -491,7 +491,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
 
 下面为线程池的转换过程：
 
-![threadpool-status.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g84ra7zwssj30qn0ai3zi.jpg)
+![threadpool-status.png](https://tva2.sinaimg.com/large/005CDUpdgy1g84ra7zwssj30qn0ai3zi.jpg)
 
 #### 2. ctl的相关方法
 
@@ -628,11 +628,11 @@ execute()方法用来提交任务，代码如下所示：
 
 execute的执行流程如下所示：
 
-![executor.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g85lc003lrj30n50le3zj.jpg)
+![executor.png](https://tva2.sinaimg.com/large/005CDUpdgy1g85lc003lrj30n50le3zj.jpg)
 
 代码执行逻辑如下图所示：
 
-![execute()提交任务](https://ws1.sinaimg.cn/large/005CDUpdgy1g85xhjsg49j30r30xhq4n.jpg)
+![execute()提交任务](https://tva2.sinaimg.com/large/005CDUpdgy1g85xhjsg49j30r30xhq4n.jpg)
 
 ##### 4.2 addWorker(Runnable firstTask, boolean core)方法
 
@@ -761,7 +761,7 @@ addWorker的执行流程如下所示：
 2. 线程池当前线程数量是否超过上限(coolPoolSize或maximumPoolSize)，超过了return false,没超过则对workerCount+1，继续下一步
 3. 在线程池的ReentrantLock保证下，向Workers Set中添加新创建的worker实例，添加完成后解锁，并启动worker线程，如果这一切都成功了，return true，如果新添加worker进入Set失败或者启动失败，调用addWorkerFailed逻辑。
 
-![addWorker流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g85xppi3vpj30tl16jdi4.jpg)
+![addWorker流程](https://tva2.sinaimg.com/large/005CDUpdgy1g85xppi3vpj30tl16jdi4.jpg)
 
 ##### 4.3 Worker类
 
@@ -967,7 +967,7 @@ STOP状态要中断线程池中的所有线程，而这里`Thread.interrupted()`
 
 completedAbruptly变量来表示在执行任务过程中是否出现了异常，在processWorkerExit方法中会对该变量的值进行判断。
 
-![runWorker流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g86rygc7edj30k213tdhh.jpg)
+![runWorker流程](https://tva2.sinaimg.com/large/005CDUpdgy1g86rygc7edj30k213tdhh.jpg)
 
 ##### 4.5 getTask()方法
 
@@ -1147,7 +1147,7 @@ processWorkerExit(Worker w, boolean completedAbruptly)的两个参数：
 
 至此，processWorkerExit执行完之后，工作线程被销毁，以上就是整个工作线程的生命周期，从execute()方法开始，Worker使用ThreadFactory创建新的工作线程，runWorker通过getTask()获取任务，然后执行任务，如果getTask返回null，进入processWorkerExit方法，整个线程结束，如下图所示：
 
-![threadpool-lifecycle](https://ws1.sinaimg.cn/large/005CDUpdgy1g86y9mlkygj30no0ii0t8.jpg)
+![threadpool-lifecycle](https://tva2.sinaimg.com/large/005CDUpdgy1g86y9mlkygj30no0ii0t8.jpg)
 
 **备注**：`tryTerminate()方法源码分析将在下一节进行详细介绍。`
 

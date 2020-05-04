@@ -29,7 +29,7 @@ tags:
 
 #### 3.YARN的架构
 YARN的架构还是经典的主从结构(master/slave)。从大体上看，YARN服务由一个ResourceManager(RM)和多个NodeManager(NM)构成，ResourceManager为主节点(master)，NodeManager为从节点(slave)。
-![](https://ws1.sinaimg.cn/large/005CDUpdly1fz9nf295u0j30fl0ax3yt.jpg)
+![](https://tva2.sinaimg.com/large/005CDUpdly1fz9nf295u0j30fl0ax3yt.jpg)
 
 从Yarn的架构图来看,它主要由ResourceManager, NodeManager, ApplicationMaster, Container等以下几个组件构成。
 - Container是Yarn对计算机资源的抽象,它其实就是一组CPU和内存资源，所有的应用都会运行在Container中
@@ -67,7 +67,7 @@ Container是YARN中的资源抽象，它封装了某个节点上的多维度资�
 
 **整体角度下的任务调度过程**：
 
-![yarn任务调度](https://ws1.sinaimg.cn/large/005CDUpdly1fz9m4avwjpj317a0j148q.jpg)
+![yarn任务调度](https://tva2.sinaimg.com/large/005CDUpdly1fz9m4avwjpj317a0j148q.jpg)
 
 **详细的工作流程**
 
@@ -77,7 +77,7 @@ Container是YARN中的资源抽象，它封装了某个节点上的多维度资�
 
 当用户向Yarn中提交一个应用程序后，Yarn将分两个阶段运行该应用程序：第一个阶段是启动ApplicationMaster;第二个阶段是由ApplicationMaster创建应用程序，为它申请资源，并监控它的整个运行流程，直到运行完成。
 
-![执行过程](https://ws1.sinaimg.cn/large/005CDUpdly1fz9pujvxezj30mb0hpq9v.jpg)
+![执行过程](https://tva3.sinaimg.com/large/005CDUpdly1fz9pujvxezj30mb0hpq9v.jpg)
 
 1. 客户端向ResourceManager提交应用并请求一个ApplicationMaster实例
 2. ResourceManager找到可以运行一个Container的NodeManager,并在这个Container容器中启动ApplicationMaster实例
@@ -90,7 +90,7 @@ Container是YARN中的资源抽象，它封装了某个节点上的多维度资�
 
 ##### 2.第二种工作流程介绍(MapReduce作业为例)
 
-![Yarn作业运行流程](https://ws1.sinaimg.cn/large/005CDUpdly1fz9rro8a1jj30fe0epdih.jpg)
+![Yarn作业运行流程](https://tva2.sinaimg.com/large/005CDUpdly1fz9rro8a1jj30fe0epdih.jpg)
 
 Yarn的作业运行，主要由以下几个步骤组成：
 

@@ -15,7 +15,7 @@ tags:
 
 Tomcat的结构很复杂，但是Tomcat也非常的模块化，找到了Tomcat最核心的模块，也就抓住了 Tomcat 的“七寸”。下面是 Tomcat 的总体结构图：
 
-![Tomcat整体结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g8bybjth2hg30es09w3yk.gif)
+![Tomcat整体结构](https://tva2.sinaimg.com/large/005CDUpdgy1g8bybjth2hg30es09w3yk.gif)
 
 从上图中可以看出Tomcat的心脏是两个组件：Connector和Container，关于这两个组件将在后面详细介绍。Connector组件是可以被替换，这样可以提供给服务器设计者更多的选择，因为这个组件是如此的重要，不仅跟服务器的设计的本身，而且和不同的应用场景也十分相关，所以一个Container可以选择对应多个Connector。
 
@@ -24,17 +24,17 @@ Tomcat的结构很复杂，但是Tomcat也非常的模块化，找到了Tomcat�
 
 一个Tomact中只有一个Server,一个Server可以包含多个Service，一个Service只有一个Container，但是可以有多个Connector，这是因为一个服务可以有多个连接，如同时提供Http和Https链接，也可以提供向相同协议不同端口的连接，示意图如下所示：(Engine、Host、Context下边会说到)
 
-![容器连接示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g8dqimjlfqj30c608kaba.jpg)、
+![容器连接示意图](https://tva2.sinaimg.com/large/005CDUpdgy1g8dqimjlfqj30c608kaba.jpg)
 
 多个Connector和一个Container形成了一个Service，Service的概念就很熟悉了，有了Service就可以对外提供服务了，但是Service还要一个生存的环境，必须要有人能够给她生命、掌握其生死大权，那就非Server莫属了。所以整个Tomact的生命周期由Server控制。
 
 另外，上述的包含关系或者说是父子关系，都可以在tomcat的conf目录下的server.xml配置文件中看出，下图是删除了注释内容之后的一个完整的`server.xml`配置文件（Tomcat版本为8.0）
 
-![示例XML文件](https://ws1.sinaimg.cn/large/005CDUpdgy1g8dqm0xik5j310o0q1n0e.jpg)
+![示例XML文件](https://tva2.sinaimg.com/large/005CDUpdgy1g8dqm0xik5j310o0q1n0e.jpg)
 
 上面的配置文件，可以通过下边的一张结构图更清楚地理解：
 
-![xml文件图解](https://ws1.sinaimg.cn/large/005CDUpdgy1g8dqost4m8j30lz0a40so.jpg)
+![xml文件图解](https://tva2.sinaimg.com/large/005CDUpdgy1g8dqost4m8j30lz0a40so.jpg)
 
 Server标签设置的端口号为8005，shutdown= "SHUTDOWN",表示在8005端口监听“SHUTDOWN”命令，如果接收到了就会关闭Tomact。一个Server有一个Service,当然还可以进行配置，一个Service有多个，Service左边的内容都属于Container的，而Service下边的是Connector。
 
@@ -66,7 +66,7 @@ Connector用于接受请求并将请求封装成Request和Response，然后交�
 
 首先，我们来看一下Connector的结构图，如下所示：
 
-![Connector结构图](https://ws1.sinaimg.cn/large/005CDUpdgy1g8dr13awn8j30lz0aj0sp.jpg)
+![Connector结构图](https://tva2.sinaimg.com/large/005CDUpdgy1g8dr13awn8j30lz0aj0sp.jpg)
 
 Connector就是使用ProtocolHandler来处理请求的，不同的ProtocolHandler代表不同的连接类型，比如：Http11Protocol使用的是普通的Socket来连接的，Http11NioProtocol使用的是NioSocket来连接的。
 
@@ -81,7 +81,7 @@ Connector就是使用ProtocolHandler来处理请求的，不同的ProtocolHandle
 
 Container用于封装和管理Servlet，以及具体处理Request请求，在Connector内部包含了4个子容器，结构图如下所示：
 
-![Container架构分析](https://ws1.sinaimg.cn/large/005CDUpdgy1g8drfd0udtj30nj0ei0th.jpg)
+![Container架构分析](https://tva1.sinaimg.com/large/005CDUpdgy1g8drfd0udtj30nj0ei0th.jpg)
 
 4个子容器的作用分别为：
 1. Engine: 引擎，用来管理多个站点，一个Service最多只能有一个Engine;
@@ -91,7 +91,7 @@ Container用于封装和管理Servlet，以及具体处理Request请求，在Con
 
 下面我们找一个Tomcat的文件目录对照一下，如下图所示：
 
-![Tomcat文件目录](https://ws1.sinaimg.cn/large/005CDUpdgy1g8drlbm4flj309w0acwed.jpg)
+![Tomcat文件目录](https://tva2.sinaimg.com/large/005CDUpdgy1g8drlbm4flj309w0acwed.jpg)
 
 Context和Host的区别是Context表示一个应用，我们的Tomcat中默认的配置下webapps下的每一个文件夹目录都是一个Context，其中ROOT目录中存放着主应用，其他目录存放着子应用，而整个webapps就是一个Host站点。
 
@@ -101,7 +101,7 @@ Context和Host的区别是Context表示一个应用，我们的Tomcat中默认�
 
 Container处理请求是使用Pipeline-Value管道来进行处理的。Pipeline-Value是责任链模式，责任链模式是指在一个请求处理的过程中有很多处理者依次对请求进行处理，每个处理者负责做自己相应的处理，处理之后将处理后的请求返回，再让下一个处理者继续处理。
 
-![责任链模式](https://ws1.sinaimg.cn/large/005CDUpdgy1g8ds2mckgvj30m1083q3z.jpg)
+![责任链模式](https://tva2.sinaimg.com/large/005CDUpdgy1g8ds2mckgvj30m1083q3z.jpg)
 
 但是，Pipeline-Valve使用的责任链模式和普通的责任链模式有些不同！区别主要有以下两点：
 - 每个Pipeline都有特定的Valve，而且是在管道的最后一个执行，这个Valve叫做BaseValve，BaseValve是不可删除的；
@@ -109,7 +109,7 @@ Container处理请求是使用Pipeline-Value管道来进行处理的。Pipeline-
 
 我们知道Container包含四个子容器，而这四个子容器对应的BaseValve分别在：StandardEngineValve、StandardHostValve、StandardContextValve、StandardWrapperValve。Pipeline的处理流程如下所示：
 
-![Pipeline处理流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g8ds4gn347j30ly0fv0tc.jpg)
+![Pipeline处理流程](https://tva4.sinaimg.com/large/005CDUpdgy1g8ds4gn347j30ly0fv0tc.jpg)
 
 1. Connector在接收到请求后会首先调用最顶层容器的Pipeline来处理，这里的最顶层容器的Pipeline就是EnginePipeline（Engine的管道）；
 2. 在Engine的管道中依次会执行EngineValve1、EngineValve2等等，最后会执行StandardEngineValve，在StandardEngineValve中会调用Host管道，然后再依次执行Host的HostValve1、HostValve2等，最后在执行StandardHostValve，然后再依次调用Context的管道和Wrapper的管道，最后执行到StandardWrapperValve。
@@ -132,7 +132,7 @@ Container处理请求是使用Pipeline-Value管道来进行处理的。Pipeline-
 
 首先，我们给出Tomcat整体类加载体系结构图如下所示：
 
-![Tomcat整体类加载体系结构图](https://ws1.sinaimg.cn/large/005CDUpdgy1g8dy0xatu9j310b0jkta8.jpg)
+![Tomcat整体类加载体系结构图](https://tva2.sinaimg.com/large/005CDUpdgy1g8dy0xatu9j310b0jkta8.jpg)
 
 Tomcat本身也是一个Java项目，因此其也需要被JDK的类加载机制加载，也就必然存在引导类加载器、扩展类加载器和应用(系统)类加载器。Tomcat自身定义的类加载器主要由图中下半部分组成，`Common ClassLoader`作为`Catalina ClassLoader`和`Shared ClassLoader`的parent，而`Shared ClassLoader`又可能存在着多个children类加载器`WebApp ClassLoader`，一个`WebApp ClassLoader`实际上对应着一个Web应用，那Web应用就有可能存在Jsp页面，这些Jsp页面最终会转成class类被加载，因此也需要一个Jsp的类加载器，就是图中的JasperLoder。
 
@@ -428,7 +428,7 @@ private ClassLoader createClassLoader(String name, ClassLoader parent)
 ```
 大块中的if代码实际上是对资源进行转化加载的过程，而return部分才是返回类加载器的部分，代码根据是否有parent调用了`URLClassLoader`不同的构造器，`Commom ClassLoader`调用的是没有parent的构造器。查看`URLClassLoader`的构造函数方法，我们跟踪到`ClassLoader`中，如下图所示：
 
-![ClassLoader.getSystemClassLoader()](https://ws1.sinaimg.cn/large/005CDUpdgy1g8e09110o8j30mt0ns76q.jpg)
+![ClassLoader.getSystemClassLoader()](https://tva2.sinaimg.com/large/005CDUpdgy1g8e09110o8j30mt0ns76q.jpg)
 
 按红线所画·Common ClassLoader·的parent实际上是JDK中sun.misc.Launcher.class类的loader成员变量，其实该loader的值就是应用类加载器（系统类加载器）`System ClassLoader`。至此Tomcat中类加载机制和JDK的类加载机制也建立上了联系。
 
@@ -569,7 +569,7 @@ public void init()
 ```
 由于Tomcat的设计，WebappLoader的start方法实际上调用的是父类的模板，而模板中的`startinternal`方法由各个子类具体实现，其中最关键的方法为createClassLoader():
 
-![createClassLoader()](https://ws1.sinaimg.cn/large/005CDUpdgy1g8e0mbkpawj30kw0aa0tj.jpg)
+![createClassLoader()](https://tva2.sinaimg.com/large/005CDUpdgy1g8e0mbkpawj30kw0aa0tj.jpg)
 
 上图中的loadClass成员变量的值为org.apache.catalina.loader.WebappClassLoader，所以，实际上该类为每一个web应用创建了一个WebappClassLoader的实例，该实例的parent就是Shared ClassLoader或者Common ClassLoader，至此WebApp ClassLoader在之前类加载架构图中的位置也得以验证。
 

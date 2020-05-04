@@ -305,11 +305,11 @@ public class Solution {
 - 前序： A B D E H I C F G
 - 中序： D B H E I A F C G
 
-![前序遍历](https://ws1.sinaimg.cn/large/005CDUpdly1g50dyx7ognj30lk0bn3zr.jpg)
+![前序遍历](https://tva2.sinaimg.com/large/005CDUpdly1g50dyx7ognj30lk0bn3zr.jpg)
 
-![中序遍历过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g50dzu7rpnj30na0bfab5.jpg)
+![中序遍历过程](https://tva2.sinaimg.com/large/005CDUpdgy1g50dzu7rpnj30na0bfab5.jpg)
 
-![后序遍历过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g50e0eqx90j30mz0c8q40.jpg)
+![后序遍历过程](https://tva2.sinaimg.com/large/005CDUpdgy1g50e0eqx90j30mz0c8q40.jpg)
 
 则让前序遍历拥有中序遍历的索引表如下所示(Index很直观，就是取了某一个节点的下标，并保存)：
 
@@ -321,7 +321,7 @@ public class Solution {
 
 其实在已知的遍历序列中，如果含有中序遍历结果，那么我们都可以直接采用上面的这种创建索引函数的方式来简化重建过程。具体原因解释之前我们先来看一下下图：
 
-![二叉树中序遍历顺序示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g50e1lle4aj30pc079wfu.jpg)
+![二叉树中序遍历顺序示意图](https://tva2.sinaimg.com/large/005CDUpdgy1g50e1lle4aj30pc079wfu.jpg)
 
 我们可以把之前的中序遍历二叉树过程平摊开，就可以获取上图这样的一个顺序序列。从上图我们可以发现这样一个现象，**那就是某一个节点的左孩子一定是在这个节点的左边，其右孩子一定是在这个节点的右边(中序遍历的定义)，也就是节点Node的左孩子left的值(index)一定是比Node的值小，而Node右孩子Right的值一定是比Node的值大。**
 
@@ -407,7 +407,7 @@ public class Solution {
 
 > 两个栈stack1和stack2,开始时，每次添加队尾元素到stack1中。当弹出时，当 stack2 不为空，弹出 stack2 栈顶元素，如果 stack2 为空，将 stack1 中的全部数逐个出栈入栈 stack2，再弹出 stack2 栈顶元素。
 
-![出入队列思路](https://ws1.sinaimg.cn/large/005CDUpdgy1g5yzkj3njjj30g706k762.jpg)
+![出入队列思路](https://tva2.sinaimg.com/large/005CDUpdgy1g5yzkj3njjj30g706k762.jpg)
 
 ```java
 import java.util.Stack;
@@ -1784,13 +1784,13 @@ public ListNode deleteDuplication(ListNode pHead)
 
 对于上面'\*'的说明也许不太清晰，我们给出图的形式来说明：
 
-![solution1-1.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7obghvri0j30y00soak7.jpg)
+![solution1-1.png](https://tva2.sinaimg.com/large/005CDUpdgy1g7obghvri0j30y00soak7.jpg)
 
-![solution1-2.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7obgwhsw3j30zs0twwrh.jpg)
+![solution1-2.png](https://tva2.sinaimg.com/large/005CDUpdgy1g7obgwhsw3j30zs0twwrh.jpg)
 
-![solution1-3.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7obi3tycjj310w0mcdnu.jpg)
+![solution1-3.png](https://tva2.sinaimg.com/large/005CDUpdgy1g7obi3tycjj310w0mcdnu.jpg)
 
-![solution1-4.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7obi9gvdmj312i0u6gy2.jpg)
+![solution1-4.png](https://tva2.sinaimg.com/large/005CDUpdgy1g7obi9gvdmj312i0u6gy2.jpg)
 
 为此，根据上面图示的思路，我们可以直接给出代码的实现：
 
@@ -1893,7 +1893,7 @@ curMatch = i < s.length() && s[i] == p[j] || p[j] == '.';
 
 我们以`s = "aab"; p = "c*a*b"`为例子，先构建一个二维状态空间来存储中间计算得出的状态值。横向的值代表i，纵向的值代表j，match(0,0)的值即为问题的解，用 f 代表 false,t 代表 true.
 
-![solution2-1.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7oh92yayij30u60pe0zv.jpg)
+![solution2-1.png](https://tva2.sinaimg.com/large/005CDUpdgy1g7oh92yayij30u60pe0zv.jpg)
 
 接下来描述一下后续的计算过程：
 
@@ -1927,7 +1927,7 @@ curMatch = i < s.length() && s[i] == p[j] || p[j] == '.';
 27. 问题解决。
 ```
 
-![solution2-2.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g7ohxnlxwaj30vk0nigsu.jpg)
+![solution2-2.png](https://tva2.sinaimg.com/large/005CDUpdgy1g7ohxnlxwaj30vk0nigsu.jpg)
 
 给出带备忘录的递归解法如下所示：
 
@@ -2183,7 +2183,7 @@ class Solution{
 
 给出本题状态机转移图如下所示：
 
-![状态转移图](https://ws1.sinaimg.cn/large/005CDUpdgy1g80c2cfap3j30ch04k0t5.jpg)
+![状态转移图](https://tva2.sinaimg.com/large/005CDUpdgy1g80c2cfap3j30ch04k0t5.jpg)
 
 ```java
  //状态机迁移解法

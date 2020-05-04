@@ -379,11 +379,11 @@ PatternSyntaxException是一个非强制异常类，它表示一个正则表达�
 
 所以，在其他的语言中（如Perl），一个反斜杠 `\` 就足以具有转义的作用，而在 Java 中正则表达式中则需要有两个反斜杠才能被解析为其他语言中的转义作用。也可以简单的理解在 Java 的正则表达式中，两个 `\\` 代表其他语言中的一个 `\`，这也就是为什么表示一位数字的正则表达式是 `\\d`，而表示一个普通的反斜杠是 `\\\\`。
 
-![正则1](https://ws1.sinaimg.cn/large/005CDUpdgy1g7pp48fjvxj30kt0o4djq.jpg)
+![正则1](https://tva1.sinaimg.com/large/005CDUpdgy1g7pp48fjvxj30kt0o4djq.jpg)
 
-![正则2](https://ws1.sinaimg.cn/large/005CDUpdgy1g7pp4uzosnj30kv0psq5t.jpg)
+![正则2](https://tva2.sinaimg.com/large/005CDUpdgy1g7pp4uzosnj30kv0psq5t.jpg)
 
-![正则3](https://ws1.sinaimg.cn/large/005CDUpdgy1g7pp7ae01pj30kr0dzmzt.jpg)
+![正则3](https://tva2.sinaimg.com/large/005CDUpdgy1g7pp7ae01pj30kr0dzmzt.jpg)
 
 #### 3.3 常用的正则表达式
 
@@ -426,7 +426,7 @@ PatternSyntaxException是一个非强制异常类，它表示一个正则表达�
 匹配包括换行符在内的任意字符： ([\s\S]*) 同时，也可以用 “([\d\D]*)”、“([\w\W]*)” 来表示；([\s\S]*?) 加上问号 表示最短匹配
 ```
 
-![同时包含数字和字母](https://ws1.sinaimg.cn/large/005CDUpdgy1g7s87zfpc2j30rt0estaf.jpg)
+![同时包含数字和字母](https://tva2.sinaimg.com/large/005CDUpdgy1g7s87zfpc2j30rt0estaf.jpg)
 
 **例题：**由数字和字母组成，并且要同时含有数字和字母，且长度要在8-16位之间。
 
@@ -452,15 +452,15 @@ $ 匹配行结尾位置
 
 索引方法提供了有用的索引值，精确表明输入字符串中在哪能找到匹配：
 
-![索引方法](https://ws1.sinaimg.cn/large/005CDUpdgy1g7ppc86obej30kp08fjrz.jpg)
+![索引方法](https://tva2.sinaimg.com/large/005CDUpdgy1g7ppc86obej30kp08fjrz.jpg)
 
 研究方法用来检查输入字符串并返回一个布尔值，表示是否找到该模式：
 
-![研究方法](https://ws1.sinaimg.cn/large/005CDUpdgy1g7ppd4gzmbj30kn08gaaq.jpg)
+![研究方法](https://tva2.sinaimg.com/large/005CDUpdgy1g7ppd4gzmbj30kn08gaaq.jpg)
 
 替换方法是替换输入字符串里文本的方法：
 
-![替换方法](https://ws1.sinaimg.cn/large/005CDUpdgy1g7ppj39pwyj30o40ba0tj.jpg)
+![替换方法](https://tva2.sinaimg.com/large/005CDUpdgy1g7ppj39pwyj30o40ba0tj.jpg)
 
 #### 3.5 PatternSyntaxException类的方法
 
@@ -468,5 +468,5 @@ PatternSyntaxException 是一个非强制异常类，它指示一个正则表达
 
 PatternSyntaxException 类提供了下面的方法来帮助我们查看发生了什么错误
 
-![异常方法](https://ws1.sinaimg.cn/large/005CDUpdgy1g7ppkk7833j30kq08ft99.jpg)
+![异常方法](https://tva2.sinaimg.com/large/005CDUpdgy1g7ppkk7833j30kq08ft99.jpg)
 

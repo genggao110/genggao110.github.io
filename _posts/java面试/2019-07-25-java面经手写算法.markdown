@@ -267,9 +267,9 @@ public class LRUCache<K, V> {
 
 给出埃式筛选法的两个图如下所示：(图1中第二行9忘记删除了)
 
-![埃式筛选法](https://ws1.sinaimg.cn/large/005CDUpdgy1g72avqpyrgj30qg0cstbd.jpg)
+![埃式筛选法](https://tva2.sinaimg.com/large/005CDUpdgy1g72avqpyrgj30qg0cstbd.jpg)
 
-![埃式筛选法](https://ws1.sinaimg.cn/large/005CDUpdgy1g72b2nse9ug30cd0a9q6x.gif)
+![埃式筛选法](https://tva2.sinaimg.com/large/005CDUpdgy1g72b2nse9ug30cd0a9q6x.gif)
 
 ```java
     //方法2：埃式筛选法(Eratosthenes筛选),筛选过程包含N

@@ -1115,7 +1115,7 @@ public class MyWaitNotify{
 ```
 在空字符串作为锁的的同步块(或者其他常量字符串)里调用wait()和notify()产生的问题是，JVM/编译器内部会把常量字符串转换成同一个对象，这意味着，即使你有两个不同的MyWaitNotify实例，它们都引用了相同的空字符串实例。同时也意味着存在这样的风险：在第一个MyWaitNotify实例上调用doWait()的线程会被在第二个MyWaitNotify实例上调用doNotify()的线程唤醒。
 
-![strings-wait-notify.png](https://ws1.sinaimg.cn/large/005CDUpdgy1g83jozi1efj30a4083t8r.jpg)
+![strings-wait-notify.png](https://tva2.sinaimg.com/large/005CDUpdgy1g83jozi1efj30a4083t8r.jpg)
 
 起初这可能不像个大问题。毕竟，如果doNotify()在第二个MyWaitNotify实例上调用，真正发生的事不外乎线程A和B被错误的唤醒了。这个被唤醒的线程（A或者B）将在while循环里检查信号值，然后回到等待状态，因为doNotify()并没有在第一个MyWaitNotify实例上调用，而这个正是它要等待的实例。这种情况相当于引发了一次假唤醒。线程A或者B在信号值没有更新的情况下唤醒，但是代码处理了这种情况，所以线程回到了等待状态。记住，即使4个线程在相同的共享字符串实例上调用wait()和notify()，doWait()和doNotify()里的信号还会被2个MyWaitNotify实例分别保存。在MyWaitNotify1上的一次doNotify()调用可能唤醒MyWaitNotify2的线程，但是信号值只会保存在MyWaitNotify1里。
 

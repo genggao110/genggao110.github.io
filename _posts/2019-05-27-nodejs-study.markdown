@@ -44,7 +44,7 @@ fs.readFile调用时所做的工作只是将异步式I/O请求发送给了操作
 
 Nodejs程序由事件循环开始，到事件循环结束，所有的逻辑都是事件的回调函数，所以Nodejs始终在事件循环中，程序入口就是事件循环第一个事件的回调函数。事件的回调函数在执行的过程中，可能会发出I/O请求或直接发射事件，执行完毕后再返回事件循环，事件循环会检查事件队列中有没有未处理的事件，直到程序结束。
 
-![事件循环](https://ws1.sinaimg.cn/large/005CDUpdgy1g3gtodedixj30ec0ckwer.jpg)
+![事件循环](https://tva2.sinaimg.com/large/005CDUpdgy1g3gtodedixj30ec0ckwer.jpg)
 
 ### 2.Nodejs HTTP服务器与客户端
 

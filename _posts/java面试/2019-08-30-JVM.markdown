@@ -325,7 +325,7 @@ java -Xmx3550m -Xms3550m -Xss128k -XX:NewRatio=4 -XX:SurvivorRatio=4 -XX:MaxPerm
 
 > 刚创建的对象会被分配在Eden区，其中的大多数对象很快就会消亡。Eden区是连续的内存空间，因此在其上分配内存极快；最初一次，当Eden区满的时候，执行Minor GC，将消亡(不可达)的对象清理掉，并将剩余(存活)的对象复制到一个存活区Survivor0（此时，Survivor1是空白的，两个Survivor总有一个是空白的）；下次Eden区满了，再执行一次Minor GC，将消亡的对象清理掉，将存活的对象复制到Survivor1中，然后清空Eden区；将Survivor0中消亡的对象清理掉，将其中可以晋级的对象晋级到Old区，将存活的对象也复制到Survivor1区，然后清空Survivor0区；当两个存活区切换了几次（HotSpot虚拟机默认15次，用-XX:MaxTenuringThreshold控制，大于该值进入老年代，但这只是个最大值，并不代表一定是这个值）之后，仍然存活的对象（其实只有一小部分，比如，我们自己定义的对象），将被复制到老年代。
 
-![内存空间](https://ws1.sinaimg.cn/large/005CDUpdgy1g88j5t54zgj30w60cot9z.jpg)
+![内存空间](https://tva2.sinaimg.com/large/005CDUpdgy1g88j5t54zgj30w60cot9z.jpg)
 
 - 新生代：
   - 大多数新生的对象在Eden区分配，当Eden区没有足够空间进行分配时，虚拟机就会进行一次MinorGC。
@@ -382,7 +382,7 @@ SerialOld是Serial收集器的`老年代收集器版本`，它同样是一个单
 
 其使用的垃圾回收算法是`标记-整理算法`。
 
-![Serial/Serial Old垃圾回收器](https://ws1.sinaimg.cn/large/005CDUpdgy1g89nb09sx6j30ig0363zd.jpg)
+![Serial/Serial Old垃圾回收器](https://tva2.sinaimg.com/large/005CDUpdgy1g89nb09sx6j30ig0363zd.jpg)
 
 **3. ParNew (-XX:+UseParNewGC)**
 
@@ -390,7 +390,7 @@ ParNew收集器其实就是Serial收集器的多线程版本。除了Serial收�
 
 其使用的垃圾回收算法是：`复制算法`。
 
-![ParNew/Serial Old垃圾回收器](https://ws1.sinaimg.cn/large/005CDUpdgy1g8af2gv593j30kg03ggmm.jpg)
+![ParNew/Serial Old垃圾回收器](https://tva2.sinaimg.com/large/005CDUpdgy1g8af2gv593j30kg03ggmm.jpg)
 
 **4.ParallelScavenge (-XX:+UseParallelGC)**
 
@@ -449,7 +449,7 @@ CMS的使用场景为：GC过程短暂停，适合对时延要求较高的服务
 - 并发清理(Concurrent sweeping): 这个阶段是并发的，应用线程和GC清除线程可以一起并发执行。
 - 并发重置(Concurrent reset): 这个阶段依旧是并发的，重置CMS收集器的数据结构，等待下一次垃圾回收。
 
-![CMS执行过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g8ar2ir2bdj30jg06y3zg.jpg)
+![CMS执行过程](https://tva2.sinaimg.com/large/005CDUpdgy1g8ar2ir2bdj30jg06y3zg.jpg)
 
 **CMS的缺点**
 
@@ -471,11 +471,11 @@ CMS的使用场景为：GC过程短暂停，适合对时延要求较高的服务
 
 Memory Barrier所做的另外一件事情就是强制刷出各种CPU Cache,如一个Write-Barrier(写入屏障)将刷出所有在Barrier之前写入cache的数据，因此，任何CPU上的线程都能够读取到这些数据的最新版本。
 
-![Memory Barrier](https://ws1.sinaimg.cn/large/005CDUpdgy1g7gf6fjtc0j306405cdgd.jpg)
+![Memory Barrier](https://tva2.sinaimg.com/large/005CDUpdgy1g7gf6fjtc0j306405cdgd.jpg)
 
 这和java有什么关系？volatile是基于Memory Barrier实现的。如果一个变量被volatile修饰，JMM会在写入这个字段之后插入一个Write-Barrier指令，并在读取这个字段之前插入一个Read-Barrier指令。
 
-![volatile](https://ws1.sinaimg.cn/large/005CDUpdgy1g7gf8d38ygj306605c753.jpg)
+![volatile](https://tva2.sinaimg.com/large/005CDUpdgy1g7gf8d38ygj306605c753.jpg)
 
 这就意味着，如果写入一个volatile变量a,可以保证：
 1. 一个线程写入变量a后，任何线程访问该变量都会拿到最新值。
@@ -521,13 +521,13 @@ Java内存模型规定了所有的变量都存储在主内存中，这里的主�
 
 线程、工作内存、主内存三者间的关系如下图所示：
 
-![JMM内存关系图](https://ws1.sinaimg.cn/large/005CDUpdgy1g7gfyjat3yj30ls0ai0t8.jpg)
+![JMM内存关系图](https://tva2.sinaimg.com/large/005CDUpdgy1g7gfyjat3yj30ls0ai0t8.jpg)
 
 **注意**：这里所说的主内存、工作内存跟Java虚拟机内存区域划分中的堆、栈是不同层次的内存划分，如果两者一定要勉强对应起来，主内存主要对应于堆中对象的实例部分，而工作内存主要对应与虚拟机栈中的部分区域。
 
 从更低层次来说，主内存主要对应硬件内存部分，工作内存主要对应于CPU的高速缓存和寄存器部分，但也不是绝对的，主内存也可能存在于高速缓存和寄存器中，工作内存也可能存在于硬件内存中。
 
-![内存对应](https://ws1.sinaimg.cn/large/005CDUpdgy1g7gg34512wj30u00fvgn3.jpg)
+![内存对应](https://tva2.sinaimg.com/large/005CDUpdgy1g7gg34512wj30u00fvgn3.jpg)
 
 ##### 3.5.1 内存间的交互操作
 

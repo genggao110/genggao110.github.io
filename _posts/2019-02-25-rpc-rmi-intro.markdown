@@ -17,7 +17,7 @@ tags:
 
 RPC(Remote Procedure Call Protocol,远程过程调用协议)，它是一种通过网络从远程计算机程序上请求服务，而不需要了解底层网络技术的协议。
 
-![RPC示意图](https://ws1.sinaimg.cn/large/005CDUpdgy1g0iokb7r7nj31440nyn0d.jpg)
+![RPC示意图](https://tva2.sinaimg.com/large/005CDUpdgy1g0iokb7r7nj31440nyn0d.jpg)
 
 RPC采用客户机/服务器模式。请求程序就是一个客户机，而服务提供程序就是一个服务器。首先，客户机调用进程发送一个有进程参数的调用信息到服务进程，然后等待应答信息。在服务器端，进程保持睡眠状态直到调用信息到达为止。当一个调用信息到达，服务器获得进程参数，计算结果，发送答复信息，然后等待下一个调用信息，最后，客户端调用进程接收答复信息，获得进程结果，然后调用执行继续进行。
 
@@ -47,7 +47,7 @@ RMI(Remote Method Invocation, 远程方法调用)。能够让在客户端JAVA虚
 **实现原理**
 客户端只与代表远程主机中对象的Stub对象进行通信，丝毫不知道Server的存在。客户端只是调用Stub对象中的本地方法，Stub对象是一个本地对象，它实现了远程对象向外暴露的接口，也就是说它的方法和远程对象暴露的方法的签名是相同的。客户端认为它是调用远程对象的方法，实际上是调用Stub对象中的方法。**可以理解为Stub对象是远程对象在本地的一个代理**,当客户端调用方法的时候，Stub对象会将通过网络传递给远程对象。
 
-![RMI](https://ws1.sinaimg.cn/large/005CDUpdly1g0izl6mcl6j308k06rq2w.jpg)
+![RMI](https://tva2.sinaimg.com/large/005CDUpdly1g0izl6mcl6j308k06rq2w.jpg)
 
 RMI调用流程：
 1. 客户端调用客户端辅助对象Stub上的方法；

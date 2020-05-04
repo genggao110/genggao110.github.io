@@ -73,7 +73,7 @@ public class SynchronizedTest {
 
 利用javap -verbose来查看上述示例的class文件信息：
 
-![synchronized案例分析](https://ws1.sinaimg.cn/large/005CDUpdgy1g5360ztb4yj30ks0qp3yv.jpg)
+![synchronized案例分析](https://tva2.sinaimg.com/large/005CDUpdgy1g5360ztb4yj30ks0qp3yv.jpg)
 
 分析一下上图结果：
 - **同步方法**：方法级同步没有通过字节码指令来控制，它实现在方法调用和返回操作之中。当方法调用时，调用指定会检查方法ACC_SYNCHRONIZED访问标志是否被设置，若设置了则执行线程需要持有管程(Monitor，或称为监视器锁)才能运行方法，当方法完成(无论是否出现异常)时释放管程。
@@ -84,7 +84,7 @@ public class SynchronizedTest {
 **Java对象头**
 
 首先，我们来看一下对象内存的简图：
-![对象内存简图](https://ws1.sinaimg.cn/large/005CDUpdgy1g537ftue23j30pp0cmt9l.jpg)
+![对象内存简图](https://tva2.sinaimg.com/large/005CDUpdgy1g537ftue23j30pp0cmt9l.jpg)
 
 - 对象头：其包含两部分Mark Word和Klass Pointer(类型指针)。Mark word用于存储对象自身的运行时数据，如Hashcode、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID等等；Klass Point是对象指向它的类元数据的指针，虚拟机通过这个指针来确定这个对象是哪个类的实例。(Mark World 是实现轻量级锁和偏向锁的关键，下面会重点阐述)。
 - 实例变量：存放类的属性数据信息，包括父类的属性信息。
@@ -92,19 +92,19 @@ public class SynchronizedTest {
 
 `Mark World`用于存储对象自身的运行时数据，如如哈希码（HashCode）、GC分代年龄、锁状态标志、线程持有的锁、偏向线程 ID、偏向时间戳等等。Java对象头一般占有两个机器码（在32位虚拟机中，1个机器码等于4字节，也就是32bit），但是如果对象是数组类型，则需要三个机器码，因为JVM虚拟机可以通过Java对象的元数据信息确定Java对象的大小，但是无法从数组的元数据来确认数组的大小，所以用一块来记录数组长度。下图是Java对象头的存储结构（32位虚拟机）：
 
-![Java对象头的存储结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g537srtzpjj30fk021glr.jpg)
+![Java对象头的存储结构](https://tva2.sinaimg.com/large/005CDUpdgy1g537srtzpjj30fk021glr.jpg)
 
 对象头信息是与对象自身定义的数据无关的额外存储成本，但是考虑到虚拟机的空间效率，Mark Word被设计成一个非固定的数据结构以便在极小的空间内存存储尽量多的数据，它会根据对象的状态复用自己的存储空间，也就是说，Mark Word会随着程序的运行发生变化，变化状态如下（32位虚拟机）：
 
-![变化状态](https://ws1.sinaimg.cn/large/005CDUpdgy1g537ub7d43j30ng06bgmo.jpg)
+![变化状态](https://tva2.sinaimg.com/large/005CDUpdgy1g537ub7d43j30ng06bgmo.jpg)
 
 `Monitor`可以把它理解为一个同步工具，也可以描述为一种同步机制，它通常被描述为一个对象。与一切解释对象一样，所有的Java对象是天生的Mointor(换句话说，每个Java对象都有成为Monitor的潜质)，因为在Java的设计中，每一个对象自打娘胎里出来就带了一把看不见的锁，它叫做内部锁或者Monitor锁。每个对象都拥有自己的监视器，当这个对象由同步块或者这个对象的同步方法调用时，执行方法的线程必须先获取该对象的监视器才能进入同步块和同步方法，如果没有获取到监视器的线程将会被阻塞在同步块和同步方法的入口处，进入到BLOCKED状态，如图:
 
-![Monitor状态图](https://ws1.sinaimg.cn/large/005CDUpdgy1g54chz02a6j30yd0c5aa6.jpg)
+![Monitor状态图](https://tva2.sinaimg.com/large/005CDUpdgy1g54chz02a6j30yd0c5aa6.jpg)
 
 Monitor是线程私有的数据结构，每一个线程都有一个可用的monitor record列表，同时还有一个全局的可用列表。每一个被锁住的对象都会和一个monitor关联(对象头的MarkWord中的LockWord指向monitor的起始地址)，同时monitor中有一个Owner字段用来存放拥有该锁的线程的唯一标识，表示该锁被这个线程占用。其结构如下所示：
 
-![Monitor结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g5438l69vdj309n0db0sm.jpg)
+![Monitor结构](https://tva2.sinaimg.com/large/005CDUpdgy1g5438l69vdj309n0db0sm.jpg)
 
 - Owner: 初始时为NULL表示当前没有任何线程拥有该monitor record,当线程成功拥有该锁后保存线程唯一标识，当锁被释放时又设置为NULL;
 - EntryQ: 关联一个系统互斥锁(semaphore)，阻塞所有试图锁住monitor record的线程；
@@ -184,7 +184,7 @@ public void vectorTest(){
 
 下图给出轻量级锁的获取和释放过程：
 
-![轻量级锁的获取和释放过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g54asrfezxj30o10ncqa9.jpg)
+![轻量级锁的获取和释放过程](https://tva2.sinaimg.com/large/005CDUpdgy1g54asrfezxj30o10ncqa9.jpg)
 
 
 ##### 6.偏向锁
@@ -206,7 +206,7 @@ public void vectorTest(){
 
 下图是偏向锁的获取和释放流程：
 
-![偏向锁的获取和释放流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g54b7649arj30o10qxq96.jpg)
+![偏向锁的获取和释放流程](https://tva2.sinaimg.com/large/005CDUpdgy1g54b7649arj30o10qxq96.jpg)
 
 ##### 7.重量级锁
 
@@ -214,7 +214,7 @@ public void vectorTest(){
 
 ##### 8.不同锁的比较
 
-![不同锁的比较](https://ws1.sinaimg.cn/large/005CDUpdgy1g54cjl3nf7j30hc0audgk.jpg)
+![不同锁的比较](https://tva2.sinaimg.com/large/005CDUpdgy1g54cjl3nf7j30hc0audgk.jpg)
 
 
 **参考博文**：

@@ -126,7 +126,7 @@ NodeManager 是 TaskTracker 的一种更加普通和高效的版本。没有固�
 
 在C++中，内存泄漏的范围更大，因为C++不存在垃圾回收机制，因此对于那些不可达的对象，C++是永远都无法回收的。但是Java中不可达的对象是由GC负责的，因此程序员不用考虑这一部分对象，这在一定程度上减轻了开发难度。
 
-![内存泄漏对比](https://ws1.sinaimg.cn/large/005CDUpdgy1g88geitctvj315u0kcaak.jpg)
+![内存泄漏对比](https://tva2.sinaimg.com/large/005CDUpdgy1g88geitctvj315u0kcaak.jpg)
 
 在Java中，对程序员来说，GC基本是透明的，虽然我们可以调用System.gc();通知垃圾回收机制进行回收，但是该函数不保证JVM一定会执行GC。因为不同的JVM实现者可能使用不同的算法管理GC。
 
@@ -224,7 +224,7 @@ QPS：每秒响应请求数。在互联网领域，这个指标和吞吐量区�
 
 ##### 3. 常见的互联网分层
 
-![互联网分层](https://ws1.sinaimg.cn/large/005CDUpdly1g8hrjc9e2aj30bi0a53zi.jpg)
+![互联网分层](https://tva2.sinaimg.com/large/005CDUpdly1g8hrjc9e2aj30bi0a53zi.jpg)
 
 常见互联网分布式架构如上，分为：
 1. 客户端层：典型调用方是浏览器browser或者手机应用APP
@@ -238,7 +238,7 @@ QPS：每秒响应请求数。在互联网领域，这个指标和吞吐量区�
 
 `反向代理层的水平扩展：`
 
-![反向代理层的水平扩展](https://ws1.sinaimg.cn/large/005CDUpdgy1g8hrlacqkgj30a003iglt.jpg)
+![反向代理层的水平扩展](https://tva2.sinaimg.com/large/005CDUpdgy1g8hrlacqkgj30a003iglt.jpg)
 
 反向代理层的水平扩展，是通过“DNS轮询”实现的：dns-server对于一个域名配置了多个解析ip，每次DNS解析请求来访问dns-server，会轮询返回这些ip。当nginx成为瓶颈的时候，只要增加服务器数量，新增nginx服务的部署，增加一个外网ip，就能扩展反向代理层的性能，做到理论上的无限高并发。
 

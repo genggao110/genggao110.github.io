@@ -31,7 +31,7 @@ drwxr-xr-x 3 root root 4096 2015-08-22 16:51 literature
 
 对ls -l 显示的内容进行分解，首先来看前半部分：
 
-![Linux文件权限](https://ws1.sinaimg.cn/large/005CDUpdly1g24hmuw9wtj30ed09e74n.jpg)
+![Linux文件权限](https://tva2.sinaimg.com/large/005CDUpdly1g24hmuw9wtj30ed09e74n.jpg)
 
 首先是文件类型，-表示文本文件，d表示目录，除此之外还有下列几种文件(不常见)：
 

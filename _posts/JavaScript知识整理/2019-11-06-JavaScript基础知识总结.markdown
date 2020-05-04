@@ -576,7 +576,7 @@ let f1 = new Foo();
 
 以上代码表示创建一个构造函数`Foo()`，并用new关键字实例化该构造函数得到一个实例化对象f1。(new操作符将函数作为构造器的过程原理上面已经介绍了)虽然这是简简单单的两行代码，其背后的关系是错综复杂的，如下图所示：
 
-![new操作背后原理](https://ws1.sinaimg.cn/large/005CDUpdgy1g8ty9etzygj31d40rk43g.jpg)
+![new操作背后原理](https://tva1.sinaimg.com/large/005CDUpdgy1g8ty9etzygj31d40rk43g.jpg)
 
 **图的说明：**右下角给出了图例，其中红色箭头表示`__proto__`属性指向、绿色箭头表示`prototype`属性的指向、棕色实线箭头表示本身`具有的constructor属性`的指向，棕色虚线箭头表示继承而来的`constructor`属性的指向；蓝色方块表示对象，浅绿色方块表示函数(这里为了更好看清，Foo()仅代表是函数，并不是指执行函数Foo后得到的结果，图中的其他函数同理)。图的中间部分即为它们之间的联系，图的最左边即为例子代码。
 
@@ -588,7 +588,7 @@ let f1 = new Foo();
 
 但是，由于JS中函数也是一种对象，所以函数也拥有着`__proto__`和`constructor`属性，这点是致使我们产生困惑的很大原因之一。我们来对上面的图按照属性分别拆开，然后进行分析：
 
-![__proto__属性分析](https://ws1.sinaimg.cn/large/005CDUpdgy1g8u5csgbmnj31dq0qgdiz.jpg)
+![__proto__属性分析](https://tva1.sinaimg.com/large/005CDUpdgy1g8u5csgbmnj31dq0qgdiz.jpg)
 
 这里我们仅仅留下`__proto__`属性，它是`对象所独有的`，可以看到`__proto__`属性都是由一个对象指向一个对象，即指向他们的原型对象(也可以理解成为父对象)。这个属性的作用就是当访问一个对象的属性时，如果该对象内部不存在这个属性，那么就会去它的`__proto__`属性所指向的那个对象(可以理解为父对象)里找，如果父对象也不存在这个属性，则继续往父对象的`__proto__`属性所指向的那个对象里找，如果还没有找到，则继续往上找......直到原型链顶端`null`。再往上找就相当于在null上取值，会报错，以上这种通过`__proto__`属性来连接对象直到`null`的一条链即为我们所谓的`原型链`。
 
@@ -596,7 +596,7 @@ let f1 = new Foo();
 
 第二，接下来我们看`prototype`属性：
 
-![prototype属性分析](https://ws1.sinaimg.cn/large/005CDUpdgy1g8u69cdxiaj31bf0oowha.jpg)
+![prototype属性分析](https://tva2.sinaimg.com/large/005CDUpdgy1g8u69cdxiaj31bf0oowha.jpg)
 
 `prototype`属性，别忘了一点，就是我们前面所说的需要了解的第二点，它是`函数所独有的`，它是从一个函数指向一个对象。它的含义是`函数的原型对象`，也就是这个函数(其实所有函数都可以作为构造函数)所创建的实例的原型对象，由此可知：`f1.__proto__ === Foo.prototype`，它们两个完全一样。那么`prototype`属性的作用又是什么呢？它的作用就是包含可以由特定类型的所有实例共享的属性和方法，也就是让该函数所实例化的对象们都可以找到公用的属性和方法。`任何函数在创建的时候，其实会默认同时创建该函数的prototype对象`。
 
@@ -604,15 +604,15 @@ let f1 = new Foo();
 
 最后，我们来看一下`constructor`属性：
 
-![constructor属性分析](https://ws1.sinaimg.cn/large/005CDUpdgy1g8u6h7gsw5j31c80q90w1.jpg)
+![constructor属性分析](https://tva2.sinaimg.com/large/005CDUpdgy1g8u6h7gsw5j31c80q90w1.jpg)
 
 `constructor`属性也是对象才拥有的，它是指从一个对象指向一个函数，含义就是`指向该对象的构造函数`。“每个对象都有构造函数”（本身拥有或者继承而来，继承而来的要结合`__proto__`属性查看会更清晰的表达，如下所示）。从上图可以看出`Function`对象比较特殊，它的构造函数就是它自己(因为Function可以看成是一个函数，也可以是一个对象)，所有函数和对象最终都是由Function构造函数得来，所以`constructor`属性的终点就是`Function`这个函数。
 
-![constructor分析](https://ws1.sinaimg.cn/large/005CDUpdgy1g8u6mged71j31cx0qwtd4.jpg)
+![constructor分析](https://tva2.sinaimg.com/large/005CDUpdgy1g8u6mged71j31cx0qwtd4.jpg)
 
 这里还是来解释一下上一段中的`每个对象都有构造函数`这句话。这里的意思是每个对象都可以找到其对应的`constructor`，因为创建对象的前提是需要有`constructor`，而这个`constructor`可能是对象本身显示定义的或者通过`__proto__`在原型链中找到的。`而单单从constructor这个属性来讲，只有prototype对象才有`。每个函数在创建的时候，JS会同时创建一个该函数对应的prototype对象，而`函数创建的对象.__proto__ === 该函数.prototype, 该函数.prototype.constructor === 该函数本身`，故通过函数创建的对象即使自己没有constructor属性，它也能够通过`__proto__`找到对应的constructor，所以任何对象最终都可以找到其构造函数(null如果当成对象的话，将null除外)。如下所示：
 
-![constructor解释](https://ws1.sinaimg.cn/large/005CDUpdgy1g8u6ui1vkpj30sw0gr0uv.jpg)
+![constructor解释](https://tva1.sinaimg.com/large/005CDUpdgy1g8u6ui1vkpj30sw0gr0uv.jpg)
 
 **4. 总结**
 
@@ -1117,7 +1117,7 @@ setTimeout(fn, 1000);
 
 事件循环(Event Loop): 主线程只会做一件事，就是从消息队列里面取消息、执行消息，再取消息，再执行。消息队列为空时，就会等待直到消息队列变成非空。只有当前的消息执行结束，才会去取下一个消息。这种机制就叫做事件循环机制`Event Loop`，取一个消息并执行的过程叫做一次循环。
 
-![JS事件循环原理](https://ws1.sinaimg.cn/large/005CDUpdgy1g9beh50gg4j30m80goabe.jpg)
+![JS事件循环原理](https://tva2.sinaimg.com/large/005CDUpdgy1g9beh50gg4j30m80goabe.jpg)
 
 > 工作线程是生产者，主线程是消费者。工作线程执行异步任务，执行完之后把对应的回调函数封装成一条消息放到消息队列中；主线程不断地从消息队列中取消息并执行，当消息队列空时主线程阻塞，直到消息队列再次非空。
 
@@ -1173,7 +1173,7 @@ W3C在HTML标准中规定，规定要求setTimeout中低于4ms的时间间隔算
 
 在XMLHttpRequest连接后通过浏览器新开的一个线程请求。
 
-![浏览器内核](https://ws1.sinaimg.cn/large/005CDUpdgy1g9biyveox2j30830hl763.jpg)
+![浏览器内核](https://tva2.sinaimg.com/large/005CDUpdgy1g9biyveox2j30830hl763.jpg)
 
 ### 2.5 任务划分
 
@@ -1185,21 +1185,21 @@ W3C在HTML标准中规定，规定要求setTimeout中低于4ms的时间间隔算
 
 **macrotask queue:** 不唯一，存在着一定的优先级(用户I/O部分优先级更高);异步执行，同一个事件循环中，只执行一个。包括整体代码script，setTimeout，setInterval ，setImmediate,I/O,各种事件的回调函数（UI rendering）
 
-![任务执行](https://ws1.sinaimg.cn/large/005CDUpdgy1g9bjhjpfk4j31f40rw7cz.jpg)
+![任务执行](https://tva2.sinaimg.com/large/005CDUpdgy1g9bjhjpfk4j31f40rw7cz.jpg)
 
 ### 2.6 JS执行机制
 
 执行整体代码这个宏任务，执行的过程发现宏任务或微任务，将其放入对应的任务队列。当整体代码这个宏任务执行完之后，查看是否有可执行的微任务，有则执行，没有则执行下一个宏任务。(`微任务的特殊性，例如Promise的回调函数就是微任务。它与正常的异步任务区别在于正常的任务是追加到下一轮事件循环，而微任务是追加到本轮事件循环。这意味着，微任务的执行时间一定早于正常任务。`)
 
-![JS执行机制](https://ws1.sinaimg.cn/large/005CDUpdgy1g9bjrhwxrkj30ip0hrn1d.jpg)
+![JS执行机制](https://tva2.sinaimg.com/large/005CDUpdgy1g9bjrhwxrkj30ip0hrn1d.jpg)
 
 不妨给出下面一个例子：
 
-![案例代码](https://ws1.sinaimg.cn/large/005CDUpdgy1g9bjsl6ad7j30ha0ktdik.jpg)
+![案例代码](https://tva2.sinaimg.com/large/005CDUpdgy1g9bjsl6ad7j30ha0ktdik.jpg)
 
 执行结果：
 
-![执行结果](https://ws1.sinaimg.cn/large/005CDUpdgy1g9bjt4glv2j308s07i755.jpg)
+![执行结果](https://tva2.sinaimg.com/large/005CDUpdgy1g9bjt4glv2j308s07i755.jpg)
 
 **参考文章**
 

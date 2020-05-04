@@ -204,7 +204,7 @@ public class DemoController {
 
 下面这种类图列出了Spring中主要的AOP组件：
 
-![AOP组件](https://ws1.sinaimg.cn/large/005CDUpdgy1g8e9tkq1idj31pa1d6k7j.jpg)
+![AOP组件](https://tva2.sinaimg.com/large/005CDUpdgy1g8e9tkq1idj31pa1d6k7j.jpg)
 
 #### 4.2 如何使用Spring AOP(不是AspectJ)
 
@@ -467,7 +467,7 @@ springMVC是一个MVC的开源框架，springMVC=struts2+spring，springMVC就�
 
 MVC的原理图如下：
 
-![MVC原理图](https://ws1.sinaimg.cn/large/005CDUpdgy1g8g0lhaccgj30mc0a90t8.jpg)
+![MVC原理图](https://tva1.sinaimg.com/large/005CDUpdgy1g8g0lhaccgj30mc0a90t8.jpg)
 
 - M-Model(模型)：完成业务逻辑，由javaBean构成，service + dao + entity
 - V-View(视图)： 界面展示jsp,html，...
@@ -477,9 +477,9 @@ MVC的原理图如下：
 
 给出网上比较清晰明了的几个工作流程图：
 
-![SpringMVC](https://ws1.sinaimg.cn/large/005CDUpdgy1g8g0tfsz5hj30rf0s6tf6.jpg)
+![SpringMVC](https://tva1.sinaimg.com/large/005CDUpdgy1g8g0tfsz5hj30rf0s6tf6.jpg)
 
-![SpringMVC](https://ws1.sinaimg.cn/large/005CDUpdgy1g8g0u30y47j30ue0lptam.jpg)
+![SpringMVC](https://tva1.sinaimg.com/large/005CDUpdgy1g8g0u30y47j30ue0lptam.jpg)
 
 #### 3.1 SpringMvc工作流程
 
@@ -537,7 +537,7 @@ MVC的原理图如下：
 
 ## Spring及SpringBoot模块架构
 
-![Spring模块架构](https://ws1.sinaimg.cn/large/005CDUpdgy1g8g1xanww2j30fp08fad0.jpg)
+![Spring模块架构](https://tva2.sinaimg.com/large/005CDUpdgy1g8g1xanww2j30fp08fad0.jpg)
 
 1. Spring Core: 主要组件就是BeanFactory,创建JavaBean的工厂，使用控制反转(IOC)模式。将应用程序的配置和依赖性规范与实际的应用程序代码分开。
 2. Spring Aop: 集成了面向切面的编程功能。（AOP把一个业务流程分成几个部分，例如权限检查、业务处理、日志记录，每个部分单独处理，然后把它们组装成完整的业务流程，每个部分被称为切面）可以将声明型事务管理集成到应用程序。

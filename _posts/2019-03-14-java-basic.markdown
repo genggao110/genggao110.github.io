@@ -398,7 +398,7 @@ class GreenApple extends Apple{}
 
 在这个体系中，上界通配符_Plate<? extends Fruit>_覆盖下图中蓝色的区域：
 
-![上界通配符](https://ws1.sinaimg.cn/large/005CDUpdly1g1hbp58jbyj317s0l8dlz.jpg)
+![上界通配符](https://tva2.sinaimg.com/large/005CDUpdly1g1hbp58jbyj317s0l8dlz.jpg)
 
 **什么是下界？**
 
@@ -410,7 +410,7 @@ Plate<? super Fruit>
 
 表达的就是相反的概念：一个能放水果以及一切是水果基类的盘子。 _Plate<? super Fruit>_ 是 _Plate< Fruit >_ 的基类，但不是 _Plate< Apple >_ 的基类。对应刚才那个例子， _Plate<? super Fruit>_ 覆盖下图中红色的区域。
 
-![下界通配符](https://ws1.sinaimg.cn/large/005CDUpdly1g1hbus470gj317o0mg43g.jpg)
+![下界通配符](https://tva2.sinaimg.com/large/005CDUpdly1g1hbus470gj317o0mg43g.jpg)
 
 **上下界通配符的副作用**
 
@@ -735,7 +735,7 @@ public class StringTest {
     }
 }
 ```
-![字符串的复合运算](https://ws1.sinaimg.cn/large/005CDUpdgy1g5595h9cvoj30t80bowg9.jpg)
+![字符串的复合运算](https://tva2.sinaimg.com/large/005CDUpdgy1g5595h9cvoj30t80bowg9.jpg)
 
 因为涉及到字符串拼接，所以运算a和运算b都会生成一个StringBuilder对象，但运算a只会调用一次append()方法，直接把字符串“ world !”与引用str拼接，而运算b需要调用两次append()方法，分别把str引用先后与字符串“ world ”和“!”拼接；表明复合运算“+=”使得编译器在编译阶段会优化字符串“ world ”和“!”的拼接。所以运算a的效率会高于运算b。
 
@@ -957,7 +957,7 @@ public class SoftReference<T> extends Reference<T> {
 
 和其它引用不同的是，在软引用实现中，有两个特殊的变量：clock 和 timestamp。在JVM初始化时，会对变量clock进行初始化，hotspot的实现如下：
 
-![clock初始化](https://ws1.sinaimg.cn/large/005CDUpdgy1g8fdc9er52j30x60e8djl.jpg)
+![clock初始化](https://tva2.sinaimg.com/large/005CDUpdgy1g8fdc9er52j30x60e8djl.jpg)
 
 同时，在JVM发生GC时，也会更新clock的值，意味着clock会记录上次GC发生的时间点。不过，这个时间记录下来有什么用？
 
@@ -965,7 +965,7 @@ public class SoftReference<T> extends Reference<T> {
 
 要理解这个，我们需要看看GC过程，对引用的处理逻辑，先来看一段HotSpot的代码，之前一直看的1.7版本，如果有出入也不要紧张。
 
-![GC过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g8fdexsswoj314y0omag1.jpg)
+![GC过程](https://tva2.sinaimg.com/large/005CDUpdgy1g8fdexsswoj314y0omag1.jpg)
 
 代码中，有两个比较重要的部分：
 1. `iter.is_referent_alive()` 这个判断软引用中的对象（referent）是否还活着，即还有没有被GC Roots可达，如果不可达，说明这个对象已经死了。

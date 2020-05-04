@@ -59,7 +59,7 @@ B树，又名B-树。它是一棵多路平衡多路查找树。
 - `最右孩子节点的所有关键字`肯定大于当前节点的`最右关键字`；例如下图中的`13`肯定大于12和8
 - 而中间孩子节点的所有关键字肯定满足与一个当前节点的关键字的开区间范围`(k[i-1],k[i])`，例如下图的p2孩子节点的关键字9肯定位于(8,12)关键字之间。
 
-![三阶B树](https://ws1.sinaimg.cn/large/005CDUpdgy1g7tfm78by1j30y70c00tt.jpg)
+![三阶B树](https://tva2.sinaimg.com/large/005CDUpdgy1g7tfm78by1j30y70c00tt.jpg)
 
 总之，我们大致的知道，B树并不是一棵二叉搜索树，而是一颗具有平衡性质的多路查找树。同时B树的定义比较复杂，具有指针域和关键字域的概念，一个结点可以存储多个数据元素，上一段是对结点定义约束，下一段是对结点内部所存储的关键字的约束。
 
@@ -75,7 +75,7 @@ B树，又名B-树。它是一棵多路平衡多路查找树。
 
 现在有一个问题，关键字总数为n的m阶B树的高是多少？
 
-![B树的高](https://ws1.sinaimg.cn/large/005CDUpdgy1g7tftss731j30rs0hzq6p.jpg)
+![B树的高](https://tva2.sinaimg.com/large/005CDUpdgy1g7tftss731j30rs0hzq6p.jpg)
 
 既底数是ceil(m/2)，最后的对数结果 + 1就是这颗B树的高
 
@@ -92,7 +92,7 @@ B+树是B树的变种，其定义基本与B树相同，除了：
 - 非叶子节点仅用来索引，数据都保存在叶子节点中
 - 所有叶子节点的数据均有两个`链指针`分别指向上一个数据和下一个数据，构成双向链表。
 
-![3阶B+树](https://ws1.sinaimg.cn/large/005CDUpdgy1g7tg4igbpij312j0fpgn2.jpg)
+![3阶B+树](https://tva2.sinaimg.com/large/005CDUpdgy1g7tg4igbpij312j0fpgn2.jpg)
 
 **B树和B+树的区别**
 
@@ -102,9 +102,9 @@ B+树，不同于B树的是，所有数据都存储在叶子结点中，非叶�
 
 因为B+树的定义中，所有的非叶子结点的关键字，都会继承至其中孩子结点中，是其孩子结点元素的最大值或最小值，所以就造成了一个特性，根结点的最小值，可能是整棵树的最小值。根结点的最大值可能是整棵树的最大值。
 
-![B+树最小值](https://ws1.sinaimg.cn/large/005CDUpdgy1g7tg6otdvwj312h0do0u9.jpg)
+![B+树最小值](https://tva2.sinaimg.com/large/005CDUpdgy1g7tg6otdvwj312h0do0u9.jpg)
 
-![B+树最大值](https://ws1.sinaimg.cn/large/005CDUpdgy1g7tg7ho6prj312l0ekmym.jpg)
+![B+树最大值](https://tva2.sinaimg.com/large/005CDUpdgy1g7tg7ho6prj312l0ekmym.jpg)
 
 #### 3.3 为什么B+树会替代B树？
 

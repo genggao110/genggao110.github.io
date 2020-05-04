@@ -23,7 +23,7 @@ Semaphore通常用于限制同一时间对共享资源的访问次数上，也�
 
 #### 2.1 类结构
 
-![类结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g8ggq3ht1dj30ds0ardfy.jpg)
+![类结构](https://tva2.sinaimg.com/large/005CDUpdgy1g8ggq3ht1dj30ds0ardfy.jpg)
 
 Semaphore中包含了一个实现AQS的同步器Sync，以及它的两个子类FairSync和NonFairSync，这说明Semaphore也是区分公平模式和非公平模式的。
 

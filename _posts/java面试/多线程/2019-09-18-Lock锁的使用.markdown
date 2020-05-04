@@ -1173,7 +1173,7 @@ signal()方法的大致流程如下所示：
 
 给出下面一个图来表示一下整个流程：
 
-![条件锁流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7xyqy56s0j30lo0j3abl.jpg)
+![条件锁流程](https://tva2.sinaimg.com/large/005CDUpdgy1g7xyqy56s0j30lo0j3abl.jpg)
 
 #### 4.9 总结
 
@@ -1223,7 +1223,7 @@ ReentrantLock是Java语言层面提供的用于在多线程环境中保持同步
 
 在我们分析源码之前，我们先来看一下ReentrantReadWriteLock这个类的主要结构：
 
-![读写锁类继承结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g7y3qrixjyj30pu0ar3yt.jpg)
+![读写锁类继承结构](https://tva2.sinaimg.com/large/005CDUpdgy1g7y3qrixjyj30pu0ar3yt.jpg)
 
 ReentrantReadWriteLock中的类分成了三个部分：
 1. ReentrantReadWriteLock本身实现了ReadWriteLock，这个接口只提供了两个方法`readLock()`和`writeLock()`;
@@ -1432,7 +1432,7 @@ ReentrantReadWriteLock中的类分成了三个部分：
 
 其答案就是在`doAcquireShared()`方法中，在这里一个节点A获取了读锁之后，会唤醒下一个读节点B，这时候B也会获取读锁，然后B继续唤醒C，依次往复，也就是这里的节点是一个唤醒一个这样的形式，而不是一个节点获取了读锁之后一次性唤醒后面所有的读节点、
 
-![唤醒流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g7z4g8g8zaj30jt05j0su.jpg)
+![唤醒流程](https://tva2.sinaimg.com/large/005CDUpdgy1g7z4g8g8zaj30jt05j0su.jpg)
 
 **ReadLock.unlock()**
 
@@ -1522,7 +1522,7 @@ ReentrantReadWriteLock中的类分成了三个部分：
 
 如下图所示，ABC三个节点各获取了一次共享锁，三者释放的顺序分别为ACB，那么最后B释放共享锁的时候tryReleaseShared()才返回true，进而才会唤醒下一个节点D.
 
-![释放锁](https://ws1.sinaimg.cn/large/005CDUpdgy1g7z6g89bp0j30jw08m3yq.jpg)
+![释放锁](https://tva2.sinaimg.com/large/005CDUpdgy1g7z6g89bp0j30jw08m3yq.jpg)
 
 **WriteLock.lock()**
 

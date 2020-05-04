@@ -94,7 +94,7 @@ GreetingService greetService1 = message -> System.out.println("Hello " + message
 
 给出一个截图如下：
 
-![方法引用](https://ws1.sinaimg.cn/large/005CDUpdgy1g522ltv9ahj30lz06jmzj.jpg)
+![方法引用](https://tva2.sinaimg.com/large/005CDUpdgy1g522ltv9ahj30lz06jmzj.jpg)
 
 ### 2.4 默认方法与静态方法
 
@@ -367,7 +367,7 @@ public class SynchronizedTest {
 
 利用javap -verbose来查看上述示例的class文件信息：
 
-![synchronized案例分析](https://ws1.sinaimg.cn/large/005CDUpdgy1g5360ztb4yj30ks0qp3yv.jpg)
+![synchronized案例分析](https://tva2.sinaimg.com/large/005CDUpdgy1g5360ztb4yj30ks0qp3yv.jpg)
 
 分析一下上图结果：
 - **同步方法**：方法级同步没有通过字节码指令来控制，它实现在方法调用和返回操作之中。当方法调用时，调用指定会检查方法ACC_SYNCHRONIZED访问标志是否被设置，若设置了则执行线程需要持有管程(Monitor，或称为监视器锁)才能运行方法，当方法完成(无论是否出现异常)时释放管程。
@@ -378,7 +378,7 @@ public class SynchronizedTest {
 **Java对象头**
 
 首先，我们来看一下对象内存的简图：
-![对象内存简图](https://ws1.sinaimg.cn/large/005CDUpdgy1g537ftue23j30pp0cmt9l.jpg)
+![对象内存简图](https://tva2.sinaimg.com/large/005CDUpdgy1g537ftue23j30pp0cmt9l.jpg)
 
 - 对象头：其包含两部分Mark Word和Klass Pointer(类型指针)。Mark word用于存储对象自身的运行时数据，如Hashcode、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID等等；Klass Point是对象指向它的类元数据的指针，虚拟机通过这个指针来确定这个对象时哪个类的实例。(Mark World 是实现轻量级锁和偏向锁的关键，下面会重点阐述)。
 - 实例变量：存放类的属性数据信息，包括父类的属性信息。
@@ -386,19 +386,19 @@ public class SynchronizedTest {
 
 `Mark World`用于存储对象自身的运行时数据，如如哈希码（HashCode）、GC分代年龄、锁状态标志、线程持有的锁、偏向线程 ID、偏向时间戳等等。Java对象头一般占有两个机器码（在32位虚拟机中，1个机器码等于4字节，也就是32bit），但是如果对象是数组类型，则需要三个机器码，因为JVM虚拟机可以通过Java对象的元数据信息确定Java对象的大小，但是无法从数组的元数据来确认数组的大小，所以用一块来记录数组长度。下图是Java对象头的存储结构（32位虚拟机）：
 
-![Java对象头的存储结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g537srtzpjj30fk021glr.jpg)
+![Java对象头的存储结构](https://tva2.sinaimg.com/large/005CDUpdgy1g537srtzpjj30fk021glr.jpg)
 
 对象头信息是与对象自身定义的数据无关的额外存储成本，但是考虑到虚拟机的空间效率，Mark Word被设计成一个非固定的数据结构以便在极小的空间内存存储尽量多的数据，它会根据对象的状态复用自己的存储空间，也就是说，Mark Word会随着程序的运行发生变化，变化状态如下（32位虚拟机）：
 
-![变化状态](https://ws1.sinaimg.cn/large/005CDUpdgy1g537ub7d43j30ng06bgmo.jpg)
+![变化状态](https://tva2.sinaimg.com/large/005CDUpdgy1g537ub7d43j30ng06bgmo.jpg)
 
 `Monitor`可以把它理解为一个同步工具，也可以描述为一种同步机制，它通常被描述为一个对象。与一切解释对象一样，所有的Java对象是天生的Mointor(换句话说，每个Java对象都有成为Monitor的潜质)，因为在Java的设计中，每一个对象自打娘胎里出来就带了一把看不见的锁，它叫做内部锁或者Monitor锁。每个对象都拥有自己的监视器，当这个对象由同步块或者这个对象的同步方法调用时，执行方法的线程必须先获取该对象的监视器才能进入同步块和同步方法，如果没有获取到监视器的线程将会被阻塞在同步块和同步方法的入口处，进入到BLOCKED状态，如图:
 
-![Monitor状态图](https://ws1.sinaimg.cn/large/005CDUpdgy1g54chz02a6j30yd0c5aa6.jpg)
+![Monitor状态图](https://tva2.sinaimg.com/large/005CDUpdgy1g54chz02a6j30yd0c5aa6.jpg)
 
 Monitor是线程私有的数据结构，每一个线程都有一个可用的monitor record列表，同时还有一个全局的可用列表。每一个被锁住的对象都会和一个monitor关联(对象头的MarkWord中的LockWord指向monitor的起始地址)，同时monitor中有一个Owner字段用来存放拥有该锁的线程的唯一标识，表示该锁被这个线程占用。其结构如下所示：
 
-![Monitor结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g5438l69vdj309n0db0sm.jpg)
+![Monitor结构](https://tva2.sinaimg.com/large/005CDUpdgy1g5438l69vdj309n0db0sm.jpg)
 
 - Owner: 初始时为NULL表示当前没有任何线程拥有该monitor record,当线程成功拥有该锁后保存线程唯一标识，当锁被释放时又设置为NULL;
 - EntryQ: 关联一个系统互斥锁(semaphore)，阻塞所有试图锁住monitor record的线程；
@@ -478,7 +478,7 @@ public void vectorTest(){
 
 下图给出轻量级锁的获取和释放过程：
 
-![轻量级锁的获取和释放过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g54asrfezxj30o10ncqa9.jpg)
+![轻量级锁的获取和释放过程](https://tva2.sinaimg.com/large/005CDUpdgy1g54asrfezxj30o10ncqa9.jpg)
 
 
 ##### 6.偏向锁
@@ -500,7 +500,7 @@ public void vectorTest(){
 
 下图是偏向锁的获取和释放流程：
 
-![偏向锁的获取和释放流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g54b7649arj30o10qxq96.jpg)
+![偏向锁的获取和释放流程](https://tva2.sinaimg.com/large/005CDUpdgy1g54b7649arj30o10qxq96.jpg)
 
 ##### 7.重量级锁
 
@@ -508,7 +508,7 @@ public void vectorTest(){
 
 ##### 8.不同锁的比较
 
-![不同锁的比较](https://ws1.sinaimg.cn/large/005CDUpdgy1g54cjl3nf7j30hc0audgk.jpg)
+![不同锁的比较](https://tva2.sinaimg.com/large/005CDUpdgy1g54cjl3nf7j30hc0audgk.jpg)
 
 
 **参考博文**：
@@ -555,7 +555,7 @@ JMM(Java Memory Model)的主要目标是定义程序中各个变量的访问规�
 
 Java内存模型有主内存和工作内存，工作内存保存了该线程使用到的变量的主内存副本拷贝，线程对变量的所有操作都必须在工作内存中进行，而不能直接读写主内存中的变量，不同线程之间无法直接访问对方工作内存中的变量，线程间变量值的传递都需要通过主内存来实现。(`注意`：当一个变量被volatile修饰后，JMM 会把该线程对应的工作内存中的共享变量值刷新到主内存。表示着线程工作内存无效，当一个线程修改共享变量后他会立即被更新到主内存中，当其他线程读取共享变量时，它会直接从主内存中读取。)下图给出具体的内存模型图：
 
-![java内存模型](https://ws1.sinaimg.cn/large/005CDUpdgy1g54ydcutebj30mo0dctdb.jpg)
+![java内存模型](https://tva2.sinaimg.com/large/005CDUpdgy1g54ydcutebj30mo0dctdb.jpg)
 
 使用工作内存和主内存，虽然加快了速度，但是也带来了一些问题,例如：
 
@@ -624,13 +624,13 @@ StoreLoad Barriers | Store1;StoreLoad;Load2 | 确保Store1数据对其他处理�
 
 **其中重点说下StoreLaod屏障，它是确保可见性的关键，因为它会将屏障之前的写缓冲区中的数据全部刷新到主内存中。**上述内存屏障插入策略非常保守，但它可以保证在任意处理平台，任意的程序中都能得到正确的volatile语义。下面是保守策略（为什么说保守呢，因为有些在实际的场景是可省略的）下，volatile 写操作 插入内存屏障后生成的指令序列示意图：
 
-![volatile写操作](https://ws1.sinaimg.cn/large/005CDUpdgy1g557insoz7j30y20ns40t.jpg)
+![volatile写操作](https://tva2.sinaimg.com/large/005CDUpdgy1g557insoz7j30y20ns40t.jpg)
 
 其中StoreStore屏障可以保证在volatile写之前，其前面的所有普通写操作对任意处理器可见（把它刷新到主内存）。另外volatile写后面有StoreLoad屏障，此屏障的作用是避免volatile写与后面可能有的读或写操作进行重排序。因为编译器常常无法准确判断在一个volatile写的后面是否需要插入一个StoreLoad屏障（比如，一个volatile写之后方法立即return）为了保证能正确实现volatile的内存语义，JMM采取了保守策略：在每个volatile写的后面插入一个StoreLoad屏障。因为volatile写-读内存语义的常见模式是：一个写线程写volatile变量，多个读线程去读同一个volatile变量。当读线程的数量大大超过写线程时，选择在volatile写之后插入StoreLoad屏障将带来可观的执行效率的提升。从这里也可看出JMM在实现上的一个特点：首先确保正确性，然后再去追求效率（其实我们工作中编码也是一样）。
 
 下面是在保守策略下，volatile读插入内存屏障后生产的指令序列示意图：
 
-![volatile读](https://ws1.sinaimg.cn/large/005CDUpdgy1g557lppd08j30u00jk76z.jpg)
+![volatile读](https://tva2.sinaimg.com/large/005CDUpdgy1g557lppd08j30u00jk76z.jpg)
 
 上述volatile写和volatile读的内存屏障插入策略非常保守。在实际执行时，只要不改变volatile写-读的内存语义，编译器可以根据具体情况忽略不必要的屏障。在JMM基础中就有提到过各个处理器对各个屏障的支持度，其中x86处理器仅会对写-读操作做重排序。
 
@@ -1240,7 +1240,7 @@ interface InnerClass {
 
 #### 4.4.5 总结
 
-![Java内部类](https://ws1.sinaimg.cn/large/005CDUpdly1g58cc4m270j31sx175h37.jpg)
+![Java内部类](https://tva2.sinaimg.com/large/005CDUpdly1g58cc4m270j31sx175h37.jpg)
 
 ### 4.5 Java的异常体系
 
@@ -1250,7 +1250,7 @@ interface InnerClass {
 
 在Java中，所有的异常都有一个共同的祖先Throwable。Throwable指定代码中可用异常传播机制通过Java应用程序传输任何问题的共性。
 
-![Exception in Java](https://ws1.sinaimg.cn/large/005CDUpdgy1g58fow23waj30hz0ghdgi.jpg)
+![Exception in Java](https://tva2.sinaimg.com/large/005CDUpdgy1g58fow23waj30hz0ghdgi.jpg)
 
 - Throwable:其有两个重要的子类——Exception(异常)，Error(错误),二者都是Java异常处理的重要子类，各自包含了大量子类。
 - Error(错误)：是程序本身无法处理的错误，表示运行应用程序中较严重问题。大多数错误与代码编写者执行的操作无关，而表示代码运行时JVM出现的问题。例如，Java虚拟机运行错误(Virtual Machine Error),内存溢出错误(OutOfMemoryError)等。这些异常发生时，JVM一般会选择线程终止。这些错误是不可查的，因为他们在应用程序的控制和处理能力之外，而且绝大多数是程序运行时不允许出现的状况。对于设计合理的应用程序来说，即使确实发生了错误，本质上也不应该试图去处理它所引起的异常状况。在 Java中，错误通过Error的子类描述。
@@ -1516,7 +1516,7 @@ Constant pool:
   #16 = Utf8               Signature
   #17 = Utf8               (Ljava/util/List<Ljava/lang/Integer;>;)V
 ```
-![字节码信息](https://ws1.sinaimg.cn/large/005CDUpdly1g58r7c8vw3j30z00nkdkh.jpg)
+![字节码信息](https://tva2.sinaimg.com/large/005CDUpdly1g58r7c8vw3j30z00nkdkh.jpg)
 
 一目了然，可以看出来调用到了泛型的地方会添加signature和LocalVariableTypeTable，现在就明白了泛型擦除不是擦除全部，不然理解的就太狭隘了。其实，jdk提供了方法来读取泛型信息的,利用class类的getGenericSuperClass()方法我们可以在泛型类中去获取具体传入参数的类型，本质上就是通过signature和LocalVariableTypeTable来获取的。我们可以利用这些虚拟机给我们保留的泛型信息做哪些事呢？
 
@@ -1696,7 +1696,7 @@ class GreenApple extends Apple{}
 
 在这个体系中，上界通配符_Plate<? extends Fruit>_覆盖下图中蓝色的区域：
 
-![上界通配符](https://ws1.sinaimg.cn/large/005CDUpdly1g1hbp58jbyj317s0l8dlz.jpg)
+![上界通配符](https://tva2.sinaimg.com/large/005CDUpdly1g1hbp58jbyj317s0l8dlz.jpg)
 
 **什么是下界？**
 
@@ -1708,7 +1708,7 @@ Plate<? super Fruit>
 
 表达的就是相反的概念：一个能放水果以及一切是水果基类的盘子。 _Plate<? super Fruit>_ 是 _Plate< Fruit >_ 的基类，但不是 _Plate< Apple >_ 的基类。对应刚才那个例子， _Plate<? super Fruit>_ 覆盖下图中红色的区域。
 
-![下界通配符](https://ws1.sinaimg.cn/large/005CDUpdly1g1hbus470gj317o0mg43g.jpg)
+![下界通配符](https://tva2.sinaimg.com/large/005CDUpdly1g1hbus470gj317o0mg43g.jpg)
 
 **上下界通配符的副作用**
 
@@ -1939,7 +1939,7 @@ Singleton2 value2 : 1
 
 类从被加载到虚拟机内存开始，直到卸载出内存为止，它的整个生命周期包括了：加载、验证、准备、解析、初始化、使用和卸载这七个阶段。其中，验证、准备和解析这三个部分统称为连接。
 
-![类的加载时机](https://ws1.sinaimg.cn/large/005CDUpdly1g59ve0nlq2j30ie05wmyd.jpg)
+![类的加载时机](https://tva2.sinaimg.com/large/005CDUpdly1g59ve0nlq2j30ie05wmyd.jpg)
 
 其中，加载、验证、准备、初始化和卸载这五个阶段的顺序是确定的，类的加载过程必须按照这种顺序按部就班的“开始”（仅仅指的是开始，而非执行或者结束，因为这些阶段通常都是互相交叉的混合进行，通常会在一个阶段执行的过程中调用或者激活另一个阶段），而解析阶段则不一定（它在某些情况下可以在初始化阶段之后再开始，这是为了支持Java语言的运行时绑定。
 
@@ -1989,7 +1989,7 @@ public static int value=123;//在准备阶段value初始值为0 。在初始化�
 
 上述过程可以使用下面的脑图进行概括：
 
-![类加载过程](https://ws1.sinaimg.cn/large/005CDUpdly1g5a61x1thrj30ne06vmxx.jpg)
+![类加载过程](https://tva2.sinaimg.com/large/005CDUpdly1g5a61x1thrj30ne06vmxx.jpg)
 
 **何时开始类的初始化？**
 
@@ -2083,7 +2083,7 @@ JVM预定义有三种类加载器，当一个 JVM启动的时候，Java开始使
 
 除此之外，还有自定义的类加载器，它们之间的层次关系被称为类加载器的双亲委派模型。该模型要求除了顶层的启动类加载器外，其余的类加载器都应该有自己的父类加载器，而这种父子关系一般通过组合（Composition）关系来实现，而不是通过继承（Inheritance）。后面会详细地讲解双亲委派模型的工作原理。
 
-![类加载器之间的层次关系](https://ws1.sinaimg.cn/large/005CDUpdgy1g5b4szbhnaj30gm0d2abd.jpg)
+![类加载器之间的层次关系](https://tva2.sinaimg.com/large/005CDUpdgy1g5b4szbhnaj30gm0d2abd.jpg)
 
 JVM的类加载机制主要有以下3种：
 1. 全盘负责：所谓全盘负责，就是当一个类加载器负责加载某个Class时，该Class所依赖和引用其他Class也将由该类加载器负责载入，除非显示使用另一个类加载器来载入。
@@ -2287,11 +2287,11 @@ public class Test1 extends Test{
 
 我们的程序在运行的时候，底层虚拟机是如何去实现动态调用？我们先从java虚拟机讲起，给出java虚拟机执行java程序的过程图如下：
 
-![JVM执行程序流程](https://ws1.sinaimg.cn/large/005CDUpdgy1g5b9kpyxxjj30hs0asaag.jpg)
+![JVM执行程序流程](https://tva2.sinaimg.com/large/005CDUpdgy1g5b9kpyxxjj30hs0asaag.jpg)
 
 从图中我们可以看出，我们的java文件要想运行，需要通过java编译器编译成.class文件，然后通过类装载器讲.class文件装载到JVM中，最后才是执行。而且JVM分了五个区域，那么在代码中定义的那些多态方法存到了哪个地方呢？为此我们还需要对这块内存区域进行一个分析：(**这里补充一下，java 1.7把运行时常量池移到了java堆中，并且java1.8之后没有永久代的概念，存放类相关信息被放在元空间里**)
 
-![JVM内存区域](https://ws1.sinaimg.cn/large/005CDUpdgy1g5b9p999b9j30hs0b4t99.jpg)
+![JVM内存区域](https://tva3.sinaimg.com/large/005CDUpdgy1g5b9p999b9j30hs0b4t99.jpg)
 
 多态方法其实就存放在方法区中，java堆里面存放的是我们建立的一个个实例对象，方法区存放的就是类的类型等信息。而且这个方法区中的类型信息跟在堆中存放的class对象是不同的。在方法区中，这个class的类型信息只有唯一的实例（所以方法区是各个线程共享的内存区域），而在堆中可以有多个该class对象。也就是说方法区的类型信息就是像一个模板，那些class对象就好比通过这些模板创建的一个个实例。
 
@@ -2332,7 +2332,7 @@ public class Test {
 - new SonA其实创建了一个实例对象，存储在了java堆中；
 - SonA的类型数据存在方法区中。
 
-![内存结构](https://ws1.sinaimg.cn/large/005CDUpdly1g5ba7jpo95j30hs09vwev.jpg)
+![内存结构](https://tva2.sinaimg.com/large/005CDUpdly1g5ba7jpo95j30hs09vwev.jpg)
 
 reference中存储的就是对象在堆中的实际地址，在堆中存储的对象信息中包含了在方法区中的相应类型数据，定位流程如下：
 - 虚拟机通过reference（Father的引用）查询java栈中的本地变量表，得到堆中的对象类型数据的指针，
@@ -2341,7 +2341,7 @@ reference中存储的就是对象在堆中的实际地址，在堆中存储的�
   
 我们来看一下父子类在方法表中是如何保存的：
 
-![父子类方法表中存储过程](https://ws1.sinaimg.cn/large/005CDUpdgy1g5baaxqzm8j30hs0aeglu.jpg)
+![父子类方法表中存储过程](https://tva2.sinaimg.com/large/005CDUpdgy1g5baaxqzm8j30hs0aeglu.jpg)
 
 很明显每一个类都会有一个方法表，子类中不同的方法指向不同的类型信息。继承自Object的就指向Object，继承自Father的就指向Father（也就是包含了父类的方法dealHouse）。
 
@@ -2363,7 +2363,7 @@ Object类是Java中所有类的基类，其位于java.lang包中，其一共有1
 - clone(),对象的浅复制
 - finalize()，与Java垃圾回收机制有关
 
-![Object类](https://ws1.sinaimg.cn/large/005CDUpdgy1g5bty0rjrtj30wx0pjtam.jpg)
+![Object类](https://tva2.sinaimg.com/large/005CDUpdgy1g5bty0rjrtj30wx0pjtam.jpg)
 
 其中，object.c中包含了下面：
 ```c++
@@ -2500,18 +2500,18 @@ monitor机制需要几个元素来配合，分别是：
 
 在HotSpot虚拟机中，monito采用ObjectMonitor实现：
 
-![ObjectMonitor结构](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c5o1n31uj30iq0bfwef.jpg)
+![ObjectMonitor结构](https://tva2.sinaimg.com/large/005CDUpdgy1g5c5o1n31uj30iq0bfwef.jpg)
 
 每个线程都会有两个ObjectMonitor对象列表，分别为free和used列表，如果当前free列表为空，线程将向全局global list请求分配ObjectMonitor。
 
 ObjectMonitor对象中有两个队列：_WaitSet和_EntryList，用来保存ObjectWaiter对象列表。_owner指向获得ObjectMonitor对象的线程。
 
-![ObjectMonitor](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c66vaq0zj30et08v0t8.jpg)
+![ObjectMonitor](https://tva2.sinaimg.com/large/005CDUpdgy1g5c66vaq0zj30et08v0t8.jpg)
 
 当一个线程需要获取 Object 的锁时，会被放入 EntrySet 中进行等待，如果该线程获取到了锁，成为当前锁的 owner。如果根据程序逻辑，一个已经获得了锁的线程缺少某些外部条件，而无法继续进行下去（例如生产者发现队列已满或者消费者发现队列为空），那么该线程可以通过调用 wait 方法将锁释放，进入 wait set 中阻塞进行等待，其它线程在这个时候有机会获得锁，去干其它的事情，从而使得之前不成立的外部条件成立，这样先前被阻塞的线程就可以重新进入 EntrySet 去竞争锁。这个外部条件在 monitor 机制中称为条件变量。
 
 **ObjectWaiter**
-![ObjectWaiter](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c6ax57f7j30j50ajaa3.jpg)
+![ObjectWaiter](https://tva2.sinaimg.com/large/005CDUpdgy1g5c6ax57f7j30j50ajaa3.jpg)
 
 ObjectWaiter对象是双向链表结构，保存了_thread（当前线程）以及当前的状态TState等数据， 每个等待锁的线程都会被封装成ObjectWaiter对象。
 
@@ -2520,15 +2520,15 @@ ObjectWaiter对象是双向链表结构，保存了_thread（当前线程）以�
 lock.wait()方法最终通过ObjectMonitor的`void wait(jlong millis, bool interruptable, TRAPS);`实现：
 1. 将当前线程封装成ObjectWaiter对象node;
 
-![step1](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c6xss5a8j30qa0jz75v.jpg)
+![step1](https://tva2.sinaimg.com/large/005CDUpdgy1g5c6xss5a8j30qa0jz75v.jpg)
 
 2. 通过`ObjectMonitor::AddWaiter`方法将node添加到_WaitSet列表中：
 
-![step2](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c71abr20j30g10aqglm.jpg)
+![step2](https://tva2.sinaimg.com/large/005CDUpdgy1g5c71abr20j30g10aqglm.jpg)
 
 3. 通过`ObjectMonitor::exit`方法释放当前的ObjectMonitor对象，这样其它竞争线程就可以获取该ObjectMonitor对象。
 
-![step3](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c72x1shsj30i50dt755.jpg)
+![step3](https://tva2.sinaimg.com/large/005CDUpdgy1g5c72x1shsj30i50dt755.jpg)
 
 4. 最终底层的park方法会挂起线程。
 
@@ -2539,7 +2539,7 @@ lock.notify()方法最终通过ObjectMonitor的`void notify(TRAPS)`实现：
 1. 如果当前_WaitSet为空，即没有正在等待的线程，则直接返回；
 2. 通过`ObjectMonitor::DequeueWaiter`方法，获取_WaitSet列表中的第一个ObjectWaiter节点，实现也很简单。(**在jdk的notify方法注释是随机唤醒一个线程，其实是第一个ObjectWaiter节点**)
 
-![notify()](https://ws1.sinaimg.cn/large/005CDUpdgy1g5c75qt0l6j30is0iw74i.jpg)
+![notify()](https://tva2.sinaimg.com/large/005CDUpdgy1g5c75qt0l6j30is0iw74i.jpg)
 
 3. 根据不同的策略，将取出来的ObjectWaiter节点，加入到_EntryList或则通过`Atomic::cmpxchg_ptr`指令进行自旋操作cxq。
 
@@ -2588,7 +2588,7 @@ lock.notifyAll()方法最终通过ObjectMonitor的`void notifyAll(TRAPS)`实现�
 
 被复制对象的所有变量都含有与原来的对象相同的值，而所有的对其他对象的引用仍然指向原来的对象。换言之，浅拷贝仅仅复制所拷贝的对象，而不复制它所引用的对象。
 
-![浅拷贝](https://ws1.sinaimg.cn/large/005CDUpdgy1g7qj197k8gj30ka0bp3yi.jpg)
+![浅拷贝](https://tva2.sinaimg.com/large/005CDUpdgy1g7qj197k8gj30ka0bp3yi.jpg)
 
 **实现方式**：浅拷贝的实现只需要实现Cloneable接口，再重写Object类的clone方法时，仍然调用super.clone()方法即可。Object类的clone方法默认就是浅拷贝。
 
@@ -2720,7 +2720,7 @@ public class BookBorrow implements Cloneable {
 
 对基本数据类型进行值传递，对引用数据类型，创建一个新的对象，并复制其内容，此为深拷贝。
 
-![深拷贝](https://ws1.sinaimg.cn/large/005CDUpdgy1g7qk1hkv5jj30ka0bp0sr.jpg)
+![深拷贝](https://tva2.sinaimg.com/large/005CDUpdgy1g7qk1hkv5jj30ka0bp0sr.jpg)
 
 对于深拷贝的实现，比较常用的方案有两种：
 1. 序列化(serialization)这个对象，再反序列化回来，就可以得到这个新的对象。

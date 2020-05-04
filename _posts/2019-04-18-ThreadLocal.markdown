@@ -88,7 +88,7 @@ class Dao{
 
 #### 从数据结构入手
 
-![ThreadLocal内部结构图](https://ws1.sinaimg.cn/large/005CDUpdly1g26uybwclbj30me0n9q5h.jpg)
+![ThreadLocal内部结构图](https://tva2.sinaimg.com/large/005CDUpdly1g26uybwclbj30me0n9q5h.jpg)
 
 从上面的结构图，我们可以初步窥见ThreadLocal的核心思想：
 - 每个Thread线程内部有一个Map
@@ -97,7 +97,7 @@ class Dao{
 
 所以，对于不同的线程，每次获取副本值时，别的线程并不能获取到当前线程的副本值，形成了副本的隔离，互不干扰。
 
-![UML类图](https://ws1.sinaimg.cn/large/005CDUpdly1g26vg3wvmnj30o20iiq3q.jpg)
+![UML类图](https://tva2.sinaimg.com/large/005CDUpdly1g26vg3wvmnj30o20iiq3q.jpg)
 
 ThreadLocal中的嵌套内部类ThreadLocalMap,这个类本质上是一个Map,和HashMap的实现相似，依然是key-value的形式，其中有一个内部类Entry,其中key可以看做是ThreadLocal实例，但是本质是持有ThreadLocal实例的弱引用。
 
