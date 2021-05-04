@@ -1,0 +1,26 @@
+---
+layout:     post
+title:      "C++基础语法总结"
+subtitle:   " \"C++ Study\""
+date:       2021-03-23 22:48:20
+author:     "ming"
+catalog: true
+header-img: "img/home-bg-nebula.jpg"
+tags:
+    - C++
+    - Basic Knowledge
+---
+
+> "The goal is not always meant to be reached, but to serve as a mark for our aim."
+
+### 1. C++的编程模块——函数
+
+> C++对于函数的返回值的类型由一定的限制：其不能够是数组，但是可以是其他任何类型(包括整型、浮点型、指针、甚至可以是结构和对象)。其外，虽然我们不能直接返回数组，但是可以将数组作为结构或者对象的组成部分来进行返回。
+
+在编译阶段进行的原型化被称为静态类型检查(static type checking),可以看出，静态类型检查可以捕获许多在运行阶段非常难以捕获的错误。
+
+#### 1.1 指针与const
+
+可以用两种不同的方式将 const 关键字应用于指针。
+- 第一种方法就是让指针指向一个常量对象，这样可以防止使用该指针来修改指向的值;
+- 第二种方法就是将指针本身声明为常量，这样可以防止改变指针指向的位置。
