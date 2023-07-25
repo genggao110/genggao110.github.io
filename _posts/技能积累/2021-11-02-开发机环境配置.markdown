@@ -1,0 +1,123 @@
+---
+layout:      post
+title:       "Development Machine Configure"
+subtitle:    " \"Machine Configure\""
+date:        2021-11-02 15:38:00
+author:      "Ming"
+catalog: true
+header-img:  "img/post-bg-2015.jpg"
+tags:
+    - cluster
+---
+
+> “Yeah It's on. ”
+
+### 1. ssh配置无密码登录
+
+将mac机器本身公钥拷贝到开发机器上，追加到开发机器 authorized_keys文件中(**开发机器没有该文件的话可以先生成公钥**)
+
+```shell
+# 生成开发机器自身的公钥
+cd ~/.ssh
+ssh-keygen -t rsa -C '****@163.com'
+
+# mac机器公钥追加到 authorized_keys 文件,我这里把文件拷贝到 /home/xiaoju目录下
+cat /home/xiaoju/id_rsa.pub >> ~/.ssh/authorized_keys
+```
+
+mac机器修改 .ssh目录下config配置，添加待登录ip配置，后用 ssh 命令尝试能不能无密码登录即可。
+
+```shell
+# 追加如下内容
+Host 10.190.54.81
+  HostName 10.190.54.81
+  User root
+```
+
+### 2. gitlab配置
+
+将开发机上一步生成的公钥内容添加到gitlab对应的 SSH Keys菜单下，这里可以参考 [GitLab配置 ssh key](https://www.cnblogs.com/hafiz/p/8146324.html)
+
+> 可以尝试本地配置多个 ssh key.
+
+### 3. oh-my-zsh安装
+
+> 因为开发机器存在墙的问题，没办法拉取github的仓库，因此这一步需要配置国内镜像进行安装和更新。
+
+#### 3.1下载码云安装包
+
+```shell
+wget https://gitee.com/mirrors/oh-my-zsh/raw/master/tools/install.sh
+```
+
+#### 3.2 编辑install.sh
+
+找到以下部分：
+```shell
+# Default settings
+ZSH=${ZSH:-~/.oh-my-zsh}
+REPO=${REPO:-ohmyzsh/ohmyzsh}
+REMOTE=${REMOTE:-https://github.com/${REPO}.git}
+BRANCH=${BRANCH:-master}
+```
+把
+```shell
+REPO=${REPO:-ohmyzsh/ohmyzsh}
+REMOTE=${REMOTE:-https://github.com/${REPO}.git}
+```
+替换成
+```shell
+REPO=${REPO:-mirrors/oh-my-zsh}
+REMOTE=${REMOTE:-https://gitee.com/${REPO}.git}
+```
+编辑后保存, 运行安装即可. (运行前先给install.sh权限)
+
+#### 3.3 修改仓库地址
+```shell
+cd ~/.oh-my-zsh
+git remote set-url origin https://gitee.com/mirrors/oh-my-zsh.git
+git pull
+```
+
+**参考zsh配置**：[oh-my-zsh](https://www.jianshu.com/p/d194d29e488c?open_source=weibo_search)
+
+
+### 4.git版本升级
+
+删除旧版本的git
+```shell
+yum remove git
+```
+
+安装依赖
+```shell
+yum install curl-devel expat-devel gettext-devel openssl-devel zlib-devel
+yum install  gcc perl-ExtUtils-MakeMaker
+```
+
+下载git源码包，进行安装：
+```shell
+wget https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.29.2.tar.xz
+xz -d git-2.29.2.tar.xz 
+tar -xvf git-2.29.2.tar
+cd git-2.29.2
+make prefix=/usr/local/git all
+make prefix=/usr/local/git install
+```
+
+添加环境变量，这里直接添加到 **/etc/profile**
+
+```shell
+vim /etc/profile
+
+# Git Env
+# export PATH=$PATH:/usr/local/git/bin
+```
+
+环境变量更新
+```shell
+source /etc/profile
+git --version
+```
+
+### 5.
